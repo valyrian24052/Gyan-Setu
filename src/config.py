@@ -34,9 +34,11 @@ class Config:
     # PostgreSQL vector settings
     VECTOR_DIMENSION = 384  # Dimension for sentence-transformers embeddings
     
-    # OpenAI settings
-    OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
-    DEFAULT_MODEL = "gpt-3.5-turbo"
+    # Llama model settings
+    MODEL_PATH = os.getenv('MODEL_PATH', 'models/llama-2-7b-chat.gguf')
+    MODEL_N_CTX = int(os.getenv('MODEL_N_CTX', '2048'))
+    MODEL_N_THREADS = int(os.getenv('MODEL_N_THREADS', '4'))
+    MODEL_N_GPU_LAYERS = int(os.getenv('MODEL_N_GPU_LAYERS', '0'))
     
     # Application settings
     MAX_RESPONSE_TOKENS = 150

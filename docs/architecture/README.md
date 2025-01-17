@@ -40,7 +40,7 @@ The Teacher Training Chatbot is built using a modern, scalable architecture with
 - Connection pooling
 
 ### 4. AI Layer
-- OpenAI GPT integration
+- Llama model integration
 - Sentence transformers
 - Vector embeddings
 - Semantic similarity calculation
@@ -96,11 +96,11 @@ The Teacher Training Chatbot is built using a modern, scalable architecture with
    - Compression
    - Load balancing
 
-3. **Frontend**
-   - Asset optimization
-   - Lazy loading
-   - Client-side caching
-   - Progressive loading
+3. **AI Model**
+   - Model quantization
+   - GPU acceleration
+   - Batch processing
+   - Response caching
 
 ## Scalability
 

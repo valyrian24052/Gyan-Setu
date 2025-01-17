@@ -1,5 +1,8 @@
 # Teacher Training Chatbot
 
+## Overview
+An AI-powered chatbot for training teachers using Llama models and natural language processing.
+
 A sophisticated chatbot system designed to help train teachers by simulating realistic student interactions. The system uses LLM models for natural conversation, PostgreSQL with vector database capabilities for efficient similarity search, and modern web technologies for an intuitive user interface.
 
 ## Project Overview
@@ -152,6 +155,14 @@ teacher-bot/
    - [ ] Optimize embedding generation
    - [ ] Create model performance monitoring
 
+5. **Llama Model Integration**
+   - [ ] Set up Llama model integration
+   - [ ] Implement response generation
+   - [ ] Create evaluation metrics
+   - [ ] Optimize model performance
+   - [ ] Add conversation history
+   - [ ] Implement feedback system
+
 ### UI/UX Developer Tasks
 
 1. **Frontend Development**
@@ -284,13 +295,13 @@ CREATE EXTENSION vector;
 
 1. Create a conda environment:
 ```bash
-conda create -n teacher-bot python=3.10
+conda create -n teacher-bot python=3.9
 conda activate teacher-bot
 ```
 
 2. Install dependencies:
 ```bash
-conda install -c conda-forge openai transformers sentence-transformers pytorch flask python-dotenv sqlalchemy
+conda install -c conda-forge llama-cpp-python transformers sentence-transformers pytorch flask python-dotenv sqlalchemy
 pip install psycopg2-binary alembic pgvector sqlalchemy-utils
 ```
 
