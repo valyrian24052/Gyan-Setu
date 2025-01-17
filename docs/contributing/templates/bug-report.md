@@ -50,11 +50,12 @@
 - [ ] Low (Minor inconvenience)
 
 ## Component
-- [ ] Database
-- [ ] AI Model
-- [ ] Frontend
-- [ ] API
+- [ ] Educational Content
+- [ ] AI/ML Model
+- [ ] Frontend Interface
 - [ ] Documentation
+- [ ] Testing
+- [ ] Project Management
 - [ ] Other: [specify]
 
 ## Checklist

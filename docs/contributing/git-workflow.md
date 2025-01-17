@@ -79,93 +79,31 @@ body:
 
 ## Role-Specific Guidelines
 
-### Database Developer
-- Branch naming: `db/feature-name`
-- Required labels: `database`, `schema`, `migration`
-- PR template focus: Schema changes, migrations
-- Documentation: Update `docs/database/`
+### Educational Content Specialist
+- Branch naming: `content/feature-name`
+- Required labels: `content`, `educational`, `scenarios`
+- PR template focus: Educational content, scenarios, feedback templates
+- Documentation: Update `docs/content/`
 
-### AI Developer
+### AI/ML Developer
 - Branch naming: `ai/feature-name`
 - Required labels: `ai`, `model`, `training`
 - PR template focus: Model changes, training scripts
 - Documentation: Update `docs/ai/`
 
-### UI/UX Developer
-- Branch naming: `ui/feature-name`
-- Required labels: `frontend`, `ui`, `ux`
-- PR template focus: UI changes, accessibility
+### Frontend Developer
+- Branch naming: `frontend/feature-name`
+- Required labels: `frontend`, `ui`, `accessibility`
+- PR template focus: UI components, user experience
 - Documentation: Update `docs/frontend/`
 
-### Research/Documentation
-- Branch naming: `docs/topic-name`
-- Required labels: `documentation`, `research`
-- PR template focus: Documentation updates
-- Documentation: Update relevant sections
+### QA/Documentation Specialist
+- Branch naming: `qa/feature-name` or `docs/feature-name`
+- Required labels: `testing`, `documentation`, `quality`
+- PR template focus: Test cases, documentation updates
+- Documentation: Update relevant documentation sections
 
 ## Contribution Tracking
 
 ### Metrics to Monitor
-```markdown
-1. Code Contributions
-   - Number of commits
-   - Lines of code changed
-   - Pull requests merged
-   - Code review participation
-
-2. Issue Management
-   - Issues created/resolved
-   - Average resolution time
-   - Comments and discussions
-   - Documentation updates
-
-3. Project Milestones
-   - Tasks completed vs. assigned
-   - Sprint completion rate
-   - Documentation coverage
-   - Test coverage
 ```
-
-### GitHub Actions Workflow
-```yaml
-name: Contribution Metrics
-on:
-  schedule:
-    - cron: '0 0 * * 0'  # Weekly report
-jobs:
-  generate-report:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Generate Contribution Report
-        uses: actions/github-script@v6
-        with:
-          script: |
-            // Generate weekly contribution metrics
-            const metrics = await github.rest.repos.getContributorsStats({
-              owner: context.repo.owner,
-              repo: context.repo.repo
-            });
-            // Process and format metrics
-            // Send to project manager
-```
-
-## Best Practices
-
-### Branch Protection Rules
-- Require pull request reviews
-- Enforce status checks
-- Require linear history
-- Protect main branch
-
-### Code Review Process
-1. Create descriptive PR
-2. Request relevant reviewers
-3. Address feedback
-4. Update documentation
-5. Merge when approved
-
-### Communication Guidelines
-- Use issue comments for technical discussions
-- Link PRs to issues
-- Update project boards regularly
-- Document decisions in PR descriptions 

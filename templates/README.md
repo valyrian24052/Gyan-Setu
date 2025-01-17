@@ -4,23 +4,51 @@
 
 - **Product Owner**: [Name]
   - Contact: [Email/Discord]
-  - Responsibilities: [List main responsibilities]
+  - Responsibilities: 
+    - Primary liaison with Education Expert
+    - Define product vision and requirements
+    - Prioritize features and backlog
+    - Validate educational effectiveness
 
 - **Project Manager**: [Name]
   - Contact: [Email/Discord]
-  - Responsibilities: [List main responsibilities]
+  - Responsibilities:
+    - Coordinate team activities
+    - Track milestones and deadlines
+    - Facilitate meetings and reviews
+    - Manage documentation
 
-- **Database Developer**: [Name]
+- **Educational Content Specialist**: [Name]
   - Contact: [Email/Discord]
-  - Current Tasks: [List current tasks]
+  - Current Tasks:
+    - Create educational scenarios
+    - Define student personas
+    - Develop evaluation criteria
+    - Write feedback templates
 
-- **AI Developer**: [Name]
+- **AI/ML Developer**: [Name]
   - Contact: [Email/Discord]
-  - Current Tasks: [List current tasks]
+  - Current Tasks:
+    - Set up Llama model
+    - Implement response generation
+    - Create evaluation system
+    - Optimize performance
 
-- **UI/UX Developer**: [Name]
+- **Frontend Developer**: [Name]
   - Contact: [Email/Discord]
-  - Current Tasks: [List current tasks]
+  - Current Tasks:
+    - Design chat interface
+    - Implement responsive design
+    - Create visualizations
+    - Ensure accessibility
+
+- **QA/Documentation Specialist**: [Name]
+  - Contact: [Email/Discord]
+  - Current Tasks:
+    - Create test cases
+    - Write documentation
+    - Track bug fixes
+    - Maintain user guides
 
 ## Project Status
 

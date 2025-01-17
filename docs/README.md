@@ -4,16 +4,34 @@ Welcome to the Teacher Training Chatbot project documentation! This guide will h
 
 ## 🎯 Quick Start by Role
 
-### For Database Developers
-- 📚 [Database Guide](database/README.md)
-  - Database schema and design
-  - PostgreSQL setup with pgvector
-  - Query optimization
-  - Data modeling
-- 🔄 [Database Workflows](contributing/workflow/database-workflow.md)
-- ✅ [Database Standards](contributing/guidelines/database-standards.md)
+### For Product Owner
+- 📋 [Product Requirements](product/README.md)
+  - Educational requirements
+  - Feature prioritization
+  - Success criteria
+  - Expert communication
+- 🔄 [Product Owner Workflow](contributing/workflow/product-owner-workflow.md)
+- ✅ [Requirements Guidelines](contributing/guidelines/requirements-standards.md)
 
-### For AI Developers
+### For Project Manager
+- 📊 [Project Management Guide](management/README.md)
+  - Team coordination
+  - Timeline tracking
+  - Risk management
+  - Progress reporting
+- 🔄 [Project Management Workflow](contributing/workflow/project-manager-workflow.md)
+- ✅ [Management Standards](contributing/guidelines/management-standards.md)
+
+### For Educational Content Specialist
+- 📚 [Content Development Guide](content/README.md)
+  - Scenario creation
+  - Student personas
+  - Assessment criteria
+  - Feedback templates
+- 🔄 [Content Development Workflow](contributing/workflow/content-workflow.md)
+- ✅ [Educational Standards](contributing/guidelines/education-standards.md)
+
+### For AI/ML Developer
 - 🤖 [AI Integration Guide](ai/README.md)
   - Llama model integration
   - Sentence transformers
@@ -22,7 +40,7 @@ Welcome to the Teacher Training Chatbot project documentation! This guide will h
 - 🔄 [AI Development Workflow](contributing/workflow/ai-workflow.md)
 - ✅ [AI Code Standards](contributing/guidelines/ai-standards.md)
 
-### For UI/UX Developers
+### For Frontend Developer
 - 🎨 [Frontend Guide](frontend/README.md)
   - UI components
   - User flows
@@ -31,23 +49,14 @@ Welcome to the Teacher Training Chatbot project documentation! This guide will h
 - 🔄 [Frontend Workflow](contributing/workflow/frontend-workflow.md)
 - ✅ [Frontend Standards](contributing/guidelines/frontend-standards.md)
 
-### For Project Managers
-- 📊 [Project Management Guide](project-management/README.md)
-  - Sprint management
-  - Team coordination
-  - Progress tracking
-  - Risk management
-- 📈 [GitHub Project Boards](project-management/project-board-setup.md)
-- 📝 [Templates](project-management/templates/)
-
-### For Product Owners
-- 🎯 [Product Ownership Guide](product-ownership/README.md)
-  - Product vision
-  - Backlog management
-  - Stakeholder communication
-  - Educational requirements
-- 📋 [Templates](product-ownership/templates/)
-- 📊 [Success Metrics](product-ownership/success-metrics.md)
+### For QA/Documentation Specialist
+- 🔍 [QA Guide](qa/README.md)
+  - Test planning
+  - Bug tracking
+  - Documentation
+  - Quality standards
+- 🔄 [QA Workflow](contributing/workflow/qa-workflow.md)
+- ✅ [Documentation Standards](contributing/guidelines/documentation-standards.md)
 
 ## 📚 Core Documentation
 
