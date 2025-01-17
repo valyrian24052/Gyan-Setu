@@ -1,200 +1,221 @@
-# Teacher Training Chatbot Project
+# Teacher Training Chatbot
 
-## 📚 Overview
+A comprehensive chatbot system for teacher training, using LLMs to simulate classroom scenarios and provide feedback on teaching responses.
 
-This project helps you build an AI-powered chatbot that simulates elementary school classroom scenarios to help train teachers. The chatbot uses Large Language Models (LLMs) to create realistic student interactions and evaluate teacher responses.
+## 📁 Repository Structure
 
-## 📋 Table of Contents
-
-1. [Learning Objectives](#-learning-objectives)
-2. [Project Structure](#-project-structure)
-3. [Getting Started](#-getting-started)
-   - [Environment Setup](#1-environment-setup)
-   - [LLM Setup](#2-llm-setup)
-4. [Creating Educational Scenarios](#-creating-educational-scenarios)
-   - [Define Student Personas](#1-define-student-personas)
-   - [Create Classroom Scenarios](#2-create-classroom-scenarios)
-5. [Training the LLM](#-training-the-llm)
-   - [Prepare Educational Materials](#1-prepare-educational-materials)
-   - [Create Training Examples](#2-create-training-examples)
-6. [Using the Chatbot](#-using-the-chatbot)
-   - [Generate Scenarios](#1-generate-scenarios)
-   - [Evaluate Responses](#2-evaluate-responses)
-7. [Development Guidelines](#-development-guidelines)
-8. [Contributing](#-contributing)
-9. [Getting Help](#-getting-help)
-10. [Additional Resources](#-additional-resources)
-
-## 🎯 Learning Objectives
-
-1. Understanding how to use LLMs for educational simulations
-2. Creating realistic classroom scenarios and student personas
-3. Implementing teacher response evaluation systems
-4. Building an interactive training environment
-
-## 📂 Project Structure
 ```
 teacher-training-chatbot/
-├── src/                  # Source code
-│   ├── ai/              # LLM integration & scenarios
-│   ├── database/        # Data storage
-│   └── web/            # User interface
-├── data/                # Educational materials
-│   ├── scenarios/      # Classroom situations
-│   └── responses/      # Expert teacher responses
-├── docs/               # Documentation
-└── tests/             # Test files
+├── src/                              # Source code
+│   ├── ai/                           # AI/ML components
+│   │   ├── embedding.py              # Embedding generation
+│   │   ├── rag_pipeline.py           # RAG implementation
+│   │   ├── llm_config.py            # LLM configuration
+│   │   └── evaluation.py            # Response evaluation
+│   │
+│   ├── database/                     # Database components
+│   │   ├── models.py                # Database models
+│   │   ├── vector_ops.py            # Vector operations
+│   │   └── connection.py            # Database connection
+│   │
+│   ├── frontend/                     # Frontend components
+│   │   ├── static/                  # Static assets
+│   │   ├── templates/               # HTML templates
+│   │   └── routes.py                # Frontend routes
+│   │
+│   └── api/                         # API endpoints
+│       ├── routes.py                # API routes
+│       └── middleware.py            # API middleware
+│
+├── data/                            # Data directory
+│   ├── scenarios/                   # Teaching scenarios
+│   │   ├── approved/               # Expert-approved scenarios
+│   │   ├── drafts/                 # Scenario drafts
+│   │   └── templates/              # Scenario templates
+│   │
+│   ├── personas/                    # Student personas
+│   │   ├── templates/              # Persona templates
+│   │   └── approved/               # Approved personas
+│   │
+│   └── evaluation/                  # Evaluation data
+│       ├── criteria/               # Evaluation criteria
+│       └── feedback/               # Feedback templates
+│
+├── docs/                            # Documentation
+│   ├── roles/                       # Role-specific guides
+│   ├── scenarios/                   # Scenario documentation
+│   ├── technical/                   # Technical documentation
+│   └── meetings/                    # Meeting notes
+│
+├── tests/                           # Test files
+├── scripts/                         # Utility scripts
+└── config/                          # Configuration files
 ```
+
+## 🎯 For Each Role
+
+### Product Owner
+- **Primary Location**: `docs/roles/product_owner.md`
+- **Key Files**:
+  - `docs/meetings/expert_reviews/` - Expert meeting notes
+  - `data/scenarios/approved/` - Approved scenarios
+  - `docs/scenarios/creation_guide.md` - Scenario creation process
+
+### Educational Content Specialist
+- **Primary Location**: `docs/roles/content_specialist.md`
+- **Key Files**:
+  - `data/scenarios/templates/` - Scenario templates
+  - `data/personas/templates/` - Student personas
+  - `data/evaluation/criteria/` - Evaluation criteria
+
+### AI/ML Developer
+- **Primary Location**: `docs/roles/ai_developer.md`
+- **Key Files**:
+  - `src/ai/` - AI implementation
+  - `config/` - Model configurations
+  - `tests/ai/` - AI component tests
+
+### Frontend Developer
+- **Primary Location**: `docs/roles/frontend_developer.md`
+- **Key Files**:
+  - `src/frontend/` - Frontend code
+  - `src/api/` - API endpoints
+  - `tests/frontend/` - Frontend tests
+
+### Project Manager
+- **Primary Location**: `docs/roles/project_manager.md`
+- **Key Files**:
+  - `docs/project_pipeline.md` - Project timeline
+  - `docs/meetings/` - Meeting notes
+  - `docs/repository_structure.md` - Repo structure
+
+### QA Specialist
+- **Primary Location**: `docs/roles/qa_specialist.md`
+- **Key Files**:
+  - `tests/` - All test files
+  - `data/scenarios/approved/` - Test scenarios
+  - `docs/technical/` - Technical documentation
 
 ## 🚀 Getting Started
 
-### 1. Environment Setup
+1. **Environment Setup**
+   ```bash
+   # Create virtual environment
+   python -m venv venv
+   source venv/bin/activate  # or `venv\Scripts\activate` on Windows
+   
+   # Install dependencies
+   pip install -r requirements.txt
+   ```
 
-```bash
-# Clone the repository
-git clone https://github.com/your-org/teacher-training-chatbot.git
-cd teacher-training-chatbot
+2. **Configuration**
+   ```bash
+   # Set environment
+   export APP_ENV=development  # or production, testing
+   
+   # Set database credentials
+   export DB_USER=your_username
+   export DB_PASSWORD=your_password
+   ```
 
-# Create and activate conda environment
-conda create -n teacher-bot python=3.9
-conda activate teacher-bot
+3. **Database Setup**
+   ```bash
+   # Install PostgreSQL and pgvector
+   python scripts/setup/init_database.py
+   ```
 
-# Install dependencies
-conda install -c conda-forge ollama langchain-ollama transformers
-pip install -r requirements.txt
-```
+4. **Running the Application**
+   ```bash
+   # Start the application
+   python src/api/main.py
+   ```
 
-### 2. LLM Setup
+## 📝 Development Workflow
 
-```bash
-# Install Ollama
-curl -fsSL https://ollama.com/install.sh | sh
+1. **Creating New Scenarios**
+   - Draft in `data/scenarios/drafts/`
+   - Get expert review
+   - Move to `data/scenarios/approved/`
 
-# Pull the Llama model
-ollama pull llama3.1
+2. **Making Changes**
+   - Create feature branch
+   - Update tests
+   - Update documentation
+   - Create pull request
 
-# Start Ollama server
-ollama serve
-```
+3. **Running Tests**
+   ```bash
+   # Run all tests
+   pytest tests/
+   
+   # Run specific component tests
+   pytest tests/ai/
+   pytest tests/frontend/
+   ```
 
-## 💡 Creating Educational Scenarios
+## 🔍 Key Features
 
-### 1. Define Student Personas
-```python
-# src/ai/student_personas.py
-class StudentPersonaBuilder:
-    def __init__(self):
-        self.personas = {
-            "visual_learner": {
-                "learning_style": "Visual aids and demonstrations",
-                "behaviors": ["Prefers diagrams", "Takes detailed notes"],
-                "challenges": ["Struggles with verbal instructions"]
-            },
-            "active_learner": {
-                "learning_style": "Hands-on activities",
-                "behaviors": ["Fidgets during lectures", "Needs movement"],
-                "challenges": ["Difficulty sitting still"]
-            }
-        }
-```
+1. **RAG Pipeline**
+   - Embedding generation
+   - Vector similarity search
+   - Context-aware responses
 
-### 2. Create Classroom Scenarios
-```python
-# src/ai/scenarios.py
-def create_scenario(student_type, subject):
-    prompt = f"""
-    Create a classroom scenario for:
-    Student Type: {student_type}
-    Subject: {subject}
-    
-    Include:
-    1. Specific behavior description
-    2. Learning challenges
-    3. Classroom context
-    4. Other students' reactions
-    """
-    return llm.invoke(prompt)
-```
+2. **Scenario Management**
+   - Expert validation
+   - Version control
+   - Performance tracking
 
-## 📊 Training the LLM
+3. **Evaluation System**
+   - Response scoring
+   - Feedback generation
+   - Progress tracking
 
-### 1. Prepare Educational Materials
-```bash
-data/
-├── classroom_scenarios/    # Real teaching situations
-├── teaching_strategies/    # Educational approaches
-└── student_profiles/      # Learner characteristics
-```
+## 📚 Documentation
 
-### 2. Create Training Examples
-```python
-training_data = [
-    {
-        "scenario": "Math class disruption...",
-        "student_profile": {
-            "type": "active_learner",
-            "behavior": "Difficulty focusing"
-        },
-        "teacher_response": "Appropriate intervention...",
-        "evaluation": "Professional handling..."
-    }
-]
-```
-
-## 🔄 Using the Chatbot
-
-### 1. Generate Scenarios
-```python
-bot = TeacherTrainingBot()
-scenario = bot.generate_scenario("classroom_management", "active")
-```
-
-### 2. Evaluate Responses
-```python
-feedback = bot.evaluate_response(
-    scenario,
-    "I would approach quietly and redirect the student's energy..."
-)
-```
-
-## 📝 Development Guidelines
-
-1. **Creating Scenarios**
-   - Base on real classroom experiences
-   - Include diverse student behaviors
-   - Consider different subjects
-   - Add contextual details
-
-2. **Training Data Quality**
-   - Use actual teaching situations
-   - Include expert teacher responses
-   - Document successful strategies
-   - Cover various challenges
-
-3. **Evaluation Criteria**
-   - Professional appropriateness
-   - Educational effectiveness
-   - Student well-being
-   - Classroom management
+- **Technical Guides**: `docs/technical/`
+- **API Documentation**: `docs/technical/api/`
+- **Database Schema**: `docs/technical/database/`
+- **Architecture**: `docs/technical/architecture/`
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create your feature branch
-3. Add your contributions
-4. Submit a pull request
+1. Read `docs/contributing/guidelines.md`
+2. Follow role-specific guides
+3. Use templates from `data/templates/`
+4. Ensure test coverage
+5. Update documentation
+
+## 🔧 Configuration
+
+- **Development**: `config/development.py`
+- **Production**: `config/production.py`
+- **Testing**: `config/testing.py`
 
 ## 🆘 Getting Help
 
-- Check documentation in `docs/`
-- Review example scenarios
-- Contact project mentors
-- Join our discussion forum
+1. Check role-specific documentation
+2. Review technical guides
+3. Contact team lead
+4. Create issue in repository
 
-## 📖 Additional Resources
+## 📊 Monitoring
 
-- [Educational Psychology Resources](docs/resources/education.md)
-- [Classroom Management Strategies](docs/resources/management.md)
-- [Student Behavior Patterns](docs/resources/behavior.md)
-- [Teaching Best Practices](docs/resources/teaching.md)
+- Application logs in `logs/`
+- Metrics at `:8001/metrics`
+- Performance dashboards
+- Error tracking
+
+## 🔐 Security
+
+- SSL/TLS in production
+- Rate limiting
+- Input validation
+- Access control
+
+## 📅 Regular Maintenance
+
+1. Database backups
+2. Log rotation
+3. Performance monitoring
+4. Security updates
  

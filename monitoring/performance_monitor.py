@@ -1,3 +1,17 @@
+"""
+Performance monitoring module using Prometheus metrics.
+
+This module provides functionality to track and measure various performance metrics
+in the teacher training chatbot application, including:
+- Embedding generation time
+- RAG query processing time
+- Model inference time
+- Query counts
+- Error counts by type
+
+The metrics are exposed via a Prometheus HTTP server for collection and visualization.
+"""
+
 from prometheus_client import start_http_server, Summary, Counter
 import logging
 
