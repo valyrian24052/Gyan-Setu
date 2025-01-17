@@ -11,6 +11,27 @@ UTAH-TTA provides:
 - Research-based evaluation of classroom management strategies
 - Progressive learning paths from basic to complex scenarios
 
+## 📋 Table of Contents
+
+- [Repository Structure](#-repository-structure)
+- [For Each Role](#-for-each-role)
+  - [Product Owner](#product-owner)
+  - [Educational Content Specialist](#educational-content-specialist)
+  - [AI/ML Developer](#aiml-developer)
+  - [Frontend Developer](#frontend-developer)
+  - [Project Manager](#project-manager)
+  - [QA Specialist](#qa-specialist)
+- [Getting Started](#-getting-started)
+- [Development Workflow](#-development-workflow)
+- [Key Features](#-key-features)
+- [Documentation](#-documentation)
+- [Contributing](#-contributing)
+- [Configuration](#-configuration)
+- [Getting Help](#-getting-help)
+- [Monitoring](#-monitoring)
+- [Security](#-security)
+- [Regular Maintenance](#-regular-maintenance)
+
 ## 📁 Repository Structure
 
 ```
@@ -64,46 +85,46 @@ teacher-training-chatbot/
 ## 🎯 For Each Role
 
 ### Product Owner
-- **Primary Location**: `docs/roles/product_owner.md`
-- **Key Files**:
-  - `docs/meetings/expert_reviews/` - Expert meeting notes
-  - `data/scenarios/approved/` - Approved scenarios
-  - `docs/scenarios/creation_guide.md` - Scenario creation process
+- **Primary Guide**: [`docs/roles/product_owner.md`](docs/roles/product_owner.md)
+- **Key Resources**:
+  - [Expert Meeting Notes](docs/meetings/expert_reviews/)
+  - [Approved Scenarios](data/scenarios/approved/)
+  - [Scenario Creation Guide](docs/scenarios/creation_guide.md)
 
 ### Educational Content Specialist
-- **Primary Location**: `docs/roles/content_specialist.md`
-- **Key Files**:
-  - `data/scenarios/templates/` - Scenario templates
-  - `data/personas/templates/` - Student personas
-  - `data/evaluation/criteria/` - Evaluation criteria
+- **Primary Guide**: [`docs/roles/content_specialist.md`](docs/roles/content_specialist.md)
+- **Key Resources**:
+  - [Scenario Templates](data/scenarios/templates/)
+  - [Student Personas](data/personas/templates/)
+  - [Evaluation Criteria](data/evaluation/criteria/)
 
 ### AI/ML Developer
-- **Primary Location**: `docs/roles/ai_developer.md`
-- **Key Files**:
-  - `src/ai/` - AI implementation
-  - `config/` - Model configurations
-  - `tests/ai/` - AI component tests
+- **Primary Guide**: [`docs/roles/ai_developer.md`](docs/roles/ai_developer.md)
+- **Key Resources**:
+  - [AI Implementation](src/ai/)
+  - [Model Configurations](config/)
+  - [AI Component Tests](tests/ai/)
 
 ### Frontend Developer
-- **Primary Location**: `docs/roles/frontend_developer.md`
-- **Key Files**:
-  - `src/frontend/` - Frontend code
-  - `src/api/` - API endpoints
-  - `tests/frontend/` - Frontend tests
+- **Primary Guide**: [`docs/roles/frontend_developer.md`](docs/roles/frontend_developer.md)
+- **Key Resources**:
+  - [Frontend Code](src/frontend/)
+  - [API Endpoints](src/api/)
+  - [Frontend Tests](tests/frontend/)
 
 ### Project Manager
-- **Primary Location**: `docs/roles/project_manager.md`
-- **Key Files**:
-  - `docs/project_pipeline.md` - Project timeline
-  - `docs/meetings/` - Meeting notes
-  - `docs/repository_structure.md` - Repo structure
+- **Primary Guide**: [`docs/roles/project_manager.md`](docs/roles/project_manager.md)
+- **Key Resources**:
+  - [Project Timeline](docs/project_pipeline.md)
+  - [Meeting Notes](docs/meetings/)
+  - [Repository Structure](docs/repository_structure.md)
 
 ### QA Specialist
-- **Primary Location**: `docs/roles/qa_specialist.md`
-- **Key Files**:
-  - `tests/` - All test files
-  - `data/scenarios/approved/` - Test scenarios
-  - `docs/technical/` - Technical documentation
+- **Primary Guide**: [`docs/roles/qa_specialist.md`](docs/roles/qa_specialist.md)
+- **Key Resources**:
+  - [Test Files](tests/)
+  - [Test Scenarios](data/scenarios/approved/)
+  - [Technical Documentation](docs/technical/)
 
 ## 🚀 Getting Started
 
@@ -142,9 +163,9 @@ teacher-training-chatbot/
 ## 📝 Development Workflow
 
 1. **Creating New Scenarios**
-   - Draft in `data/scenarios/drafts/`
+   - Draft in [`data/scenarios/drafts/`](data/scenarios/drafts/)
    - Get expert review
-   - Move to `data/scenarios/approved/`
+   - Move to [`data/scenarios/approved/`](data/scenarios/approved/)
 
 2. **Making Changes**
    - Create feature branch
@@ -165,66 +186,66 @@ teacher-training-chatbot/
 ## 🔍 Key Features
 
 1. **RAG Pipeline**
-   - Embedding generation
-   - Vector similarity search
-   - Context-aware responses
+   - [Embedding Generation](src/ai/embedding.py)
+   - [Vector Similarity Search](src/database/vector_ops.py)
+   - [Context-aware Responses](src/ai/rag_pipeline.py)
 
 2. **Scenario Management**
-   - Expert validation
-   - Version control
-   - Performance tracking
+   - [Expert Validation Process](docs/scenarios/validation_process.md)
+   - [Version Control Guide](docs/contributing/version_control.md)
+   - [Performance Tracking](docs/technical/monitoring.md)
 
 3. **Evaluation System**
-   - Response scoring
-   - Feedback generation
-   - Progress tracking
+   - [Response Scoring](src/ai/evaluation.py)
+   - [Feedback Generation](data/evaluation/feedback/)
+   - [Progress Tracking](docs/technical/progress_tracking.md)
 
 ## 📚 Documentation
 
-- **Technical Guides**: `docs/technical/`
-- **API Documentation**: `docs/technical/api/`
-- **Database Schema**: `docs/technical/database/`
-- **Architecture**: `docs/technical/architecture/`
+- [Technical Guides](docs/technical/)
+- [API Documentation](docs/technical/api/)
+- [Database Schema](docs/technical/database/)
+- [Architecture Overview](docs/technical/architecture/)
 
 ## 🤝 Contributing
 
-1. Read `docs/contributing/guidelines.md`
-2. Follow role-specific guides
-3. Use templates from `data/templates/`
+1. Read [`docs/contributing/guidelines.md`](docs/contributing/guidelines.md)
+2. Follow [role-specific guides](docs/roles/)
+3. Use [templates](data/templates/)
 4. Ensure test coverage
 5. Update documentation
 
 ## 🔧 Configuration
 
-- **Development**: `config/development.py`
-- **Production**: `config/production.py`
-- **Testing**: `config/testing.py`
+- [Development Config](config/development.py)
+- [Production Config](config/production.py)
+- [Testing Config](config/testing.py)
 
 ## 🆘 Getting Help
 
-1. Check role-specific documentation
-2. Review technical guides
+1. Check [role-specific documentation](docs/roles/)
+2. Review [technical guides](docs/technical/)
 3. Contact team lead
-4. Create issue in repository
+4. [Create an issue](docs/contributing/creating_issues.md)
 
 ## 📊 Monitoring
 
-- Application logs in `logs/`
-- Metrics at `:8001/metrics`
-- Performance dashboards
-- Error tracking
+- Application logs in [`logs/`](logs/)
+- [Metrics Dashboard](docs/technical/metrics.md)
+- [Performance Monitoring](docs/technical/performance.md)
+- [Error Tracking](docs/technical/error_tracking.md)
 
 ## 🔐 Security
 
-- SSL/TLS in production
-- Rate limiting
-- Input validation
-- Access control
+- [SSL/TLS Configuration](docs/technical/security/ssl_config.md)
+- [Rate Limiting](docs/technical/security/rate_limiting.md)
+- [Input Validation](docs/technical/security/input_validation.md)
+- [Access Control](docs/technical/security/access_control.md)
 
 ## 📅 Regular Maintenance
 
-1. Database backups
-2. Log rotation
-3. Performance monitoring
-4. Security updates
+1. [Database Backups](docs/technical/maintenance/backups.md)
+2. [Log Rotation](docs/technical/maintenance/log_rotation.md)
+3. [Performance Monitoring](docs/technical/maintenance/monitoring.md)
+4. [Security Updates](docs/technical/maintenance/security_updates.md)
  
