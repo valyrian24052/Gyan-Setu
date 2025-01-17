@@ -1,6 +1,15 @@
-# Teacher Training Chatbot
+# Utah Elementary Teacher Training Assistant (UTAH-TTA)
 
-A comprehensive chatbot system for teacher training, using LLMs to simulate classroom scenarios and provide feedback on teaching responses.
+An LLM-powered educational chatbot designed specifically for training elementary school teachers in Utah. The system simulates authentic classroom scenarios to help teachers develop and refine their classroom management, student interaction, and response strategies aligned with Utah's elementary education program standards.
+
+## 🎯 Project Overview
+
+UTAH-TTA provides:
+- Realistic elementary classroom scenario simulations
+- Personalized feedback on teacher responses
+- Alignment with Utah elementary education program objectives
+- Research-based evaluation of classroom management strategies
+- Progressive learning paths from basic to complex scenarios
 
 ## 📁 Repository Structure
 
