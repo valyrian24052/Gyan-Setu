@@ -1,139 +1,197 @@
-# [Your Team Name] - Teacher Training Chatbot
+# Templates Directory Guide
 
-## Team Members and Roles
+This directory contains all HTML templates and UI components for the Utah Elementary Teacher Training Assistant (UTAH-TTA). It follows a modular structure for maintainable and reusable frontend components.
 
-- **Product Owner**: [Name]
-  - Contact: [Email/Discord]
-  - Responsibilities: 
-    - Primary liaison with Education Expert
-    - Define product vision and requirements
-    - Prioritize features and backlog
-    - Validate educational effectiveness
+## 📋 Table of Contents
+- [Directory Structure](#directory-structure)
+- [Layout Templates](#layout-templates)
+- [Component Templates](#component-templates)
+- [Page Templates](#page-templates)
+- [Email Templates](#email-templates)
+- [Development Guidelines](#development-guidelines)
 
-- **Project Manager**: [Name]
-  - Contact: [Email/Discord]
-  - Responsibilities:
-    - Coordinate team activities
-    - Track milestones and deadlines
-    - Facilitate meetings and reviews
-    - Manage documentation
+## Directory Structure
 
-- **Educational Content Specialist**: [Name]
-  - Contact: [Email/Discord]
-  - Current Tasks:
-    - Create educational scenarios
-    - Define student personas
-    - Develop evaluation criteria
-    - Write feedback templates
-
-- **AI/ML Developer**: [Name]
-  - Contact: [Email/Discord]
-  - Current Tasks:
-    - Set up Llama model
-    - Implement response generation
-    - Create evaluation system
-    - Optimize performance
-
-- **Frontend Developer**: [Name]
-  - Contact: [Email/Discord]
-  - Current Tasks:
-    - Design chat interface
-    - Implement responsive design
-    - Create visualizations
-    - Ensure accessibility
-
-- **QA/Documentation Specialist**: [Name]
-  - Contact: [Email/Discord]
-  - Current Tasks:
-    - Create test cases
-    - Write documentation
-    - Track bug fixes
-    - Maintain user guides
-
-## Project Status
-
-### Current Sprint: [Sprint Number]
-- Start Date: [Date]
-- End Date: [Date]
-- Goals: [List sprint goals]
-
-### Progress Overview
-- [✓] Task completed
-- [🚧] Task in progress
-- [ ] Task not started
-
-## Development Setup
-
-### Prerequisites
-```bash
-# List any prerequisites students need to install
+```
+templates/
+├── layouts/                    # Base layout templates
+│   ├── base.html             # Main layout template
+│   ├── auth.html            # Authentication layout
+│   └── error.html           # Error page layout
+│
+├── components/                 # Reusable components
+│   ├── chat/                # Chat components
+│   │   ├── message.html    # Message bubble
+│   │   ├── input.html     # Chat input
+│   │   └── feedback.html  # Feedback display
+│   │
+│   ├── navigation/          # Navigation components
+│   │   ├── header.html    # Header navigation
+│   │   ├── sidebar.html   # Sidebar navigation
+│   │   └── footer.html    # Footer content
+│   │
+│   └── forms/               # Form components
+│       ├── login.html      # Login form
+│       └── feedback.html   # Feedback form
+│
+├── pages/                     # Page templates
+│   ├── dashboard.html        # Dashboard page
+│   ├── scenarios.html       # Scenarios list
+│   ├── practice.html        # Practice session
+│   └── profile.html         # User profile
+│
+├── emails/                    # Email templates
+│   ├── welcome.html         # Welcome email
+│   ├── feedback.html        # Feedback email
+│   └── report.html          # Progress report
+│
+└── macros/                    # Jinja2 macros
+    ├── forms.html           # Form macros
+    ├── alerts.html         # Alert macros
+    └── utils.html          # Utility macros
 ```
 
-### Installation Steps
-```bash
-# Step-by-step installation instructions
+## Layout Templates
+
+### Base Layout (`layouts/base.html`)
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% block head %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}UTAH-TTA{% endblock %}</title>
+    {% endblock %}
+</head>
+<body>
+    {% include 'components/navigation/header.html' %}
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+    {% include 'components/navigation/footer.html' %}
+</body>
+</html>
 ```
 
-### Running the Project
-```bash
-# Commands to run the project
+## Component Templates
+
+### Chat Components
+- **Message Bubble** (`components/chat/message.html`)
+  ```html
+  <div class="message {% if is_user %}user{% else %}bot{% endif %}">
+      <div class="message-content">{{ content }}</div>
+      <div class="message-time">{{ timestamp }}</div>
+  </div>
+  ```
+
+### Navigation Components
+- **Header** (`components/navigation/header.html`)
+- **Sidebar** (`components/navigation/sidebar.html`)
+- **Footer** (`components/navigation/footer.html`)
+
+### Form Components
+- **Login Form** (`components/forms/login.html`)
+- **Feedback Form** (`components/forms/feedback.html`)
+
+## Page Templates
+
+### Dashboard (`pages/dashboard.html`)
+```html
+{% extends "layouts/base.html" %}
+
+{% block content %}
+<div class="dashboard">
+    <h1>Welcome, {{ user.name }}</h1>
+    <div class="stats">{% include "components/dashboard/stats.html" %}</div>
+    <div class="recent">{% include "components/dashboard/recent.html" %}</div>
+</div>
+{% endblock %}
 ```
 
-## Project Structure
+## Email Templates
+
+### Welcome Email (`emails/welcome.html`)
+```html
+{% extends "layouts/email.html" %}
+
+{% block content %}
+<h1>Welcome to UTAH-TTA</h1>
+<p>Dear {{ user.name }},</p>
+<p>Welcome to the Utah Elementary Teacher Training Assistant...</p>
+{% endblock %}
 ```
-your-project/
-├── src/
-│   ├── database/    # Database related code
-│   ├── ai/          # AI model integration
-│   ├── web/         # Frontend and API
-│   └── config.py    # Configuration settings
-├── docs/            # Documentation
-├── tests/           # Test files
-└── templates/       # HTML templates
+
+## Development Guidelines
+
+### Template Structure
+1. **Extend Base Templates**
+   ```html
+   {% extends "layouts/base.html" %}
+   ```
+
+2. **Use Blocks**
+   ```html
+   {% block content %}
+   <!-- Content here -->
+   {% endblock %}
+   ```
+
+3. **Include Components**
+   ```html
+   {% include "components/navigation/header.html" %}
+   ```
+
+### Best Practices
+
+1. **Component Organization**
+   - Keep components modular
+   - Use meaningful names
+   - Document dependencies
+   - Maintain consistency
+
+2. **Styling**
+   - Use CSS classes
+   - Avoid inline styles
+   - Follow BEM naming
+   - Maintain responsiveness
+
+3. **JavaScript**
+   - Use data attributes
+   - Keep scripts modular
+   - Handle errors gracefully
+   - Document interactions
+
+4. **Accessibility**
+   - Add ARIA labels
+   - Use semantic HTML
+   - Ensure keyboard navigation
+   - Test with screen readers
+
+## Template Macros
+
+### Form Macros (`macros/forms.html`)
+```html
+{% macro input(name, label, type="text", required=false) %}
+<div class="form-group">
+    <label for="{{ name }}">{{ label }}</label>
+    <input type="{{ type }}" id="{{ name }}" name="{{ name }}"
+           {% if required %}required{% endif %}>
+</div>
+{% endmacro %}
 ```
 
-## Documentation Links
-- [Setup Guide](docs/setup.md)
-- [Database Schema](docs/database/schema.md)
-- [API Documentation](docs/api/README.md)
-- [UI Guidelines](docs/frontend/guidelines.md)
+## Additional Resources
 
-## Getting Started
+- [Frontend Guide](../docs/technical/frontend_guide.md)
+- [Style Guide](../docs/technical/style_guide.md)
+- [Component Library](../docs/technical/components.md)
+- [Accessibility Guide](../docs/technical/accessibility.md)
 
-### For Database Developers
-1. [Setup PostgreSQL](docs/database/setup.md)
-2. [Run Migrations](docs/database/migrations.md)
-3. [Test Database Connection](docs/database/testing.md)
+## Support
 
-### For AI Developers
-1. [Setup Llama Model](docs/ai/model-setup.md)
-2. [Test Model Integration](docs/ai/testing.md)
-3. [Implement Features](docs/ai/features.md)
-
-### For UI/UX Developers
-1. [Setup Frontend Environment](docs/frontend/setup.md)
-2. [Run Development Server](docs/frontend/development.md)
-3. [Implement UI Components](docs/frontend/components.md)
-
-## Weekly Updates
-### Week [Number]
-- **Completed**:
-  - [List completed tasks]
-- **In Progress**:
-  - [List tasks in progress]
-- **Blocked**:
-  - [List blocked tasks]
-- **Next Steps**:
-  - [List upcoming tasks]
-
-## Meeting Schedule
-- Daily Standup: [Time]
-- Sprint Planning: [Day/Time]
-- Sprint Review: [Day/Time]
-- Sprint Retrospective: [Day/Time]
-
-## Need Help?
-1. Check the [FAQ](docs/faq.md)
-2. Ask in the team Discord channel
-3. Contact your role mentor
-4. Create an issue with the 'help wanted' label 
+For template-related issues:
+1. Check component documentation
+2. Review style guide
+3. Contact frontend team
+4. Create template-related issues 
