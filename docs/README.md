@@ -1,71 +1,136 @@
 # Teacher Training Chatbot Documentation
 
-Welcome to the comprehensive documentation for the Teacher Training Chatbot project. This directory contains detailed documentation covering all aspects of the project.
+Welcome to the Teacher Training Chatbot project documentation! This guide will help you find the relevant documentation based on your role and needs.
 
-## Directory Structure
+## 🎯 Quick Start by Role
 
-```
-docs/
-├── architecture/          # System architecture and technical design
-├── api/                  # API documentation and endpoints
-├── database/            # Database design and operations
-├── ai/                  # AI components and integration
-├── frontend/           # Frontend development and UI/UX
-├── deployment/         # Deployment and infrastructure
-├── testing/            # Testing procedures and guidelines
-├── contributing/       # Contribution guidelines and workflows
-│   ├── workflow/      # Git and development workflows
-│   ├── templates/     # Issue and PR templates
-│   └── guidelines/    # Coding standards and guidelines
-├── project-management/ # Project management resources
-└── product-ownership/ # Product ownership guidelines
-```
+### For Database Developers
+- 📚 [Database Guide](database/README.md)
+  - Database schema and design
+  - PostgreSQL setup with pgvector
+  - Query optimization
+  - Data modeling
+- 🔄 [Database Workflows](contributing/workflow/database-workflow.md)
+- ✅ [Database Standards](contributing/guidelines/database-standards.md)
 
-## Documentation Sections
+### For AI Developers
+- 🤖 [AI Integration Guide](ai/README.md)
+  - OpenAI GPT integration
+  - Sentence transformers
+  - Model training
+  - Response generation
+- 🔄 [AI Development Workflow](contributing/workflow/ai-workflow.md)
+- ✅ [AI Code Standards](contributing/guidelines/ai-standards.md)
 
-### Technical Documentation
-- [Architecture Guide](architecture/README.md) - System design and component interaction
-- [API Documentation](api/README.md) - API endpoints and usage
-- [Database Guide](database/README.md) - Database schema and operations
-- [AI Integration](ai/README.md) - AI components and model integration
-- [Frontend Guide](frontend/README.md) - UI/UX implementation details
-- [Deployment Guide](deployment/README.md) - Setup and deployment procedures
-- [Testing Guide](testing/README.md) - Testing strategies and procedures
+### For UI/UX Developers
+- 🎨 [Frontend Guide](frontend/README.md)
+  - UI components
+  - User flows
+  - Accessibility
+  - Responsive design
+- 🔄 [Frontend Workflow](contributing/workflow/frontend-workflow.md)
+- ✅ [Frontend Standards](contributing/guidelines/frontend-standards.md)
 
-### Process Documentation
-- [Contributing Guide](contributing/README.md) - How to contribute to the project
-- [Project Management](project-management/README.md) - Project management processes
-- [Product Ownership](product-ownership/README.md) - Product ownership guidelines
+### For Project Managers
+- 📊 [Project Management Guide](project-management/README.md)
+  - Sprint management
+  - Team coordination
+  - Progress tracking
+  - Risk management
+- 📈 [GitHub Project Boards](project-management/project-board-setup.md)
+- 📝 [Templates](project-management/templates/)
 
-## Quick Links
+### For Product Owners
+- 🎯 [Product Ownership Guide](product-ownership/README.md)
+  - Product vision
+  - Backlog management
+  - Stakeholder communication
+  - Educational requirements
+- 📋 [Templates](product-ownership/templates/)
+- 📊 [Success Metrics](product-ownership/success-metrics.md)
 
-- [Getting Started](getting-started.md) - Quick start guide for new team members
-- [Git Workflow](contributing/workflow/git-workflow.md) - Git branching and PR process
-- [Issue Templates](contributing/templates/README.md) - Templates for creating issues
-- [Coding Standards](contributing/guidelines/coding-standards.md) - Code style and practices
+## 📚 Core Documentation
 
-## For Team Members
+### Technical Guides
+1. [System Architecture](architecture/README.md)
+   - System overview
+   - Component interactions
+   - Data flow
+   - Security considerations
 
-Each role has specific documentation relevant to their responsibilities:
+2. [API Documentation](api/README.md)
+   - Endpoint specifications
+   - Authentication
+   - Request/Response formats
+   - Rate limiting
 
-- **Database Developers**: Focus on [Database Guide](database/README.md)
-- **AI Developers**: Focus on [AI Integration](ai/README.md)
-- **UI/UX Developers**: Focus on [Frontend Guide](frontend/README.md)
-- **Project Managers**: Focus on [Project Management](project-management/README.md)
-- **Product Owners**: Focus on [Product Ownership](product-ownership/README.md)
+3. [Testing Guide](testing/README.md)
+   - Unit testing
+   - Integration testing
+   - End-to-end testing
+   - Performance testing
 
-## Contributing to Documentation
+4. [Deployment Guide](deployment/README.md)
+   - Environment setup
+   - Configuration
+   - CI/CD pipeline
+   - Monitoring
+
+### Process Guides
+1. [Git Workflow](contributing/workflow/git-workflow.md)
+   - Branch naming
+   - Commit messages
+   - Pull requests
+   - Code review process
+
+2. [Contributing Guidelines](contributing/README.md)
+   - Development setup
+   - Coding standards
+   - Documentation
+   - Testing requirements
+
+## 🛠 Development Setup
+
+1. [Getting Started](getting-started.md)
+   - Repository setup
+   - Environment configuration
+   - Dependencies installation
+   - Local development
+
+2. [Development Tools](contributing/guidelines/tools.md)
+   - Required software
+   - IDE setup
+   - Extensions
+   - Debugging tools
+
+## 📝 Templates
+
+### For Development
+- [Pull Request Template](contributing/templates/pull-request.md)
+- [Bug Report Template](contributing/templates/bug-report.md)
+- [Feature Request Template](contributing/templates/feature-request.md)
+
+### For Project Management
+- [Sprint Planning Template](project-management/templates/sprint-planning.md)
+- [Daily Standup Template](project-management/templates/daily-standup.md)
+- [Risk Assessment Template](project-management/templates/risk-assessment.md)
+
+### For Product Ownership
+- [User Story Template](product-ownership/templates/user-story.md)
+- [Feature Specification Template](product-ownership/templates/feature-spec.md)
+- [Release Notes Template](product-ownership/templates/release-notes.md)
+
+## 🤝 Contributing to Documentation
 
 1. All documentation is written in Markdown
 2. Follow the established directory structure
-3. Update the relevant README files when adding new documents
-4. Include code examples where appropriate
+3. Update the relevant README files
+4. Include practical examples
 5. Keep documentation up to date with code changes
 
-## Documentation Standards
+## 🔍 Need Help?
 
-- Use clear, concise language
-- Include practical examples
-- Keep formatting consistent
-- Update related documents together
-- Link between related sections 
+- 🐛 Found a bug? [Create an issue](contributing/templates/bug-report.md)
+- 💡 Have a feature idea? [Submit a feature request](contributing/templates/feature-request.md)
+- ❓ Questions? Check our [FAQ](faq.md) or contact the team lead
+- 📖 Can't find what you need? [Create a documentation request](contributing/templates/doc-request.md) 
