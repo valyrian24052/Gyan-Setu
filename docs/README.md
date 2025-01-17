@@ -15,9 +15,9 @@ Welcome to the Teacher Training Chatbot project documentation! This guide will h
 
 ### For AI Developers
 - 🤖 [AI Integration Guide](ai/README.md)
-  - OpenAI GPT integration
+  - Llama model integration
   - Sentence transformers
-  - Model training
+  - Model training and quantization
   - Response generation
 - 🔄 [AI Development Workflow](contributing/workflow/ai-workflow.md)
 - ✅ [AI Code Standards](contributing/guidelines/ai-standards.md)

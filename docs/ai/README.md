@@ -2,38 +2,43 @@
 
 ## Overview
 
-The AI component of the Teacher Training Chatbot uses OpenAI's GPT models for natural language processing and sentence transformers for semantic similarity calculations.
+The AI component of the Teacher Training Chatbot uses Llama models for natural language processing and sentence transformers for semantic similarity calculations.
 
 ## Components
 
 ### 1. Language Model Integration
 
-#### OpenAI GPT Setup
+#### Llama Model Setup
 ```python
-from openai import OpenAI
-client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+from llama_cpp import Llama
 
-response = client.chat.completions.create(
-    model="gpt-3.5-turbo",
-    messages=[
-        {"role": "system", "content": "You are a student asking questions."},
-        {"role": "user", "content": prompt}
-    ],
-    max_tokens=100,
-    temperature=0.7
+# Initialize Llama model
+llm = Llama(
+    model_path="models/llama-2-7b-chat.gguf",  # Path to your GGUF model file
+    n_ctx=2048,            # Context window
+    n_threads=4,           # Number of CPU threads to use
+    n_gpu_layers=0         # Number of layers to offload to GPU (if available)
 )
+
+def get_completion(prompt):
+    response = llm(
+        prompt,
+        max_tokens=100,
+        temperature=0.7,
+        stop=["</s>"],     # Llama's end of sequence token
+        echo=False
+    )
+    return response['choices'][0]['text']
 ```
 
 #### Prompt Engineering
 ```python
 def generate_student_query(scenario, personality, tone):
-    prompt = f"""
-    You are simulating an elementary school student.
+    prompt = f"""<s>[INST]You are simulating an elementary school student.
     Scenario: {scenario}
     Personality: {personality}
     Emotional Tone: {tone}
-    Generate a realistic question as the student.
-    """
+    Generate a realistic question as the student.[/INST]"""
     return get_completion(prompt)
 ```
 
@@ -56,11 +61,13 @@ def calculate_similarity(text1, text2):
 #### Student Query Generation
 ```python
 def generate_student_query(scenario, personality, tone):
-    messages = [
-        {"role": "system", "content": "You are a student with specific traits."},
-        {"role": "user", "content": f"Generate a question about {scenario} ..."}
-    ]
-    return get_completion(messages)
+    prompt = f"""<s>[INST]Generate a student question with these characteristics:
+    - Scenario: {scenario}
+    - Student Personality: {personality}
+    - Emotional Tone: {tone}
+    
+    Respond with just the question, no additional text.[/INST]"""
+    return get_completion(prompt)
 ```
 
 #### Response Evaluation
@@ -73,7 +80,22 @@ def evaluate_response(teacher_response, expected_response):
 
 ## Implementation Guidelines
 
-### 1. Error Handling
+### 1. Model Setup
+
+#### Model Download
+```bash
+# Download Llama model in GGUF format
+wget https://huggingface.co/TheBloke/Llama-2-7B-Chat-GGUF/resolve/main/llama-2-7b-chat.Q4_K_M.gguf -O models/llama-2-7b-chat.gguf
+```
+
+#### Environment Setup
+```bash
+# Install required packages
+pip install llama-cpp-python
+pip install sentence-transformers
+```
+
+### 2. Error Handling
 
 ```python
 def safe_completion(prompt, max_retries=3):
@@ -84,17 +106,6 @@ def safe_completion(prompt, max_retries=3):
             if attempt == max_retries - 1:
                 raise
             time.sleep(1)
-```
-
-### 2. Rate Limiting
-
-```python
-from ratelimit import limits, sleep_and_retry
-
-@sleep_and_retry
-@limits(calls=60, period=60)
-def rate_limited_completion(prompt):
-    return get_completion(prompt)
 ```
 
 ### 3. Caching
@@ -109,27 +120,28 @@ def cached_embedding(text):
 
 ## Best Practices
 
-### 1. Prompt Engineering
+### 1. Prompt Engineering for Llama
 
-- Be specific and clear
-- Include context
-- Use consistent formatting
+- Use Llama's instruction format: `<s>[INST]...[/INST]`
+- Keep instructions clear and concise
+- Include relevant context
 - Handle edge cases
 - Validate outputs
 
 ### 2. Model Selection
 
-- GPT-3.5-turbo for general responses
+- Llama 2 7B for general responses
 - Sentence transformers for embeddings
-- Consider cost vs. performance
-- Monitor token usage
+- Consider hardware requirements
+- Monitor memory usage
 
 ### 3. Performance Optimization
 
-- Batch processing
+- Use quantized models (GGUF format)
+- Batch processing when possible
 - Response caching
 - Embedding precomputation
-- Asynchronous processing
+- GPU acceleration when available
 
 ## Security Considerations
 
@@ -149,12 +161,12 @@ def filter_response(response):
     return validate_content(response)
 ```
 
-### 3. API Key Management
+### 3. Model Security
 
-- Use environment variables
-- Rotate keys regularly
-- Monitor usage
-- Set up alerts
+- Secure model file storage
+- Regular model updates
+- Access control
+- Input/output monitoring
 
 ## Monitoring and Logging
 
@@ -201,20 +213,21 @@ def test_end_to_end_interaction():
     assert similarity > 0.5
 ```
 
-## Deployment
+## Model Management
 
 ### 1. Environment Setup
 
 ```bash
-export OPENAI_API_KEY="your-key-here"
+export MODEL_PATH="models/llama-2-7b-chat.gguf"
 export MODEL_CACHE_DIR="/path/to/cache"
 ```
 
-### 2. Model Management
+### 2. Model Loading
 
 ```python
 def load_models():
-    global embedding_model
+    global llm, embedding_model
+    llm = Llama(model_path=os.getenv('MODEL_PATH'))
     embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
 ```
 
@@ -222,14 +235,29 @@ def load_models():
 
 ### Common Issues
 
-1. API Rate Limits
-2. Token Usage
+1. Memory Management
+   - Monitor RAM usage
+   - Use appropriate model size
+   - Implement proper cleanup
+
+2. Performance Issues
+   - Use quantized models
+   - Enable GPU acceleration
+   - Optimize batch size
+
 3. Response Quality
-4. Performance Issues
+   - Adjust temperature
+   - Refine prompts
+   - Implement better validation
 
 ### Solutions
 
-1. Implement retries
-2. Monitor usage
-3. Adjust prompts
-4. Optimize caching 
+1. Memory Issues
+   - Use smaller models
+   - Implement garbage collection
+   - Monitor memory usage
+
+2. Speed Issues
+   - Enable GPU layers
+   - Use caching
+   - Optimize context window 
