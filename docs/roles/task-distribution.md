@@ -1,4 +1,73 @@
-# Task Distribution for Teacher Training Chatbot Project
+# Task Distribution and Responsibilities
+
+## Product Owner
+- **Primary Responsibility**: Act as the main liaison with Education Experts
+- **Key Tasks**:
+  - Schedule regular meetings with Education Experts
+  - Document and validate all educational scenarios
+  - Ensure all responses align with pedagogical best practices
+  - Maintain a feedback loop for continuous improvement
+  - Track scenario effectiveness metrics
+
+## Educational Content Specialist
+- **Primary Responsibility**: Create and maintain educational scenarios
+- **Key Tasks**:
+  - Draft initial scenarios based on common classroom situations
+  - Document expected teacher responses and rationale
+  - Work with Product Owner to get expert validation
+  - Maintain scenario database with approved content
+  - Create evaluation criteria for responses
+
+## AI/ML Developer
+- **Primary Responsibility**: Implement validated scenarios into the system
+- **Key Tasks**:
+  - Implement embedding generation for scenarios
+  - Build RAG pipeline using approved content
+  - Ensure response generation aligns with expert guidelines
+  - Optimize model for educational context
+  - Implement feedback mechanisms
+
+## Frontend Developer
+- **Primary Responsibility**: Create intuitive interface for teachers
+- **Key Tasks**:
+  - Build scenario presentation interface
+  - Implement response input mechanism
+  - Create feedback visualization
+  - Ensure accessibility standards
+  - Build progress tracking features
+
+## Project Manager
+- **Primary Responsibility**: Coordinate development with content validation
+- **Key Tasks**:
+  - Track scenario validation status
+  - Coordinate between technical team and content team
+  - Ensure development aligns with approved content
+  - Manage development timeline
+  - Facilitate communication between teams
+
+## QA/Documentation Specialist
+- **Primary Responsibility**: Ensure quality of scenarios and responses
+- **Key Tasks**:
+  - Test scenarios against approved criteria
+  - Validate response evaluation
+  - Document approved scenarios
+  - Maintain testing documentation
+  - Track quality metrics
+
+## Data Flow and Validation
+1. Educational Content Specialist creates initial scenarios
+2. Product Owner reviews with Education Expert
+3. Approved scenarios are documented and tracked
+4. AI/ML team implements approved scenarios
+5. QA validates implementation matches approval
+6. Continuous feedback loop for improvements
+
+## Success Metrics
+- Number of expert-approved scenarios
+- Scenario coverage of different teaching situations
+- Response accuracy compared to expert guidelines
+- Teacher satisfaction with feedback
+- System performance with approved content
 
 ## 1. Product Owner
 ### Primary Responsibilities
