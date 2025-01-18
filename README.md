@@ -13,24 +13,30 @@ UTAH-TTA provides:
 
 ## 📋 Table of Contents
 
-- [Repository Structure](#-repository-structure)
-- [For Each Role](#-for-each-role)
-  - [Product Owner](#product-owner)
-  - [Educational Content Specialist](#educational-content-specialist)
-  - [AI/ML Developer](#aiml-developer)
-  - [Frontend Developer](#frontend-developer)
-  - [Project Manager](#project-manager)
-  - [QA Specialist](#qa-specialist)
-- [Getting Started](#-getting-started)
-- [Development Workflow](#-development-workflow)
-- [Key Features](#-key-features)
-- [Documentation](#-documentation)
-- [Contributing](#-contributing)
-- [Configuration](#-configuration)
-- [Getting Help](#-getting-help)
-- [Monitoring](#-monitoring)
-- [Security](#-security)
-- [Regular Maintenance](#-regular-maintenance)
+- [Utah Elementary Teacher Training Assistant (UTAH-TTA)](#utah-elementary-teacher-training-assistant-utah-tta)
+  - [🎯 Project Overview](#-project-overview)
+  - [📋 Table of Contents](#-table-of-contents)
+  - [📁 Repository Structure](#-repository-structure)
+  - [🎯 For Each Role](#-for-each-role)
+    - [Product Owner](#product-owner)
+    - [Educational Content Specialist](#educational-content-specialist)
+    - [AI/ML Developer](#aiml-developer)
+    - [Frontend Developer](#frontend-developer)
+    - [Project Manager](#project-manager)
+    - [QA Specialist](#qa-specialist)
+  - [🚀 Getting Started](#-getting-started)
+    - [Windows Setup with WSL](#windows-setup-with-wsl)
+    - [Anaconda Environment Setup](#anaconda-environment-setup)
+    - [Standard Environment Setup](#standard-environment-setup)
+  - [📝 Development Workflow](#-development-workflow)
+  - [🔍 Key Features](#-key-features)
+  - [📚 Documentation](#-documentation)
+  - [🤝 Contributing](#-contributing)
+  - [🔧 Configuration](#-configuration)
+  - [🆘 Getting Help](#-getting-help)
+  - [📊 Monitoring](#-monitoring)
+  - [🔐 Security](#-security)
+  - [📅 Regular Maintenance](#-regular-maintenance)
 
 ## 📁 Repository Structure
 
@@ -128,7 +134,55 @@ teacher-training-chatbot/
 
 ## 🚀 Getting Started
 
-1. **Environment Setup**
+### Windows Setup with WSL
+
+1. **Install WSL**
+   ```powershell
+   # Open PowerShell as Administrator and run:
+   wsl --install
+   
+   # After installation, restart your computer
+   # WSL will finish Ubuntu setup on first launch
+   ```
+
+2. **Configure WSL**
+   ```bash
+   # Update package list
+   sudo apt update && sudo apt upgrade
+   
+   # Install required system packages
+   sudo apt install build-essential libpq-dev python3-dev
+   ```
+
+### Anaconda Environment Setup
+
+1. **Install Anaconda in WSL**
+   ```bash
+   # Download Anaconda
+   wget https://repo.anaconda.com/archive/Anaconda3-2024.02-1-Linux-x86_64.sh
+   
+   # Install Anaconda
+   bash Anaconda3-2024.02-1-Linux-x86_64.sh
+   
+   # Reload shell configuration
+   source ~/.bashrc
+   ```
+
+2. **Create and Activate Environment**
+   ```bash
+   # Create new environment
+   conda create -n utah-tta python=3.11
+   
+   # Activate environment
+   conda activate utah-tta
+   
+   # Install required packages
+   pip install -r requirements.txt
+   ```
+
+### Standard Environment Setup
+
+1. **Environment Setup** (Alternative to Anaconda)
    ```bash
    # Create virtual environment
    python -m venv venv
