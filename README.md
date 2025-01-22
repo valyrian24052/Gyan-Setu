@@ -31,40 +31,59 @@ UTAH-TTA Second Grade Edition provides:
 
 Our data collection is organized into three main categories:
 
-### 1. Educational Science (data/education_science/)
+### 1. Second Grade Core Content (data/second_grade/)
 - **Utah Core Standards**
-  - Second-grade specific standards
-  - Learning objectives
-  - Assessment criteria
+  - Second Grade Math Standards
+    - Numbers and Operations
+    - Basic Algebra Concepts
+    - Measurement and Data
+    - Geometry
+  - Second Grade Language Arts
+    - Reading Comprehension
+    - Writing Skills
+    - Phonics and Word Recognition
+    - Speaking and Listening
+  - Second Grade Science
+    - Earth and Space Systems
+    - Physical Science
+    - Life Science
+    - Engineering Design
+
 - **Teaching Methodologies**
-  - Evidence-based practices
-  - Age-appropriate strategies
-  - STEM integration approaches
-- **Learning Psychology**
-  - Child development principles
-  - Cognitive development stages
-  - Learning style adaptations
+  - Second Grade Teaching Strategies
+  - Hands-on Learning Approaches
+  - Inquiry-based Teaching
+  - Collaborative Learning Strategies
+  - Visual and Kinesthetic Methods
+  - Age-Appropriate Assessment Methods
+  - Differentiated Instruction for 7-8 Year Olds
 
 ### 2. Teacher-Student Interactions (data/interactions/)
 - **Classroom Dialogues**
+  - Second Grade Communication Patterns
   - Real-world examples
   - Best practice demonstrations
   - Common challenges
 - **Behavior Management**
+  - Age-Appropriate Management Techniques
   - Positive reinforcement examples
   - Conflict resolution scenarios
   - Group dynamics management
-- **Learning Support**
-  - Differentiation strategies
-  - Individual attention techniques
-  - Progress monitoring methods
 
 ### 3. Teaching Scenarios (data/scenarios/)
 - **Subject-Specific**
-  - Mathematics teaching scenarios
-  - Reading and writing activities
-  - Science experiments
-  - Social studies discussions
+  - Second Grade Math Lessons
+    - Addition and Subtraction with Regrouping
+    - Introduction to Multiplication
+    - Basic Fractions
+  - Reading and Writing Activities
+    - Reading Comprehension Strategies
+    - Writing Complete Sentences
+    - Basic Paragraph Structure
+  - Science Experiments
+    - Simple Machines
+    - States of Matter
+    - Plant Life Cycles
 - **Classroom Management**
   - Transition periods
   - Group activities
@@ -100,22 +119,19 @@ teacher-training-chatbot/
 │       └── middleware.py            # API middleware
 │
 ├── data/                            # Data directory
-│   ├── education_science/           # Educational foundations
+│   ├── second_grade/                # Second grade content
 │   │   ├── utah_core_standards/    # Utah 2nd grade standards
 │   │   │   ├── mathematics/        # Math standards and objectives
 │   │   │   ├── english_language_arts/ # ELA standards
 │   │   │   ├── science/           # Science standards
 │   │   │   └── social_studies/    # Social studies standards
 │   │   │
-│   │   ├── teaching_methods/      # Teaching methodologies
+│   │   ├── teaching_methods/       # Teaching methodologies
 │   │   │   ├── stem_integration/  # STEM teaching approaches
 │   │   │   ├── literacy_development/ # Reading/writing methods
 │   │   │   └── differentiation/   # Learning adaptations
 │   │   │
-│   │   └── child_development/    # 7-8 year old development
-│   │       ├── cognitive/        # Cognitive development
-│   │       ├── social_emotional/ # Social-emotional growth
-│   │       └── physical/         # Physical development
+│   │   └── assessment_methods/     # Age-appropriate assessments
 │   │
 │   ├── interactions/             # Teacher-student interactions
 │   │   ├── classroom_management/ # Management scenarios
@@ -166,14 +182,18 @@ teacher-training-chatbot/
 ### Product Owner
 - **Primary Guide**: [`docs/product/README.md`](docs/product/README.md)
 - **Key Responsibilities**:
-  - Coordinate with Krista (UVU Education Chair) for content validation
+  - Coordinate with Krista for content validation
   - Prioritize scenario development based on educational needs
   - Ensure alignment with Utah Core Standards
-  - Manage feedback from education experts
+  - Manage educational content backlog
+  - Schedule and lead content review sessions
+  - Define acceptance criteria for scenarios
+  - Coordinate educational feedback implementation
 - **Key Resources**:
   - [Expert Meeting Notes](docs/meetings/expert_reviews/)
   - [Approved Scenarios](data/scenarios/approved/)
   - [Content Validation Process](docs/validation/README.md)
+  - [Educational Milestones](docs/milestones.md)
 
 ### AI/ML Developer
 - **Primary Guide**: [`docs/ai/README.md`](docs/ai/README.md)
@@ -202,14 +222,17 @@ teacher-training-chatbot/
 ### Project Manager
 - **Primary Guide**: [`docs/project-management/README.md`](docs/project-management/README.md)
 - **Key Responsibilities**:
-  - Schedule reviews with Krista
-  - Coordinate cross-team educational alignment
-  - Track content validation progress
-  - Manage educational feedback implementation
+  - Coordinate team schedules and deadlines
+  - Facilitate communication between teams
+  - Track overall project progress
+  - Manage development sprints
+  - Organize technical documentation
+  - Ensure resource availability
 - **Key Resources**:
   - [Project Timeline](docs/project_pipeline.md)
   - [Meeting Notes](docs/meetings/)
-  - [Educational Milestones](docs/milestones.md)
+  - [Sprint Planning](docs/sprints/README.md)
+  - [Resource Allocation](docs/resources/README.md)
 
 ### QA Specialist
 - **Primary Guide**: [`docs/qa/README.md`](docs/qa/README.md)
