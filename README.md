@@ -91,42 +91,42 @@ teacher-training-chatbot/
 ## 🎯 For Each Role
 
 ### Product Owner
-- **Primary Guide**: [`docs/roles/product_owner.md`](docs/roles/product_owner.md)
+- **Primary Guide**: [`docs/product/README.md`](docs/product/README.md)
 - **Key Resources**:
   - [Expert Meeting Notes](docs/meetings/expert_reviews/)
   - [Approved Scenarios](data/scenarios/approved/)
-  - [Scenario Creation Guide](docs/scenarios/creation_guide.md)
+  - [Scenario Creation Guide](docs/scenarios/README.md)
 
 ### Educational Content Specialist
-- **Primary Guide**: [`docs/roles/content_specialist.md`](docs/roles/content_specialist.md)
+- **Primary Guide**: [`docs/content/README.md`](docs/content/README.md)
 - **Key Resources**:
   - [Scenario Templates](data/scenarios/templates/)
   - [Student Personas](data/personas/templates/)
   - [Evaluation Criteria](data/evaluation/criteria/)
 
 ### AI/ML Developer
-- **Primary Guide**: [`docs/roles/ai_developer.md`](docs/roles/ai_developer.md)
+- **Primary Guide**: [`docs/ai/README.md`](docs/ai/README.md)
 - **Key Resources**:
   - [AI Implementation](src/ai/)
   - [Model Configurations](config/)
   - [AI Component Tests](tests/ai/)
 
 ### Frontend Developer
-- **Primary Guide**: [`docs/roles/frontend_developer.md`](docs/roles/frontend_developer.md)
+- **Primary Guide**: [`docs/frontend/README.md`](docs/frontend/README.md)
 - **Key Resources**:
   - [Frontend Code](src/frontend/)
   - [API Endpoints](src/api/)
   - [Frontend Tests](tests/frontend/)
 
 ### Project Manager
-- **Primary Guide**: [`docs/roles/project_manager.md`](docs/roles/project_manager.md)
+- **Primary Guide**: [`docs/project-management/README.md`](docs/project-management/README.md)
 - **Key Resources**:
   - [Project Timeline](docs/project_pipeline.md)
   - [Meeting Notes](docs/meetings/)
   - [Repository Structure](docs/repository_structure.md)
 
 ### QA Specialist
-- **Primary Guide**: [`docs/roles/qa_specialist.md`](docs/roles/qa_specialist.md)
+- **Primary Guide**: [`docs/qa/README.md`](docs/qa/README.md)
 - **Key Resources**:
   - [Test Files](tests/)
   - [Test Scenarios](data/scenarios/approved/)
