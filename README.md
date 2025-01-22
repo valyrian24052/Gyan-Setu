@@ -19,8 +19,8 @@ UTAH-TTA Second Grade Edition provides:
 - Mathematical Operations and Problem Solving
 - Scientific Investigation Skills
 - Social Studies and Community Understanding
-- Physical Education and Motor Skills
-- Arts and Creative Expression
+- Cross-Curricular Integration
+- STEM Education Focus
 
 ### Key Data Categories
 1. **Curriculum Materials**
