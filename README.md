@@ -246,7 +246,7 @@ teacher-training-chatbot/
   - [Educational Standards](docs/standards/)
   - [Validation Criteria](docs/qa/validation_criteria.md)
 
-## 📋 Educational Content Specialist
+## 📋 Elementary Education Content Specialist
 ### Dr. Krista Ruggles
 **Associate Professor - Elementary Education STEM**
 School of Education, Utah Valley University
