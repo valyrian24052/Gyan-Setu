@@ -1,218 +1,163 @@
-# Data Directory Guide
+# Second Grade Education Data Collection Guide
 
-This directory contains all the educational data used by the Utah Elementary Teacher Training Assistant (UTAH-TTA). This guide explains the directory structure, data creation process, and approval workflows.
-
-## 📋 Table of Contents
-- [Directory Structure](#directory-structure)
-- [Scenarios](#scenarios)
-- [Personas](#personas)
-- [Evaluation Data](#evaluation-data)
-- [Workflow](#workflow)
-- [Role Responsibilities](#role-responsibilities)
-- [Quality Standards](#quality-standards)
+## Overview
+This directory contains structured educational data for the Utah Elementary Teacher Training Assistant (UTAH-TTA), specifically curated for second-grade education under Dr. Ruggles' guidance.
 
 ## Directory Structure
-
 ```
 data/
-├── scenarios/                   # Teaching scenarios
-│   ├── approved/               # Expert-approved scenarios
-│   ├── drafts/                # Scenario drafts in progress
-│   └── templates/             # Scenario templates and guides
+├── education_science/                    # Educational foundations
+│   ├── utah_core_standards/             # Utah 2nd grade standards
+│   │   ├── mathematics/                 # Math standards and objectives
+│   │   ├── english_language_arts/       # ELA standards
+│   │   ├── science/                     # Science standards
+│   │   └── social_studies/             # Social studies standards
+│   │
+│   ├── teaching_methods/               # Teaching methodologies
+│   │   ├── stem_integration/           # STEM teaching approaches
+│   │   ├── literacy_development/       # Reading/writing methods
+│   │   └── differentiation/           # Learning adaptations
+│   │
+│   └── child_development/             # 7-8 year old development
+│       ├── cognitive/                 # Cognitive development
+│       ├── social_emotional/          # Social-emotional growth
+│       └── physical/                  # Physical development
 │
-├── personas/                   # Student personas
-│   ├── templates/             # Persona templates
-│   └── approved/              # Approved persona profiles
+├── interactions/                      # Teacher-student interactions
+│   ├── classroom_management/          # Management scenarios
+│   │   ├── positive_reinforcement/    # Positive behavior examples
+│   │   ├── conflict_resolution/       # Conflict handling
+│   │   └── transitions/              # Activity transitions
+│   │
+│   ├── instructional_dialogs/        # Teaching conversations
+│   │   ├── math_discussions/         # Math teaching dialogs
+│   │   ├── reading_groups/           # Reading group interactions
+│   │   └── science_experiments/      # Science lesson dialogs
+│   │
+│   └── support_strategies/           # Learning support
+│       ├── struggling_learners/      # Support for challenges
+│       ├── advanced_learners/        # Enrichment interactions
+│       └── esl_support/             # Language support
 │
-└── evaluation/                # Evaluation data
-    ├── criteria/              # Evaluation criteria
-    └── feedback/              # Feedback templates
+└── scenarios/                        # Teaching scenarios
+    ├── core_subjects/               # Subject-specific
+    │   ├── mathematics/             # Math teaching scenarios
+    │   ├── reading_writing/         # Literacy scenarios
+    │   ├── science/                # Science experiments
+    │   └── social_studies/         # Social studies activities
+    │
+    ├── classroom_situations/        # Management scenarios
+    │   ├── daily_routines/         # Regular procedures
+    │   ├── special_events/         # Special activities
+    │   └── challenges/             # Difficult situations
+    │
+    └── special_cases/              # Specific situations
+        ├── learning_support/       # Learning difficulties
+        ├── behavioral_support/     # Behavior management
+        └── parent_communication/   # Parent interactions
 ```
 
-## Scenarios
+## Data Collection Focus
 
-### Creation Process
+### 1. Core Educational Content
+- **Utah Second Grade Standards**
+  - Mathematics: Numbers to 1000, basic operations, measurement
+  - ELA: Reading fluency, comprehension, writing development
+  - Science: Matter, ecosystems, Earth systems
+  - Social Studies: Community, geography, history
 
-1. **Initial Draft**
-   - Use the [scenario template](scenarios/templates/scenario_template.json)
-   - Follow the [template guide](scenarios/templates/README.md)
-   - Save draft in `scenarios/drafts/`
+- **Collection Sources**:
+  - Utah State Board of Education (www.schools.utah.gov)
+  - Dr. Ruggles' approved curriculum materials
+  - UVU School of Education resources
+  - Validated teaching methodologies
 
-2. **Review Process**
-   - Educational Content Specialist reviews for pedagogical accuracy
-   - Product Owner schedules review with Education Expert
-   - Feedback documented in `docs/meetings/expert_reviews/`
+### 2. Classroom Interactions
+- **Real-World Dialogs**
+  - Math problem-solving discussions
+  - Reading group facilitation
+  - Science experiment guidance
+  - Behavior management conversations
 
-3. **Approval Process**
-   - Education Expert reviews and provides feedback
-   - Required revisions tracked in scenario metadata
-   - Final approval moves file to `scenarios/approved/`
+- **Collection Methods**:
+  - Classroom observations (with permissions)
+  - Expert teacher demonstrations
+  - Professional development recordings
+  - Simulated scenarios
 
-### Required Components
-- Detailed context and student profile
-- Clear trigger events and behaviors
-- Specific evaluation criteria
-- Research-backed expected responses
-- Improvement suggestions
-- Expert notes and references
+### 3. Teaching Scenarios
+- **Subject-Specific Scenarios**
+  ```yaml
+  scenario:
+    subject: "Mathematics"
+    topic: "Addition with Regrouping"
+    context: "Small group instruction"
+    challenge: "Students struggling with carrying numbers"
+    teaching_strategies:
+      - Use of manipulatives
+      - Visual representations
+      - Step-by-step guidance
+    learning_objectives:
+      - Understanding place value
+      - Mastering regrouping concept
+      - Building number sense
+  ```
 
-## Personas
+## Data Validation Process
 
-### Creation Process
+### Initial Collection
+1. **Source Verification**
+   - Confirm alignment with Utah standards
+   - Verify age appropriateness
+   - Check educational validity
 
-1. **Research Phase**
-   - Review Utah elementary student demographics
-   - Consult with Education Expert on common profiles
-   - Document behavioral patterns and learning needs
+2. **Content Review**
+   - Submit to Dr. Ruggles for review
+   - Incorporate expert feedback
+   - Document validation process
 
-2. **Development Phase**
-   - Use [persona template](personas/templates/persona_template.json)
-   - Include learning styles, behaviors, and needs
-   - Add specific examples and scenarios
+3. **Technical Processing**
+   - Format for AI training
+   - Generate embeddings
+   - Test retrieval accuracy
 
-3. **Validation Phase**
-   - Review by Educational Content Specialist
-   - Validation by Education Expert
-   - Integration with scenarios
+### Quality Standards
+- **Content Requirements**
+  - Grade-level appropriate language
+  - Clear learning objectives
+  - Measurable outcomes
+  - Multiple teaching approaches
 
-## Evaluation Data
+- **Privacy Guidelines**
+  - Remove student identifiers
+  - Generalize specific details
+  - Maintain educational context
+  - Protect sensitive information
 
-### Criteria Development
+## Usage and Maintenance
 
-1. **Standards Alignment**
-   - Align with Utah teaching standards
-   - Map to educational program objectives
-   - Define measurable outcomes
+### Data Access
+- Use provided Python scripts
+- Follow security protocols
+- Document all usage
+- Maintain access logs
 
-2. **Rubric Creation**
-   - Define scoring criteria
-   - Set performance levels
-   - Create feedback templates
+### Contributing Guidelines
+- Use standard templates
+- Follow naming conventions
+- Include required metadata
+- Submit for expert review
 
-3. **Validation**
-   - Review by Education Expert
-   - Test with sample responses
-   - Calibrate scoring weights
+### Quality Control
+- Regular content audits
+- Version control
+- Update documentation
+- Track changes
 
-## Workflow
+## Contact
 
-1. **Initial Creation**
-   ```mermaid
-   graph TD
-   A[Draft Creation] --> B[Internal Review]
-   B --> C[Expert Review]
-   C --> D[Revisions]
-   D --> E[Final Approval]
-   E --> F[Implementation]
-   ```
-
-2. **Review Cycles**
-   - Weekly internal reviews
-   - Bi-weekly expert consultations
-   - Monthly content audits
-
-3. **Version Control**
-   - Use semantic versioning (v1.0.0)
-   - Track changes in metadata
-   - Document approval history
-
-## Role Responsibilities
-
-### Product Owner
-- Schedule expert review sessions
-- Track approval status
-- Maintain communication with Education Expert
-- Ensure alignment with project goals
-
-### Educational Content Specialist
-- Create initial drafts
-- Review pedagogical accuracy
-- Implement expert feedback
-- Maintain templates
-- Document best practices
-
-### AI/ML Developer
-- Implement approved scenarios
-- Create embedding generation scripts
-- Develop evaluation algorithms
-- Test scenario effectiveness
-
-### QA Specialist
-- Validate scenario format
-- Test scenario implementation
-- Track scenario performance
-- Report issues and inconsistencies
-
-### Education Expert
-- Review scenario accuracy
-- Validate teaching approaches
-- Approve final content
-- Provide improvement suggestions
-
-## Quality Standards
-
-### Content Standards
-- Clear and specific descriptions
-- Research-based approaches
-- Grade-level appropriate
-- Culturally sensitive
-- Aligned with Utah standards
-
-### Technical Standards
-- Valid JSON format
-- Complete metadata
-- Proper versioning
-- Consistent formatting
-- Comprehensive documentation
-
-### Review Checklist
-- [ ] Pedagogical accuracy
-- [ ] Technical correctness
-- [ ] Completeness
-- [ ] Standards alignment
-- [ ] Expert approval
-- [ ] Implementation testing
-
-## Getting Started
-
-1. **For Content Creators**
-   ```bash
-   # Copy template
-   cp scenarios/templates/scenario_template.json scenarios/drafts/new_scenario.json
-   
-   # Edit scenario
-   # Submit for review
-   ```
-
-2. **For Reviewers**
-   ```bash
-   # Access review form
-   docs/templates/review_template.md
-   
-   # Track changes
-   docs/meetings/expert_reviews/YYYY-MM-DD_scenario_review.md
-   ```
-
-3. **For Implementers**
-   ```bash
-   # Validate JSON
-   python scripts/validate_scenario.py data/scenarios/approved/scenario.json
-   
-   # Generate embeddings
-   python scripts/generate_embeddings.py data/scenarios/approved/
-   ```
-
-## Additional Resources
-
-- [Scenario Creation Guide](../docs/scenarios/creation_guide.md)
-- [Review Process Documentation](../docs/scenarios/review_process.md)
-- [Quality Assurance Guidelines](../docs/technical/qa_guidelines.md)
-- [Implementation Guide](../docs/technical/implementation_guide.md)
-
-## Support
-
-For questions or issues:
-1. Check role-specific documentation
-2. Contact your team lead
-3. Create an issue in the repository
-4. Schedule a consultation with the Education Expert 
+For questions about data collection or validation:
+1. Contact Project Manager first
+2. Schedule review with Dr. Ruggles
+3. Document decisions
+4. Update guidelines as needed 

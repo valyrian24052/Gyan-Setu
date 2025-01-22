@@ -1,42 +1,92 @@
 # Utah Elementary Teacher Training Assistant (UTAH-TTA)
+## Second Grade Focus
 
-An LLM-powered educational chatbot designed specifically for training elementary school teachers in Utah. The system simulates authentic classroom scenarios to help teachers develop and refine their classroom management, student interaction, and response strategies aligned with Utah's elementary education program standards.
+A specialized LLM-powered educational chatbot designed for training elementary school teachers in Utah, with a specific focus on second-grade education. The system simulates authentic classroom scenarios to help teachers develop effective teaching strategies aligned with Utah's second-grade curriculum standards.
 
 ## 🎯 Project Overview
 
-UTAH-TTA provides:
-- Realistic elementary classroom scenario simulations
-- Personalized feedback on teacher responses
-- Alignment with Utah elementary education program objectives
-- Research-based evaluation of classroom management strategies
-- Progressive learning paths from basic to complex scenarios
+UTAH-TTA Second Grade Edition provides:
+- Second-grade specific classroom scenarios
+- Alignment with Utah Core Standards for 2nd Grade
+- Research-based teaching strategies for 7-8 year olds
+- Age-appropriate classroom management techniques
+- Progressive learning paths for second-grade teachers
 
-## 📋 Table of Contents
+## 📚 Data Collection Focus
 
-- [Utah Elementary Teacher Training Assistant (UTAH-TTA)](#utah-elementary-teacher-training-assistant-utah-tta)
-  - [🎯 Project Overview](#-project-overview)
-  - [📋 Table of Contents](#-table-of-contents)
-  - [📁 Repository Structure](#-repository-structure)
-  - [🎯 For Each Role](#-for-each-role)
-    - [Product Owner](#product-owner)
-    - [Educational Content Specialist](#educational-content-specialist)
-    - [AI/ML Developer](#aiml-developer)
-    - [Frontend Developer](#frontend-developer)
-    - [Project Manager](#project-manager)
-    - [QA Specialist](#qa-specialist)
-  - [🚀 Getting Started](#-getting-started)
-    - [Windows Setup with WSL](#windows-setup-with-wsl)
-    - [Anaconda Environment Setup](#anaconda-environment-setup)
-    - [Standard Environment Setup](#standard-environment-setup)
-  - [📝 Development Workflow](#-development-workflow)
-  - [🔍 Key Features](#-key-features)
-  - [📚 Documentation](#-documentation)
-  - [🤝 Contributing](#-contributing)
-  - [🔧 Configuration](#-configuration)
-  - [🆘 Getting Help](#-getting-help)
-  - [📊 Monitoring](#-monitoring)
-  - [🔐 Security](#-security)
-  - [📅 Regular Maintenance](#-regular-maintenance)
+### Second Grade Core Areas
+- Reading and Writing Development
+- Mathematical Operations and Problem Solving
+- Scientific Investigation Skills
+- Social Studies and Community Understanding
+- Physical Education and Motor Skills
+- Arts and Creative Expression
+
+### Key Data Categories
+1. **Curriculum Materials**
+   - Utah 2nd Grade Core Standards
+   - Lesson plan templates
+   - Assessment frameworks
+   - Learning objectives
+
+2. **Teaching Scenarios**
+   - Common classroom situations
+   - Student behavior patterns
+   - Learning difficulties
+   - Success stories
+
+3. **Teacher-Student Interactions**
+   - Age-appropriate communication
+   - Behavior management
+   - Learning support strategies
+   - Parent communication
+
+## Knowledge Base Structure
+
+Our data collection is organized into three main categories:
+
+### 1. Educational Science (data/education_science/)
+- **Utah Core Standards**
+  - Second-grade specific standards
+  - Learning objectives
+  - Assessment criteria
+- **Teaching Methodologies**
+  - Evidence-based practices
+  - Age-appropriate strategies
+  - STEM integration approaches
+- **Learning Psychology**
+  - Child development principles
+  - Cognitive development stages
+  - Learning style adaptations
+
+### 2. Teacher-Student Interactions (data/interactions/)
+- **Classroom Dialogues**
+  - Real-world examples
+  - Best practice demonstrations
+  - Common challenges
+- **Behavior Management**
+  - Positive reinforcement examples
+  - Conflict resolution scenarios
+  - Group dynamics management
+- **Learning Support**
+  - Differentiation strategies
+  - Individual attention techniques
+  - Progress monitoring methods
+
+### 3. Teaching Scenarios (data/scenarios/)
+- **Subject-Specific**
+  - Mathematics teaching scenarios
+  - Reading and writing activities
+  - Science experiments
+  - Social studies discussions
+- **Classroom Management**
+  - Transition periods
+  - Group activities
+  - Special events
+- **Special Situations**
+  - Learning difficulties
+  - Behavioral challenges
+  - Parent communication
 
 ## 📁 Repository Structure
 
@@ -64,18 +114,55 @@ teacher-training-chatbot/
 │       └── middleware.py            # API middleware
 │
 ├── data/                            # Data directory
-│   ├── scenarios/                   # Teaching scenarios
-│   │   ├── approved/               # Expert-approved scenarios
-│   │   ├── drafts/                 # Scenario drafts
-│   │   └── templates/              # Scenario templates
+│   ├── education_science/           # Educational foundations
+│   │   ├── utah_core_standards/    # Utah 2nd grade standards
+│   │   │   ├── mathematics/        # Math standards and objectives
+│   │   │   ├── english_language_arts/ # ELA standards
+│   │   │   ├── science/           # Science standards
+│   │   │   └── social_studies/    # Social studies standards
+│   │   │
+│   │   ├── teaching_methods/      # Teaching methodologies
+│   │   │   ├── stem_integration/  # STEM teaching approaches
+│   │   │   ├── literacy_development/ # Reading/writing methods
+│   │   │   └── differentiation/   # Learning adaptations
+│   │   │
+│   │   └── child_development/    # 7-8 year old development
+│   │       ├── cognitive/        # Cognitive development
+│   │       ├── social_emotional/ # Social-emotional growth
+│   │       └── physical/         # Physical development
 │   │
-│   ├── personas/                    # Student personas
-│   │   ├── templates/              # Persona templates
-│   │   └── approved/               # Approved personas
+│   ├── interactions/             # Teacher-student interactions
+│   │   ├── classroom_management/ # Management scenarios
+│   │   │   ├── positive_reinforcement/ # Positive behavior examples
+│   │   │   ├── conflict_resolution/ # Conflict handling
+│   │   │   └── transitions/     # Activity transitions
+│   │   │
+│   │   ├── instructional_dialogs/ # Teaching conversations
+│   │   │   ├── math_discussions/ # Math teaching dialogs
+│   │   │   ├── reading_groups/   # Reading group interactions
+│   │   │   └── science_experiments/ # Science lesson dialogs
+│   │   │
+│   │   └── support_strategies/  # Learning support
+│   │       ├── struggling_learners/ # Support for challenges
+│   │       ├── advanced_learners/ # Enrichment interactions
+│   │       └── esl_support/     # Language support
 │   │
-│   └── evaluation/                  # Evaluation data
-│       ├── criteria/               # Evaluation criteria
-│       └── feedback/               # Feedback templates
+│   └── scenarios/               # Teaching scenarios
+│       ├── core_subjects/      # Subject-specific
+│       │   ├── mathematics/    # Math teaching scenarios
+│       │   ├── reading_writing/ # Literacy scenarios
+│       │   ├── science/       # Science experiments
+│       │   └── social_studies/ # Social studies activities
+│       │
+│       ├── classroom_situations/ # Management scenarios
+│       │   ├── daily_routines/ # Regular procedures
+│       │   ├── special_events/ # Special activities
+│       │   └── challenges/    # Difficult situations
+│       │
+│       └── special_cases/     # Specific situations
+│           ├── learning_support/ # Learning difficulties
+│           ├── behavioral_support/ # Behavior management
+│           └── parent_communication/ # Parent interactions
 │
 ├── docs/                            # Documentation
 │   ├── roles/                       # Role-specific guides
@@ -92,45 +179,105 @@ teacher-training-chatbot/
 
 ### Product Owner
 - **Primary Guide**: [`docs/product/README.md`](docs/product/README.md)
+- **Key Responsibilities**:
+  - Coordinate with Krista (UVU Education Chair) for content validation
+  - Prioritize scenario development based on educational needs
+  - Ensure alignment with Utah Core Standards
+  - Manage feedback from education experts
 - **Key Resources**:
   - [Expert Meeting Notes](docs/meetings/expert_reviews/)
   - [Approved Scenarios](data/scenarios/approved/)
-  - [Scenario Creation Guide](docs/scenarios/README.md)
-
-### Educational Content Specialist
-- **Primary Guide**: [`docs/content/README.md`](docs/content/README.md)
-- **Key Resources**:
-  - [Scenario Templates](data/scenarios/templates/)
-  - [Student Personas](data/personas/templates/)
-  - [Evaluation Criteria](data/evaluation/criteria/)
+  - [Content Validation Process](docs/validation/README.md)
 
 ### AI/ML Developer
 - **Primary Guide**: [`docs/ai/README.md`](docs/ai/README.md)
+- **Key Responsibilities**:
+  - Implement AI models following educational guidelines
+  - Consult with Krista on response appropriateness
+  - Ensure age-appropriate language processing
+  - Maintain educational accuracy in AI responses
 - **Key Resources**:
   - [AI Implementation](src/ai/)
   - [Model Configurations](config/)
-  - [AI Component Tests](tests/ai/)
+  - [Educational Guidelines](docs/education/guidelines.md)
 
 ### Frontend Developer
 - **Primary Guide**: [`docs/frontend/README.md`](docs/frontend/README.md)
+- **Key Responsibilities**:
+  - Design teacher-friendly interfaces
+  - Implement accessibility standards
+  - Follow educational UX guidelines
+  - Support content presentation requirements
 - **Key Resources**:
   - [Frontend Code](src/frontend/)
-  - [API Endpoints](src/api/)
-  - [Frontend Tests](tests/frontend/)
+  - [UI Guidelines](docs/frontend/ui_guidelines.md)
+  - [Accessibility Standards](docs/frontend/accessibility.md)
 
 ### Project Manager
 - **Primary Guide**: [`docs/project-management/README.md`](docs/project-management/README.md)
+- **Key Responsibilities**:
+  - Schedule reviews with Krista
+  - Coordinate cross-team educational alignment
+  - Track content validation progress
+  - Manage educational feedback implementation
 - **Key Resources**:
   - [Project Timeline](docs/project_pipeline.md)
   - [Meeting Notes](docs/meetings/)
-  - [Repository Structure](docs/repository_structure.md)
+  - [Educational Milestones](docs/milestones.md)
 
 ### QA Specialist
 - **Primary Guide**: [`docs/qa/README.md`](docs/qa/README.md)
+- **Key Responsibilities**:
+  - Verify educational accuracy with Krista's guidance
+  - Test age-appropriate interactions
+  - Validate scenario authenticity
+  - Ensure educational standard compliance
 - **Key Resources**:
   - [Test Files](tests/)
-  - [Test Scenarios](data/scenarios/approved/)
-  - [Technical Documentation](docs/technical/)
+  - [Educational Standards](docs/standards/)
+  - [Validation Criteria](docs/qa/validation_criteria.md)
+
+## 📋 Educational Content Specialist (Krista - UVU Education Chair)
+### Dr. Krista Ruggles
+**Associate Professor - Elementary Education STEM**
+School of Education, Utah Valley University
+
+#### Contact Information
+- **Email**: kruggles@uvu.edu
+- **Chat**: 10800383@uvu.edu
+- **Phone**: 801-863-8057
+- **Office**: ME-116B
+
+#### Availability
+- **Office Hours**: Schedule via email
+- **Response Time**: 24-48 hours
+- **Preferred Contact Method**: Email for initial contact
+
+### Collaboration Guidelines
+1. Schedule reviews through Project Manager
+2. Submit content validation requests 48 hours in advance
+3. Attend monthly cross-team alignment meetings
+4. Follow educational feedback implementation process
+
+### Review Schedule
+- **Content Reviews**: Tuesdays and Thursdays
+- **Team Meetings**: First Monday of each month
+- **Emergency Reviews**: Contact via email with "URGENT" in subject
+
+### Key Touchpoints
+- Initial scenario validation
+- Content accuracy review
+- Age-appropriateness verification
+- Educational standard alignment
+- Response pattern validation
+- Cross-team standardization
+
+### Areas of Expertise
+- Elementary Education STEM
+- Second Grade Curriculum Development
+- Teacher Training Methodologies
+- Educational Technology Integration
+- Student Assessment Strategies
 
 ## 🚀 Getting Started
 
