@@ -1,6 +1,94 @@
 # Utah Elementary Teacher Training Assistant (UTAH-TTA)
 ## Second Grade Focus
 
+## 📋 Table of Contents
+
+- [Utah Elementary Teacher Training Assistant (UTAH-TTA)](#utah-elementary-teacher-training-assistant-utah-tta)
+  - [Second Grade Focus](#second-grade-focus)
+  - [📋 Table of Contents](#-table-of-contents)
+  - [Quick Links](#quick-links)
+    - [Documentation](#documentation)
+    - [Data Resources](#data-resources)
+    - [Development Resources](#development-resources)
+  - [🎯 Project Overview](#-project-overview)
+  - [📚 Data Collection Focus](#-data-collection-focus)
+    - [Second Grade Core Areas](#second-grade-core-areas)
+    - [Key Data Categories](#key-data-categories)
+  - [Knowledge Base Structure](#knowledge-base-structure)
+    - [1. Educational Science (data/education\_science/)](#1-educational-science-dataeducation_science)
+    - [2. Teacher-Student Interactions (data/interactions/)](#2-teacher-student-interactions-datainteractions)
+    - [3. Teaching Scenarios (data/scenarios/)](#3-teaching-scenarios-datascenarios)
+  - [📁 Repository Structure](#-repository-structure)
+  - [🎯 For Each Role](#-for-each-role)
+    - [Product Owner](#product-owner)
+    - [AI/ML Developer](#aiml-developer)
+    - [Frontend Developer](#frontend-developer)
+    - [Project Manager](#project-manager)
+    - [QA Specialist](#qa-specialist)
+  - [📋 Educational Content Specialist (Krista - UVU Education Chair)](#-educational-content-specialist-krista---uvu-education-chair)
+    - [Dr. Krista Ruggles](#dr-krista-ruggles)
+      - [Contact Information](#contact-information)
+      - [Availability](#availability)
+    - [Collaboration Guidelines](#collaboration-guidelines)
+    - [Review Schedule](#review-schedule)
+    - [Key Touchpoints](#key-touchpoints)
+    - [Areas of Expertise](#areas-of-expertise)
+  - [🚀 Getting Started](#-getting-started)
+    - [Windows Setup with WSL](#windows-setup-with-wsl)
+    - [Anaconda Environment Setup](#anaconda-environment-setup)
+    - [Standard Environment Setup](#standard-environment-setup)
+  - [📝 Development Workflow](#-development-workflow)
+  - [🔍 Key Features](#-key-features)
+  - [📚 Documentation](#-documentation)
+  - [🤝 Contributing](#-contributing)
+  - [🔧 Configuration](#-configuration)
+  - [🆘 Getting Help](#-getting-help)
+  - [📊 Monitoring](#-monitoring)
+  - [🔐 Security](#-security)
+  - [📅 Regular Maintenance](#-regular-maintenance)
+  - [🔧 Configuration](#-configuration-1)
+  - [🆘 Getting Help](#-getting-help-1)
+  - [📊 Monitoring](#-monitoring-1)
+  - [🔐 Security](#-security-1)
+  - [📅 Regular Maintenance](#-regular-maintenance-1)
+  - [🆘 Getting Help](#-getting-help-2)
+  - [📊 Monitoring](#-monitoring-2)
+  - [🔐 Security](#-security-2)
+  - [📅 Regular Maintenance](#-regular-maintenance-2)
+  - [🆘 Getting Help](#-getting-help-3)
+  - [📊 Monitoring](#-monitoring-3)
+  - [🔐 Security](#-security-3)
+  - [📅 Regular Maintenance](#-regular-maintenance-3)
+  - [📊 Monitoring](#-monitoring-4)
+  - [🔐 Security](#-security-4)
+  - [📅 Regular Maintenance](#-regular-maintenance-4)
+  - [📊 Monitoring](#-monitoring-5)
+  - [🔐 Security](#-security-5)
+  - [📅 Regular Maintenance](#-regular-maintenance-5)
+  - [🔐 Security](#-security-6)
+  - [📅 Regular Maintenance](#-regular-maintenance-6)
+  - [🔐 Security](#-security-7)
+  - [📅 Regular Maintenance](#-regular-maintenance-7)
+
+## Quick Links
+
+### Documentation
+- [Technical Documentation](/docs/technical/README.md)
+- [API Documentation](/docs/technical/api/README.md)
+- [Development Guidelines](/docs/technical/development/README.md)
+
+### Data Resources
+- [Utah Core Standards](/data/education_science/utah_core_standards/README.md)
+- [Teaching Methods](/data/education_science/teaching_methods/README.md)
+- [Classroom Management](/data/interactions/classroom_management/README.md)
+- [Teaching Scenarios](/data/scenarios/README.md)
+
+### Development Resources
+- [AI Implementation Guide](/docs/ai/README.md)
+- [Frontend Development](/docs/frontend/README.md)
+- [Testing Guidelines](/docs/qa/README.md)
+- [Project Management](/docs/project-management/README.md)
+
 A specialized LLM-powered educational chatbot designed for training elementary school teachers in Utah, with a specific focus on second-grade education. The system simulates authentic classroom scenarios to help teachers develop effective teaching strategies aligned with Utah's second-grade curriculum standards.
 
 ## 🎯 Project Overview
@@ -432,6 +520,187 @@ School of Education, Utah Valley University
 ## 📊 Monitoring
 
 - Application logs in [`logs/`](logs/)
+- [Metrics Dashboard](docs/technical/metrics.md)
+- [Performance Monitoring](docs/technical/performance.md)
+- [Error Tracking](docs/technical/error_tracking.md)
+
+## 🔐 Security
+
+- [SSL/TLS Configuration](docs/technical/security/ssl_config.md)
+- [Rate Limiting](docs/technical/security/rate_limiting.md)
+- [Input Validation](docs/technical/security/input_validation.md)
+- [Access Control](docs/technical/security/access_control.md)
+
+## 📅 Regular Maintenance
+
+1. [Database Backups](docs/technical/maintenance/backups.md)
+2. [Log Rotation](docs/technical/maintenance/log_rotation.md)
+3. [Performance Monitoring](docs/technical/maintenance/monitoring.md)
+4. [Security Updates](docs/technical/maintenance/security_updates.md)
+ 
+5. Update documentation
+
+## 🔧 Configuration
+
+- [Development Config](config/development.py)
+- [Production Config](config/production.py)
+- [Testing Config](config/testing.py)
+
+## 🆘 Getting Help
+
+1. Check [role-specific documentation](docs/roles/)
+2. Review [technical guides](docs/technical/)
+3. Contact team lead
+4. [Create an issue](docs/contributing/creating_issues.md)
+
+## 📊 Monitoring
+
+- Application logs in [`logs/`](logs/)
+- [Metrics Dashboard](docs/technical/metrics.md)
+- [Performance Monitoring](docs/technical/performance.md)
+- [Error Tracking](docs/technical/error_tracking.md)
+
+## 🔐 Security
+
+- [SSL/TLS Configuration](docs/technical/security/ssl_config.md)
+- [Rate Limiting](docs/technical/security/rate_limiting.md)
+- [Input Validation](docs/technical/security/input_validation.md)
+- [Access Control](docs/technical/security/access_control.md)
+
+## 📅 Regular Maintenance
+
+1. [Database Backups](docs/technical/maintenance/backups.md)
+2. [Log Rotation](docs/technical/maintenance/log_rotation.md)
+3. [Performance Monitoring](docs/technical/maintenance/monitoring.md)
+4. [Security Updates](docs/technical/maintenance/security_updates.md)
+ 
+- [Development Config](config/development.py)
+- [Production Config](config/production.py)
+- [Testing Config](config/testing.py)
+
+## 🆘 Getting Help
+
+1. Check [role-specific documentation](docs/roles/)
+2. Review [technical guides](docs/technical/)
+3. Contact team lead
+4. [Create an issue](docs/contributing/creating_issues.md)
+
+## 📊 Monitoring
+
+- Application logs in [`logs/`](logs/)
+- [Metrics Dashboard](docs/technical/metrics.md)
+- [Performance Monitoring](docs/technical/performance.md)
+- [Error Tracking](docs/technical/error_tracking.md)
+
+## 🔐 Security
+
+- [SSL/TLS Configuration](docs/technical/security/ssl_config.md)
+- [Rate Limiting](docs/technical/security/rate_limiting.md)
+- [Input Validation](docs/technical/security/input_validation.md)
+- [Access Control](docs/technical/security/access_control.md)
+
+## 📅 Regular Maintenance
+
+1. [Database Backups](docs/technical/maintenance/backups.md)
+2. [Log Rotation](docs/technical/maintenance/log_rotation.md)
+3. [Performance Monitoring](docs/technical/maintenance/monitoring.md)
+4. [Security Updates](docs/technical/maintenance/security_updates.md)
+ 
+## 🆘 Getting Help
+
+1. Check [role-specific documentation](docs/roles/)
+2. Review [technical guides](docs/technical/)
+3. Contact team lead
+4. [Create an issue](docs/contributing/creating_issues.md)
+
+## 📊 Monitoring
+
+- Application logs in [`logs/`](logs/)
+- [Metrics Dashboard](docs/technical/metrics.md)
+- [Performance Monitoring](docs/technical/performance.md)
+- [Error Tracking](docs/technical/error_tracking.md)
+
+## 🔐 Security
+
+- [SSL/TLS Configuration](docs/technical/security/ssl_config.md)
+- [Rate Limiting](docs/technical/security/rate_limiting.md)
+- [Input Validation](docs/technical/security/input_validation.md)
+- [Access Control](docs/technical/security/access_control.md)
+
+## 📅 Regular Maintenance
+
+1. [Database Backups](docs/technical/maintenance/backups.md)
+2. [Log Rotation](docs/technical/maintenance/log_rotation.md)
+3. [Performance Monitoring](docs/technical/maintenance/monitoring.md)
+4. [Security Updates](docs/technical/maintenance/security_updates.md)
+ 
+2. Review [technical guides](docs/technical/)
+3. Contact team lead
+4. [Create an issue](docs/contributing/creating_issues.md)
+
+## 📊 Monitoring
+
+- Application logs in [`logs/`](logs/)
+- [Metrics Dashboard](docs/technical/metrics.md)
+- [Performance Monitoring](docs/technical/performance.md)
+- [Error Tracking](docs/technical/error_tracking.md)
+
+## 🔐 Security
+
+- [SSL/TLS Configuration](docs/technical/security/ssl_config.md)
+- [Rate Limiting](docs/technical/security/rate_limiting.md)
+- [Input Validation](docs/technical/security/input_validation.md)
+- [Access Control](docs/technical/security/access_control.md)
+
+## 📅 Regular Maintenance
+
+1. [Database Backups](docs/technical/maintenance/backups.md)
+2. [Log Rotation](docs/technical/maintenance/log_rotation.md)
+3. [Performance Monitoring](docs/technical/maintenance/monitoring.md)
+4. [Security Updates](docs/technical/maintenance/security_updates.md)
+ 
+
+## 📊 Monitoring
+
+- Application logs in [`logs/`](logs/)
+- [Metrics Dashboard](docs/technical/metrics.md)
+- [Performance Monitoring](docs/technical/performance.md)
+- [Error Tracking](docs/technical/error_tracking.md)
+
+## 🔐 Security
+
+- [SSL/TLS Configuration](docs/technical/security/ssl_config.md)
+- [Rate Limiting](docs/technical/security/rate_limiting.md)
+- [Input Validation](docs/technical/security/input_validation.md)
+- [Access Control](docs/technical/security/access_control.md)
+
+## 📅 Regular Maintenance
+
+1. [Database Backups](docs/technical/maintenance/backups.md)
+2. [Log Rotation](docs/technical/maintenance/log_rotation.md)
+3. [Performance Monitoring](docs/technical/maintenance/monitoring.md)
+4. [Security Updates](docs/technical/maintenance/security_updates.md)
+ 
+
+- Application logs in [`logs/`](logs/)
+- [Metrics Dashboard](docs/technical/metrics.md)
+- [Performance Monitoring](docs/technical/performance.md)
+- [Error Tracking](docs/technical/error_tracking.md)
+
+## 🔐 Security
+
+- [SSL/TLS Configuration](docs/technical/security/ssl_config.md)
+- [Rate Limiting](docs/technical/security/rate_limiting.md)
+- [Input Validation](docs/technical/security/input_validation.md)
+- [Access Control](docs/technical/security/access_control.md)
+
+## 📅 Regular Maintenance
+
+1. [Database Backups](docs/technical/maintenance/backups.md)
+2. [Log Rotation](docs/technical/maintenance/log_rotation.md)
+3. [Performance Monitoring](docs/technical/maintenance/monitoring.md)
+4. [Security Updates](docs/technical/maintenance/security_updates.md)
+ 
 - [Metrics Dashboard](docs/technical/metrics.md)
 - [Performance Monitoring](docs/technical/performance.md)
 - [Error Tracking](docs/technical/error_tracking.md)
