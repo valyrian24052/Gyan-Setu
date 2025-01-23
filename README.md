@@ -308,26 +308,50 @@ cd utah-tta
 
 ## 📝 Development Workflow
 
-1. **Creating New Scenarios**
-   - Draft in [`data/scenarios/drafts/`](data/scenarios/drafts/)
-   - Get expert review
-   - Move to [`data/scenarios/approved/`](data/scenarios/approved/)
+1. **Creating New Educational Content**
+   - **Second Grade Content**
+     - Create content in appropriate directory under [`data/second_grade/`](data/second_grade/)
+     - Follow Utah Core Standards templates
+     - Submit for Dr. Ruggles' review
 
-2. **Making Changes**
+   - **Teacher-Student Interactions**
+     - Document interactions in [`data/interactions/`](data/interactions/)
+     - Ensure age-appropriate language
+     - Include teaching context and objectives
+
+   - **Teaching Scenarios**
+     - Draft scenarios in relevant subject area under [`data/scenarios/core_subjects/`](data/scenarios/core_subjects/)
+     - Include classroom management considerations
+     - Document special cases and adaptations
+
+2. **Content Review Process**
+   - Submit content through Product Owner
+   - Schedule review with Dr. Ruggles
+   - Implement expert feedback
+   - Move to appropriate approved directory
+
+3. **Making Changes**
    - Create feature branch
    - Update tests
    - Update documentation
    - Create pull request
 
-3. **Running Tests**
+4. **Testing and Validation**
    ```bash
    # Run all tests
    pytest tests/
    
-   # Run specific component tests
-   pytest tests/ai/
-   pytest tests/frontend/
+   # Run specific content tests
+   pytest tests/second_grade/
+   pytest tests/interactions/
+   pytest tests/scenarios/
    ```
+
+5. **Content Integration**
+   - Verify alignment with Core Standards
+   - Check cross-references between content types
+   - Update relevant metadata
+   - Generate embeddings for AI training
 
 ## 🔍 Key Features
 
