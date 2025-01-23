@@ -219,38 +219,95 @@ teacher-training-chatbot/
 ### AI/ML Developer
 - **Primary Guide**: [`docs/ai/README.md`](docs/ai/README.md)
 - **Key Responsibilities**:
-  - Implement AI models following educational guidelines
-  - Consult with Krista on response appropriateness
+  - Design, develop, and implement AI algorithms and models
+  - Train and fine-tune models for educational context
+  - Integrate AI components with overall architecture
+  - Collaborate with Data Engineer for data preprocessing
+  - Conduct experiments and evaluate model performance
   - Ensure age-appropriate language processing
-  - Maintain educational accuracy in AI responses
+  - Maintain educational accuracy in responses
 - **Key Resources**:
   - [AI Implementation](src/ai/)
   - [Model Configurations](config/)
-  - [Educational Guidelines](docs/second_grade/guidelines.md)
+  - [AI Development Guidelines](docs/ai/development_guidelines.md)
+  - [Model Training Protocols](docs/ai/training_protocols.md)
+  - [Performance Metrics](docs/ai/performance_metrics.md)
 
 ### Frontend Developer
 - **Primary Guide**: [`docs/frontend/README.md`](docs/frontend/README.md)
 - **Key Responsibilities**:
-  - Design teacher-friendly interfaces
-  - Implement accessibility standards
-  - Follow educational UX guidelines
-  - Support content presentation requirements
+  - Design intuitive and accessible teacher interfaces
+  - Conduct user research with educators
+  - Create wireframes and prototypes
+  - Implement responsive UI components
+  - Ensure accessibility compliance
+  - Collaborate on user experience improvements
 - **Key Resources**:
   - [Frontend Code](src/frontend/)
   - [UI Guidelines](docs/frontend/ui_guidelines.md)
   - [Accessibility Standards](docs/frontend/accessibility.md)
+  - [Design System](docs/frontend/design_system.md)
+  - [User Research](docs/frontend/user_research.md)
 
-### QA Specialist
+### Documentation and Quality Specialist
 - **Primary Guide**: [`docs/qa/README.md`](docs/qa/README.md)
 - **Key Responsibilities**:
-  - Verify educational accuracy with Krista's guidance
-  - Test age-appropriate interactions
-  - Validate scenario authenticity
+  - Create and maintain comprehensive documentation
+  - Develop quality assurance processes
+  - Conduct testing and validation
+  - Track and document defects
   - Ensure educational standard compliance
+  - Coordinate with Dr. Ruggles for content validation
+  - Maintain documentation accuracy and clarity
 - **Key Resources**:
   - [Test Files](tests/)
   - [Educational Standards](data/second_grade/utah_core_standards/)
   - [Validation Criteria](docs/qa/validation_criteria.md)
+  - [Documentation Guidelines](docs/qa/documentation_guidelines.md)
+  - [QA Processes](docs/qa/quality_processes.md)
+
+### Data Engineer
+- **Primary Guide**: [`docs/data/README.md`](docs/data/README.md)
+- **Key Responsibilities**:
+  - Design and maintain data pipelines
+  - Manage educational content databases
+  - Ensure data quality and security
+  - Collaborate with AI team on data preprocessing
+  - Optimize data storage and retrieval
+  - Monitor data infrastructure
+- **Key Resources**:
+  - [Data Architecture](docs/data/architecture.md)
+  - [Pipeline Documentation](docs/data/pipelines.md)
+  - [Data Security](docs/data/security.md)
+  - [Quality Standards](docs/data/quality_standards.md)
+
+### Backend Developer
+- **Primary Guide**: [`docs/backend/README.md`](docs/backend/README.md)
+- **Key Responsibilities**:
+  - Develop server-side logic and APIs
+  - Design and manage databases
+  - Ensure system scalability and performance
+  - Implement security measures
+  - Integrate with AI and frontend components
+- **Key Resources**:
+  - [API Documentation](docs/backend/api.md)
+  - [Database Schema](docs/backend/database.md)
+  - [Security Protocols](docs/backend/security.md)
+  - [Integration Guide](docs/backend/integration.md)
+
+### Data Analyst
+- **Primary Guide**: [`docs/analysis/README.md`](docs/analysis/README.md)
+- **Key Responsibilities**:
+  - Analyze chatbot performance data
+  - Identify usage patterns and trends
+  - Create performance reports
+  - Provide improvement recommendations
+  - Monitor educational effectiveness
+- **Key Resources**:
+  - [Analysis Methods](docs/analysis/methods.md)
+  - [Reporting Templates](docs/analysis/reports.md)
+  - [Metrics Dashboard](docs/analysis/dashboard.md)
+  - [Improvement Tracking](docs/analysis/improvements.md)
 
 ## 📋 Elementary Education Content Specialist
 ### Dr. Krista Ruggles
