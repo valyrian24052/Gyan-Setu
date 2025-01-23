@@ -332,7 +332,7 @@ School of Education, Utah Valley University
 4. Follow expert feedback implementation process
 
 ### Review Schedule
-- **Content Reviews**: ???
+- **Content Reviews**: Every 2 weeks
 - **Team Meetings**: First Monday of each month
 - **Emergency Reviews**: Contact via email with "URGENT" in subject
 
