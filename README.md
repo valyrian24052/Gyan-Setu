@@ -191,7 +191,7 @@ teacher-training-chatbot/
   - Coordinate educational feedback implementation
 - **Key Resources**:
   - [Expert Meeting Notes](docs/meetings/expert_reviews/)
-  - [Approved Scenarios](data/scenarios/approved/)
+  - [Teaching Scenarios](data/scenarios/core_subjects/)
   - [Content Validation Process](docs/validation/README.md)
   - [Educational Milestones](docs/milestones.md)
 
@@ -205,7 +205,7 @@ teacher-training-chatbot/
 - **Key Resources**:
   - [AI Implementation](src/ai/)
   - [Model Configurations](config/)
-  - [Educational Guidelines](docs/education/guidelines.md)
+  - [Educational Guidelines](docs/second_grade/guidelines.md)
 
 ### Frontend Developer
 - **Primary Guide**: [`docs/frontend/README.md`](docs/frontend/README.md)
@@ -243,7 +243,7 @@ teacher-training-chatbot/
   - Ensure educational standard compliance
 - **Key Resources**:
   - [Test Files](tests/)
-  - [Educational Standards](docs/standards/)
+  - [Educational Standards](data/second_grade/utah_core_standards/)
   - [Validation Criteria](docs/qa/validation_criteria.md)
 
 ## 📋 Elementary Education Content Specialist
@@ -310,7 +310,7 @@ cd utah-tta
 
 1. **Creating New Educational Content**
    - **Second Grade Content**
-     - Create content in appropriate directory under [`data/second_grade/`](data/second_grade/)
+     - Create content in appropriate directory under [`data/second_grade/`](/data/second_grade/README.md)
      - Follow Utah Core Standards templates
      - Submit for Dr. Ruggles' review
 
@@ -361,13 +361,13 @@ cd utah-tta
    - [Context-aware Responses](src/ai/rag_pipeline.py)
 
 2. **Scenario Management**
-   - [Expert Validation Process](docs/scenarios/validation_process.md)
+   - [Expert Validation Process](docs/validation/process.md)
    - [Version Control Guide](docs/contributing/version_control.md)
    - [Performance Tracking](docs/technical/monitoring.md)
 
 3. **Evaluation System**
    - [Response Scoring](src/ai/evaluation.py)
-   - [Feedback Generation](data/evaluation/feedback/)
+   - [Feedback Templates](docs/validation/feedback_templates.md)
    - [Progress Tracking](docs/technical/progress_tracking.md)
 
 ## 📚 Documentation
