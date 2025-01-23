@@ -1,3 +1,21 @@
+# AI Developer Guide
+
+## Overview
+Guide for implementing and maintaining the AI components of UTAH-TTA.
+
+## Key Resources
+- [Development Guidelines](development_guidelines.md)
+- [Model Training Protocols](training_protocols.md)
+- [Performance Metrics](performance_metrics.md)
+
+## Implementation Guides
+1. RAG Pipeline Setup
+2. Model Fine-tuning
+3. Response Generation
+4. Performance Monitoring
+
+[Additional content...]
+
 # AI Integration Documentation
 
 ## Overview

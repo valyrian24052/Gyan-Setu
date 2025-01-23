@@ -81,4 +81,24 @@ This directory contains comprehensive documentation for project management proce
    - Code review requirements
    - Testing standards
    - Documentation updates
-   - Performance monitoring 
+   - Performance monitoring
+
+# Project Manager Guide
+
+## Overview
+This guide outlines the responsibilities, workflows, and resources for the Project Manager role in the UTAH-TTA project.
+
+## Key Resources
+- [Project Timeline](../project_pipeline.md)
+- [Risk Management Plan](risk_management.md)
+- [Team Communication Guidelines](communication.md)
+- [Sprint Planning Guide](../sprints/README.md)
+- [Resource Allocation Guide](../resources/README.md)
+
+## Workflows
+1. Sprint Planning
+2. Risk Management
+3. Team Coordination
+4. Progress Tracking
+
+[Additional content...] 
