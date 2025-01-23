@@ -290,85 +290,21 @@ School of Education, Utah Valley University
 
 ## 🚀 Getting Started
 
-### Windows Setup with WSL
+For detailed setup instructions, see:
 
-1. **Install WSL**
-   ```powershell
-   # Open PowerShell as Administrator and run:
-   wsl --install
-   
-   # After installation, restart your computer
-   # WSL will finish Ubuntu setup on first launch
-   ```
+- [Development Environment Setup Guide](docs/setup/README.md)
+- [Windows/WSL Setup](docs/setup/windows_wsl.md)
+- [Environment Configuration](docs/setup/environment.md)
+- [Database Setup](docs/setup/database.md)
 
-2. **Configure WSL**
-   ```bash
-   # Update package list
-   sudo apt update && sudo apt upgrade
-   
-   # Install required system packages
-   sudo apt install build-essential libpq-dev python3-dev
-   ```
+Quick Start:
+```bash
+# Clone repository
+git clone https://github.com/your-org/utah-tta.git
+cd utah-tta
 
-### Anaconda Environment Setup
-
-1. **Install Anaconda in WSL**
-   ```bash
-   # Download Anaconda
-   wget https://repo.anaconda.com/archive/Anaconda3-2024.02-1-Linux-x86_64.sh
-   
-   # Install Anaconda
-   bash Anaconda3-2024.02-1-Linux-x86_64.sh
-   
-   # Reload shell configuration
-   source ~/.bashrc
-   ```
-
-2. **Create and Activate Environment**
-   ```bash
-   # Create new environment
-   conda create -n utah-tta python=3.11
-   
-   # Activate environment
-   conda activate utah-tta
-   
-   # Install required packages
-   pip install -r requirements.txt
-   ```
-
-### Standard Environment Setup
-
-1. **Environment Setup** (Alternative to Anaconda)
-   ```bash
-   # Create virtual environment
-   python -m venv venv
-   source venv/bin/activate  # or `venv\Scripts\activate` on Windows
-   
-   # Install dependencies
-   pip install -r requirements.txt
-   ```
-
-2. **Configuration**
-   ```bash
-   # Set environment
-   export APP_ENV=development  # or production, testing
-   
-   # Set database credentials
-   export DB_USER=your_username
-   export DB_PASSWORD=your_password
-   ```
-
-3. **Database Setup**
-   ```bash
-   # Install PostgreSQL and pgvector
-   python scripts/setup/init_database.py
-   ```
-
-4. **Running the Application**
-   ```bash
-   # Start the application
-   python src/api/main.py
-   ```
+# Follow setup guide in docs/setup/README.md
+```
 
 ## 📝 Development Workflow
 
