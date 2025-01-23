@@ -177,23 +177,44 @@ teacher-training-chatbot/
 └── config/                          # Configuration files
 ```
 
-## 🎯 For Each Role
+## �� For Each Role
+
+### Project Manager
+- **Primary Guide**: [`docs/project-management/README.md`](docs/project-management/README.md)
+- **Key Responsibilities**:
+  - Oversee project lifecycle from initiation to completion
+  - Develop and maintain project plan, schedule, and budget
+  - Coordinate team collaboration and communication
+  - Manage project risks and issues
+  - Facilitate Agile/Scrum ceremonies
+  - Ensure deliverables meet objectives
+  - Foster team cohesion and resolve conflicts
+- **Key Resources**:
+  - [Project Timeline](docs/project_pipeline.md)
+  - [Meeting Notes](docs/meetings/)
+  - [Sprint Planning](docs/sprints/README.md)
+  - [Resource Allocation](docs/resources/README.md)
+  - [Risk Management Plan](docs/project-management/risk_management.md)
+  - [Team Communication Guidelines](docs/project-management/communication.md)
 
 ### Product Owner
 - **Primary Guide**: [`docs/product/README.md`](docs/product/README.md)
 - **Key Responsibilities**:
-  - Coordinate with Krista for content validation
-  - Prioritize scenario development based on educational needs
+  - Define and prioritize product backlog
+  - Communicate product vision and goals
+  - Gather and analyze user requirements
+  - Coordinate with Dr. Ruggles for content validation
   - Ensure alignment with Utah Core Standards
-  - Manage educational content backlog
-  - Schedule and lead content review sessions
-  - Define acceptance criteria for scenarios
-  - Coordinate educational feedback implementation
+  - Make decisions on features and functionality
+  - Balance stakeholder expectations
+  - Guide product development direction
 - **Key Resources**:
   - [Expert Meeting Notes](docs/meetings/expert_reviews/)
   - [Teaching Scenarios](data/scenarios/core_subjects/)
   - [Content Validation Process](docs/validation/README.md)
   - [Educational Milestones](docs/milestones.md)
+  - [Product Backlog](docs/product/backlog.md)
+  - [Stakeholder Requirements](docs/product/requirements.md)
 
 ### AI/ML Developer
 - **Primary Guide**: [`docs/ai/README.md`](docs/ai/README.md)
@@ -218,21 +239,6 @@ teacher-training-chatbot/
   - [Frontend Code](src/frontend/)
   - [UI Guidelines](docs/frontend/ui_guidelines.md)
   - [Accessibility Standards](docs/frontend/accessibility.md)
-
-### Project Manager
-- **Primary Guide**: [`docs/project-management/README.md`](docs/project-management/README.md)
-- **Key Responsibilities**:
-  - Coordinate team schedules and deadlines
-  - Facilitate communication between teams
-  - Track overall project progress
-  - Manage development sprints
-  - Organize technical documentation
-  - Ensure resource availability
-- **Key Resources**:
-  - [Project Timeline](docs/project_pipeline.md)
-  - [Meeting Notes](docs/meetings/)
-  - [Sprint Planning](docs/sprints/README.md)
-  - [Resource Allocation](docs/resources/README.md)
 
 ### QA Specialist
 - **Primary Guide**: [`docs/qa/README.md`](docs/qa/README.md)
