@@ -266,10 +266,10 @@ School of Education, Utah Valley University
 1. Schedule reviews through Project Manager
 2. Submit content validation requests 48 hours in advance
 3. Attend monthly cross-team alignment meetings
-4. Follow educational feedback implementation process
+4. Follow expert feedback implementation process
 
 ### Review Schedule
-- **Content Reviews**: Tuesdays and Thursdays
+- **Content Reviews**: ???
 - **Team Meetings**: First Monday of each month
 - **Emergency Reviews**: Contact via email with "URGENT" in subject
 
