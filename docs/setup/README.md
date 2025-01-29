@@ -3,18 +3,87 @@
 This guide provides detailed instructions for setting up your development environment and accessing the data collection server for the Utah Elementary Teacher Training Assistant project.
 
 ## Table of Contents
-1. [Development Prerequisites](#development-prerequisites)
-2. [Server Access Setup](#server-access-setup)
-3. [Development Setup Options](#development-setup-options)
-4. [Common Setup Steps](#common-setup-steps)
-5. [Data Collection Server](#data-collection-server)
-6. [Troubleshooting](#troubleshooting)
+- [Development Environment Setup Guide](#development-environment-setup-guide)
+  - [Table of Contents](#table-of-contents)
+  - [Development Prerequisites](#development-prerequisites)
+    - [Required Software](#required-software)
+    - [Python Environment Setup](#python-environment-setup)
+  - [Server Access Setup](#server-access-setup)
+    - [1. UVU VPN Access Required](#1-uvu-vpn-access-required)
+    - [2. Server Information](#2-server-information)
+    - [3. Team Account Details](#3-team-account-details)
+    - [4. Connection Steps](#4-connection-steps)
+  - [Development Setup Options](#development-setup-options)
+  - [Common Setup Steps](#common-setup-steps)
+  - [Data Collection Server](#data-collection-server)
+    - [Directory Structure](#directory-structure)
+    - [File Management](#file-management)
+    - [File Naming Convention](#file-naming-convention)
+    - [Required Metadata](#required-metadata)
+  - [Troubleshooting](#troubleshooting)
+    - [Common Issues](#common-issues)
+    - [Getting Help](#getting-help)
 
 ## Development Prerequisites
-- Git
-- Python 3.11+
-- PostgreSQL 14+
-- Node.js 18+
+
+### Required Software
+- Git (version control)
+  ```bash
+  # Ubuntu/Debian
+  sudo apt-get install git
+
+  # Windows
+  # Download from https://git-scm.com/download/win
+  ```
+
+- Anaconda (Python environment management)
+  - Download from: https://www.anaconda.com/download
+  - Includes Python and package management
+
+- PostgreSQL 14+ (database)
+  ```bash
+  # Ubuntu/Debian
+  sudo apt-get install postgresql-14
+  ```
+
+### Python Environment Setup
+
+1. **Install Anaconda**
+   - Follow installation guide at: https://docs.anaconda.com/free/anaconda/install/
+
+2. **Create Project Virtual Environment**
+   ```bash
+   # Create new environment with Python 3.11
+   conda create -n utah-tta python=3.11
+
+   # Activate environment
+   conda activate utah-tta
+
+   # Verify Python version
+   python --version  # Should show Python 3.11.x
+   ```
+
+3. **Install Required Packages**
+   ```bash
+   # Install basic requirements
+   conda install numpy pandas scikit-learn
+   conda install -c conda-forge pytorch
+
+   # Install additional packages
+   pip install -r requirements.txt
+   ```
+
+4. **Environment Management**
+   ```bash
+   # Activate environment (at start of each session)
+   conda activate utah-tta
+
+   # Deactivate when done
+   conda deactivate
+
+   # Update environment
+   conda update --all
+   ```
 
 ## Server Access Setup
 
@@ -74,17 +143,55 @@ Choose the setup guide that matches your development environment:
    ```
 
 2. **Environment Setup**
-   - [Anaconda Setup](environment.md#anaconda-setup)
-   - [Standard Python Setup](environment.md#standard-setup)
-   - [Database Configuration](database.md)
-
-3. **Configuration**
    ```bash
-   # Copy example config
-   cp config/example.env .env
-   
-   # Edit configuration
-   nano .env
+   # Create and activate conda environment
+   conda create -n utah-tta python=3.11
+   conda activate utah-tta
+
+   # Install required packages
+   conda install numpy pandas scikit-learn
+   conda install -c conda-forge pytorch
+   pip install -r requirements.txt
+   ```
+
+3. **Database Configuration**
+   ```bash
+   # Install PostgreSQL client in conda environment
+   conda install psycopg2
+
+   # Configure database connection
+   cp config/database.example.yml config/database.yml
+   nano config/database.yml
+   ```
+
+4. **Verify Setup**
+   ```bash
+   # Make sure you're in the conda environment
+   conda activate utah-tta
+
+   # Run tests
+   python -m pytest tests/
+
+   # Start development server
+   python manage.py runserver
+   ```
+
+5. **Daily Development Workflow**
+   ```bash
+   # 1. Activate environment
+   conda activate utah-tta
+
+   # 2. Pull latest changes
+   git pull origin main
+
+   # 3. Update dependencies if needed
+   pip install -r requirements.txt
+
+   # 4. Start development
+   python manage.py runserver
+
+   # 5. Deactivate when done
+   conda deactivate
    ```
 
 ## Data Collection Server
