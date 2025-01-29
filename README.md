@@ -6,6 +6,7 @@ A specialized LLM-powered educational chatbot designed for training elementary s
 ## 📋 Table of Contents
 
 - [Project Overview](#-project-overview)
+- [Server Access](#-server-access)
 - [Data Collection Focus](#-data-collection-focus)
 - [Knowledge Base Structure](#knowledge-base-structure)
 - [Repository Structure](#-repository-structure)
@@ -24,6 +25,46 @@ UTAH-TTA Second Grade Edition provides:
 - Research-based teaching strategies for 7-8 year olds
 - Age-appropriate classroom management techniques
 - Progressive learning paths for second-grade teachers
+
+## 🔐 Server Access
+
+### Project Server Information
+- Server: Ubuntu 24.04 LTS
+- Hostname: d19559
+- Purpose: Long-term data collection and storage
+- Access: Requires UVU VPN connection
+
+### Prerequisites
+1. **UVU VPN Access Required**
+   - Get VPN access: [UVU VPN Service](https://www.uvu.edu/itservices/information-security/vpn_campus.html)
+   - Contact UVU IT: (801) 863-8888
+   - VPN access is granted per semester
+   - Must renew through myUVU each semester
+
+2. **Team Accounts**
+   Each team has a dedicated account with specific workspace:
+
+   | Team | Username | Initial Password | Workspace |
+   |------|----------|-----------------|-----------|
+   | Team 1 | team1 | Team2ndGrade12024! | team1_data |
+   | Team 2 | team2 | Team2ndGrade22024! | team2_data |
+   | Team 3 | team3 | Team2ndGrade32024! | team3_data |
+   | Team 4 | team4 | Team2ndGrade42024! | team4_data |
+   | Team 5 | team5 | Team2ndGrade52024! | team5_data |
+   | Team 6 | team6 | Team2ndGrade62024! | team6_data |
+
+   ⚠️ **IMPORTANT**: Change password on first login!
+
+3. **Connection Steps**
+   ```bash
+   # 1. Connect to UVU VPN
+   # 2. SSH to server
+   ssh teamX@d19559  # Replace X with your team number
+   # 3. Change password on first login
+   passwd
+   ```
+
+For detailed access instructions, see: [Access Control Guide](docs/setup/ACCESS_CONTROL.md)
 
 ## 📚 Data Collection Focus
 
@@ -177,7 +218,7 @@ teacher-training-chatbot/
 └── config/                          # Configuration files
 ```
 
-## �� For Each Role
+## 🎯 For Each Role
 
 ### Project Manager
 - **Primary Guide**: [`docs/project-management/README.md`](docs/project-management/README.md)
