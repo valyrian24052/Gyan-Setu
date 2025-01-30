@@ -21,6 +21,11 @@ This guide provides instructions for accessing the remote Ubuntu server and coll
   - [Troubleshooting](#troubleshooting)
     - [Common Issues](#common-issues)
     - [Getting Help](#getting-help)
+  - [Data Collection Plan](#data-collection-plan)
+    - [Core Data Collection Focus Areas](#core-data-collection-focus-areas)
+    - [Creative Approaches for Teams](#creative-approaches-for-teams)
+    - [Innovative Data Collection Methods](#innovative-data-collection-methods)
+    - [Data Collection Best Practices](#data-collection-best-practices)
 
 ## Server Access Setup
 
@@ -278,3 +283,149 @@ Notes: 30-minute observation, 23 students present
 1. For VPN issues: Contact UVU IT (801) 863-8888
 2. For server access: Email system administrator [admin email]
 3. For data collection questions: Contact your team lead 
+
+## Data Collection Plan
+
+### Core Data Collection Focus Areas
+
+1. **Teaching Methods and Strategies**
+   - Document innovative teaching approaches
+   - Capture successful differentiation strategies
+   - Record classroom technology integration
+   - Note student response to different methods
+   - Observe peer learning and group work dynamics
+   - Track time management and lesson pacing
+
+2. **Student Learning Patterns**
+   - Monitor individual learning styles
+   - Document group interaction patterns
+   - Record question-asking behaviors
+   - Track engagement levels throughout lessons
+   - Note areas of confusion or difficulty
+   - Observe problem-solving approaches
+
+3. **Assessment and Feedback**
+   - Gather formative assessment techniques
+   - Document feedback delivery methods
+   - Record student self-assessment practices
+   - Collect rubrics and scoring guides
+   - Note effective praise and constructive criticism
+   - Track progress monitoring methods
+
+### Creative Approaches for Teams
+
+1. **Team 1: Math Learning Dynamics**
+   - Focus on mathematical thinking processes
+   - Create "math talk" observation protocols
+   - Document manipulative use effectiveness
+   - Record problem-solving strategies
+   - Capture student explanations of solutions
+   - Track mathematical vocabulary development
+
+2. **Team 2: Literacy Development**
+   - Map reading comprehension strategies
+   - Document writing process development
+   - Create vocabulary acquisition logs
+   - Track phonics and phonemic awareness
+   - Record guided reading sessions
+   - Document peer reading interactions
+
+3. **Team 3: Science Inquiry**
+   - Document hands-on experiment processes
+   - Record hypothesis formation
+   - Track scientific reasoning development
+   - Capture student predictions and results
+   - Document science vocabulary usage
+   - Map concept understanding progression
+
+4. **Team 4: Social Studies Engagement**
+   - Track cultural awareness development
+   - Document historical concept understanding
+   - Record civic engagement activities
+   - Capture map and geography skills
+   - Document current events discussions
+   - Track community connection projects
+
+5. **Team 5: Cross-Disciplinary Integration**
+   - Document STEAM integration
+   - Record project-based learning
+   - Track thematic unit implementation
+   - Capture arts integration moments
+   - Document technology integration
+   - Map cross-subject connections
+
+6. **Team 6: Student Support and Intervention**
+   - Document differentiation strategies
+   - Record intervention effectiveness
+   - Track support service integration
+   - Capture ELL student progress
+   - Document IEP implementation
+   - Map behavioral support strategies
+
+### Innovative Data Collection Methods
+
+1. **Digital Documentation**
+   - Time-lapse classroom recordings
+   - Student work progression photos
+   - Digital portfolio development
+   - Interactive whiteboard captures
+   - Student-created video explanations
+   - Audio recordings of discussions
+
+2. **Interactive Observation**
+   - Student journey mapping
+   - Learning station rotation tracking
+   - Engagement heat maps
+   - Classroom movement patterns
+   - Question frequency charts
+   - Peer interaction sociograms
+
+3. **Collaborative Tools**
+   - Shared reflection journals
+   - Digital annotation of lessons
+   - Interactive feedback forms
+   - Progress tracking dashboards
+   - Student self-assessment logs
+   - Teacher-student conference notes
+
+### Data Collection Best Practices
+
+1. **Consistency in Documentation**
+   - Use standardized observation forms
+   - Maintain regular collection schedules
+   - Follow metadata templates strictly
+   - Document context thoroughly
+   - Cross-reference related materials
+   - Update collection logs daily
+
+2. **Quality Assurance**
+   - Peer review of documentation
+   - Regular data validation checks
+   - Metadata completeness verification
+   - File format compliance checks
+   - Regular backup procedures
+   - Version control maintenance
+
+3. **Ethical Considerations**
+   - Maintain student privacy
+   - Secure sensitive information
+   - Follow consent protocols
+   - Respect classroom dynamics
+   - Consider cultural sensitivity
+   - Protect personal information
+
+4. **Creative Documentation Ideas**
+   - Create learning journey maps
+   - Develop success story portfolios
+   - Design visual progress trackers
+   - Build strategy effectiveness matrices
+   - Create intervention impact charts
+   - Design engagement pattern visualizations
+
+⚠️ **Important Notes for Teams**:
+- Be innovative while maintaining scientific rigor
+- Document unexpected observations
+- Look for patterns and connections
+- Consider multiple perspectives
+- Track both successes and challenges
+- Share creative approaches with other teams 
