@@ -13,7 +13,6 @@ This guide provides detailed instructions for setting up your development enviro
     - [2. Server Information](#2-server-information)
     - [3. Team Account Details](#3-team-account-details)
     - [4. Connection Steps](#4-connection-steps)
-  - [Development Setup Options](#development-setup-options)
   - [Common Setup Steps](#common-setup-steps)
   - [Data Collection Server](#data-collection-server)
     - [Directory Structure](#directory-structure)
@@ -27,29 +26,51 @@ This guide provides detailed instructions for setting up your development enviro
 ## Development Prerequisites
 
 ### Required Software
-- Git (version control)
-  ```bash
-  # Ubuntu/Debian
-  sudo apt-get install git
 
-  # Windows
-  # Download from https://git-scm.com/download/win
-  ```
+1. **Git** (version control)
+   - Windows: Download and install from https://git-scm.com/download/win
+   - macOS: Install via Xcode Command Line Tools
+   - Linux: Use your package manager (apt-get, yum, etc.)
 
-- Anaconda (Python environment management)
-  - Download from: https://www.anaconda.com/download
-  - Includes Python and package management
+2. **Miniconda** (Required)
+   - Download Miniconda installer for your OS:
+     - Linux: https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+     - Windows: https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe
+     - macOS: https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh
 
-- PostgreSQL 14+ (database)
-  ```bash
-  # Ubuntu/Debian
-  sudo apt-get install postgresql-14
-  ```
+   - Install Miniconda (Linux/macOS):
+     ```bash
+     # 1. Download installer
+     wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+
+     # 2. Make installer executable
+     chmod +x Miniconda3-latest-Linux-x86_64.sh
+
+     # 3. Run installer (install locally in your home directory)
+     ./Miniconda3-latest-Linux-x86_64.sh
+     # Choose 'yes' to initialize Miniconda
+     # Default location will be ~/miniconda3
+
+     # 4. Activate the installation
+     source ~/.bashrc  # or open a new terminal
+     ```
+
+   - Install Miniconda (Windows):
+     1. Download the Windows installer (.exe)
+     2. Double-click the installer
+     3. Install for your user account only (not all users)
+     4. Open a new terminal after installation
 
 ### Python Environment Setup
 
-1. **Install Anaconda**
-   - Follow installation guide at: https://docs.anaconda.com/free/anaconda/install/
+1. **Verify Miniconda Installation**
+   ```bash
+   # Should show the conda version
+   conda --version
+
+   # Should show the path in your home directory
+   which conda
+   ```
 
 2. **Create Project Virtual Environment**
    ```bash
@@ -65,25 +86,38 @@ This guide provides detailed instructions for setting up your development enviro
 
 3. **Install Required Packages**
    ```bash
-   # Install basic requirements
+   # Make sure you're in your project environment
+   conda activate utah-tta
+
+   # Install scientific packages from conda (preferred method)
    conda install numpy pandas scikit-learn
    conda install -c conda-forge pytorch
 
-   # Install additional packages
-   pip install -r requirements.txt
+   # Install project-specific requirements
+   pip install --user -r requirements.txt
    ```
 
 4. **Environment Management**
    ```bash
-   # Activate environment (at start of each session)
+   # Always activate the environment before working
    conda activate utah-tta
 
    # Deactivate when done
    conda deactivate
 
-   # Update environment
+   # List all your environments
+   conda env list
+
+   # Update packages when needed
    conda update --all
    ```
+
+⚠️ **Important Notes**:
+- Do NOT use `sudo` with conda or pip commands
+- Install everything in your user space (--user flag with pip)
+- Keep your base conda environment clean
+- Always work in the project-specific environment
+- Make sure to activate the environment in each new terminal session
 
 ## Server Access Setup
 
@@ -126,73 +160,92 @@ This guide provides detailed instructions for setting up your development enviro
    - Include numbers and special characters
    - Don't use parts of your username
 
-## Development Setup Options
-
-Choose the setup guide that matches your development environment:
-
-- [Windows with WSL](windows_wsl.md)
-- [macOS](macos.md)
-- [Linux](linux.md)
-
 ## Common Setup Steps
 
 1. **Clone Repository**
    ```bash
+   # Clone in your home directory or preferred location
+   cd ~
    git clone https://github.com/your-org/utah-tta.git
    cd utah-tta
    ```
 
 2. **Environment Setup**
    ```bash
-   # Create and activate conda environment
-   conda create -n utah-tta python=3.11
-   conda activate utah-tta
+   # Make sure you're starting with Miniconda activated
+   # The command prompt should show (base)
 
-   # Install required packages
+   # Create project environment
+   conda create -n utah-tta python=3.11
+
+   # Activate project environment
+   conda activate utah-tta
+   # Command prompt should now show (utah-tta)
+
+   # Install dependencies using conda (preferred)
    conda install numpy pandas scikit-learn
    conda install -c conda-forge pytorch
-   pip install -r requirements.txt
+
+   # Install additional requirements locally
+   pip install --user -r requirements.txt
    ```
 
-3. **Database Configuration**
+3. **Development Database Setup**
    ```bash
-   # Install PostgreSQL client in conda environment
-   conda install psycopg2
+   # Install PostgreSQL client libraries via conda
+   conda install -c conda-forge postgresql
 
-   # Configure database connection
+   # Set up local database configuration
    cp config/database.example.yml config/database.yml
+   
+   # Edit configuration with your credentials
+   # Use nano, vim, or your preferred editor
    nano config/database.yml
    ```
 
 4. **Verify Setup**
    ```bash
-   # Make sure you're in the conda environment
+   # Ensure you're in the conda environment
    conda activate utah-tta
 
-   # Run tests
-   python -m pytest tests/
+   # Check Python version and location
+   which python
+   python --version
 
-   # Start development server
-   python manage.py runserver
+   # Verify key packages
+   python -c "import numpy; import pandas; import torch; print('All good!')"
+
+   # Run project tests
+   python -m pytest tests/
    ```
 
 5. **Daily Development Workflow**
    ```bash
-   # 1. Activate environment
+   # 1. Start Miniconda and activate environment
    conda activate utah-tta
 
-   # 2. Pull latest changes
+   # 2. Navigate to project
+   cd ~/utah-tta  # or your project location
+
+   # 3. Pull latest changes
    git pull origin main
 
-   # 3. Update dependencies if needed
-   pip install -r requirements.txt
+   # 4. Update dependencies if needed
+   conda update --all
+   pip install --user -r requirements.txt
 
-   # 4. Start development
+   # 5. Start development
    python manage.py runserver
 
-   # 5. Deactivate when done
+   # 6. When done
    conda deactivate
    ```
+
+⚠️ **Important Reminders**:
+- Never use sudo with conda or pip
+- Always check that you're in the correct environment
+- Keep packages updated but stable
+- Report any installation issues to your team lead
 
 ## Data Collection Server
 
