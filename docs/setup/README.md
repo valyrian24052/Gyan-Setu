@@ -1,68 +1,35 @@
 # Data Collection Guide - Utah Elementary Teacher Training Assistant
 
+This guide outlines the data collection process for building a comprehensive knowledge base of elementary education teaching practices.
+
 ## Table of Contents
+
 - [Data Collection Guide - Utah Elementary Teacher Training Assistant](#data-collection-guide---utah-elementary-teacher-training-assistant)
   - [Table of Contents](#table-of-contents)
-  - [Server Access and Setup](#server-access-and-setup)
+  - [Overview and Team Structure](#overview-and-team-structure)
+    - [Team Assignments](#team-assignments)
+    - [Collection Focus Areas](#collection-focus-areas)
+    - [Data Types and Categories](#data-types-and-categories)
+  - [Collaboration Strategy](#collaboration-strategy)
+    - [Phase 1: Independent Collection](#phase-1-independent-collection)
+    - [Phase 2: Knowledge Base Integration](#phase-2-knowledge-base-integration)
+    - [Best Practices](#best-practices)
+  - [Server Access Setup](#server-access-setup)
     - [VPN Requirements](#vpn-requirements)
     - [Server Information](#server-information)
     - [Team Accounts](#team-accounts)
     - [Connection Steps](#connection-steps)
-  - [Data Collection Framework](#data-collection-framework)
-    - [Team Assignments](#team-assignments)
-    - [Collection Focus Areas](#collection-focus-areas)
-    - [Data Types and Categories](#data-types-and-categories)
-  - [Data Organization and Storage](#data-organization-and-storage)
+  - [Data Organization](#data-organization)
     - [Directory Structure](#directory-structure)
     - [File Management Commands](#file-management-commands)
     - [File Type Guidelines](#file-type-guidelines)
-  - [Documentation Requirements](#documentation-requirements)
+  - [Documentation Standards](#documentation-standards)
     - [Metadata Template](#metadata-template)
-  - [Team Collaboration Model](#team-collaboration-model)
-    - [Independent Phase](#independent-phase)
-    - [Future Integration](#future-integration)
-    - [Best Practices](#best-practices)
-  - [Support and Help](#support-and-help)
-    - [Technical Issues](#technical-issues)
-    - [Common Problems](#common-problems)
+  - [Support Resources](#support-resources)
+    - [Technical Support](#technical-support)
+    - [Common Issues](#common-issues)
 
-## Server Access and Setup
-
-### VPN Requirements
-- Access via [UVU VPN Service](https://www.uvu.edu/itservices/information-security/vpn_campus.html)
-- Contact UVU IT: (801) 863-8888
-- Semester-based access
-- Renewal through myUVU required each semester
-
-### Server Information
-- Server: Ubuntu 24.04 LTS
-- Hostname: d19559
-- Purpose: Long-term data collection and storage
-- Access: Requires UVU VPN connection
-
-### Team Accounts
-| Team | Username | Initial Password | Workspace Directory |
-|------|----------|-----------------|---------------------|
-| Team 1 | team1 | Team2ndGrade12024! | /mnt/shared_education_data/raw_data/team1_data |
-| Team 2 | team2 | Team2ndGrade22024! | /mnt/shared_education_data/raw_data/team2_data |
-| Team 3 | team3 | Team2ndGrade32024! | /mnt/shared_education_data/raw_data/team3_data |
-| Team 4 | team4 | Team2ndGrade42024! | /mnt/shared_education_data/raw_data/team4_data |
-| Team 5 | team5 | Team2ndGrade52024! | /mnt/shared_education_data/raw_data/team5_data |
-| Team 6 | team6 | Team2ndGrade62024! | /mnt/shared_education_data/raw_data/team6_data |
-
-⚠️ **IMPORTANT**: Password change required on first login!
-
-### Connection Steps
-1. Connect to UVU VPN using your UVU credentials
-2. SSH command: `ssh teamX@d19559` (replace X with team number)
-3. Enter initial password
-4. Set new password following requirements:
-   - Minimum 12 characters
-   - Include uppercase and lowercase letters
-   - Include numbers and special characters
-   - Don't use parts of your username
-
-## Data Collection Framework
+## Overview and Team Structure
 
 ### Team Assignments
 
@@ -160,7 +127,122 @@
    - Learning patterns
    ```
 
-## Data Organization and Storage
+## Collaboration Strategy
+
+### Phase 1: Independent Collection
+
+Each team will focus on their specialized area:
+
+1. **Independent Work Focus**
+   - Concentrate on assigned subject expertise
+   - Develop domain-specific collection methods
+   - Build deep understanding of subject area
+   - Create efficient team workflows
+   - Establish quality control processes
+
+2. **Team Autonomy Benefits**
+   - Faster decision-making
+   - Specialized expertise development
+   - Focused data collection
+   - Clear accountability
+   - Streamlined communication
+
+3. **Quality Standards**
+   - Follow standardized documentation
+   - Maintain consistent metadata
+   - Adhere to file naming conventions
+   - Regular quality checks
+   - Peer reviews within team
+
+### Phase 2: Knowledge Base Integration
+
+Teams' collected data will be integrated into a unified knowledge base:
+
+1. **Data Consolidation**
+   - Merge subject-specific insights
+   - Identify common patterns
+   - Connect related concepts
+   - Build comprehensive view
+   - Create cross-references
+
+2. **Knowledge Organization**
+   - Unified search system
+   - Cross-subject connections
+   - Integrated analysis
+   - Shared best practices
+   - Combined insights
+
+3. **Collaboration Framework**
+   - Regular team updates
+   - Shared findings
+   - Cross-team reviews
+   - Joint analysis sessions
+   - Combined reporting
+
+⚠️ **Important Guidelines**:
+- Focus on your team's assigned area
+- Maintain consistent documentation
+- Prepare for future integration
+- Follow standard protocols
+- Regular internal reviews
+- Keep detailed metadata
+
+### Best Practices
+1. **Documentation**
+   - Use standard forms
+   - Regular schedules
+   - Complete metadata
+   - Cross-reference materials
+
+2. **Quality Control**
+   - Peer review
+   - Data validation
+   - Format compliance
+   - Regular backups
+
+3. **Ethics**
+   - Student privacy
+   - Data security
+   - Consent protocols
+   - Cultural sensitivity
+
+## Server Access Setup
+
+### VPN Requirements
+- Access via [UVU VPN Service](https://www.uvu.edu/itservices/information-security/vpn_campus.html)
+- Contact UVU IT: (801) 863-8888
+- Semester-based access
+- Renewal through myUVU required each semester
+
+### Server Information
+- Server: Ubuntu 24.04 LTS
+- Hostname: d19559
+- Purpose: Long-term data collection and storage
+- Access: Requires UVU VPN connection
+
+### Team Accounts
+| Team | Username | Initial Password | Workspace Directory |
+|------|----------|-----------------|---------------------|
+| Team 1 | team1 | Team2ndGrade12024! | /mnt/shared_education_data/raw_data/team1_data |
+| Team 2 | team2 | Team2ndGrade22024! | /mnt/shared_education_data/raw_data/team2_data |
+| Team 3 | team3 | Team2ndGrade32024! | /mnt/shared_education_data/raw_data/team3_data |
+| Team 4 | team4 | Team2ndGrade42024! | /mnt/shared_education_data/raw_data/team4_data |
+| Team 5 | team5 | Team2ndGrade52024! | /mnt/shared_education_data/raw_data/team5_data |
+| Team 6 | team6 | Team2ndGrade62024! | /mnt/shared_education_data/raw_data/team6_data |
+
+⚠️ **IMPORTANT**: Password change required on first login!
+
+### Connection Steps
+1. Connect to UVU VPN using your UVU credentials
+2. SSH command: `ssh teamX@d19559` (replace X with team number)
+3. Enter initial password
+4. Set new password following requirements:
+   - Minimum 12 characters
+   - Include uppercase and lowercase letters
+   - Include numbers and special characters
+   - Don't use parts of your username
+
+## Data Organization
 
 ### Directory Structure
 ```
@@ -228,7 +310,7 @@ scp teamX@d19559:/mnt/shared_education_data/raw_data/teamX_data/file.pdf ./
    - Digital work: Original + PDF
    - Photos: JPG
 
-## Documentation Requirements
+## Documentation Standards
 
 ### Metadata Template
 ```
@@ -250,55 +332,14 @@ Related Files: [Related files]
 ---
 ```
 
-## Team Collaboration Model
+## Support Resources
 
-### Independent Phase
-- Teams work separately on assigned areas
-- Develop specialized methods
-- Build team expertise
-- Establish workflows
-- Maintain quality control
-
-### Future Integration
-1. **Data Integration**
-   - Cross-subject insights
-   - Pattern identification
-   - Strategy sharing
-   - Comprehensive analysis
-
-2. **Knowledge Base Development**
-   - Unified search
-   - Cross-referencing
-   - Analysis tools
-   - Best practices
-
-### Best Practices
-1. **Documentation**
-   - Use standard forms
-   - Regular schedules
-   - Complete metadata
-   - Cross-reference materials
-
-2. **Quality Control**
-   - Peer review
-   - Data validation
-   - Format compliance
-   - Regular backups
-
-3. **Ethics**
-   - Student privacy
-   - Data security
-   - Consent protocols
-   - Cultural sensitivity
-
-## Support and Help
-
-### Technical Issues
+### Technical Support
 - VPN problems: UVU IT (801) 863-8888
 - Server access: System administrator [email]
 - Data collection: Team lead
 
-### Common Problems
+### Common Issues
 1. **Connection Issues**
    - Check VPN status
    - Verify credentials
