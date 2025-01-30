@@ -3,7 +3,6 @@
 ## Overview
 Comprehensive guide for ethically collecting educational content focused on elementary education (K-3) while complying with legal requirements and preserving system resources.
 
-![Scraping Workflow](https://example.com/scraping-workflow.png)
 
 ## Table of Contents
 1. [Targeted Collection Strategy](#targeted-collection-strategy)
