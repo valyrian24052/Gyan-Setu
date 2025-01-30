@@ -185,4 +185,72 @@ The Educational Content Specialist is responsible for creating and maintaining h
 - Team feedback
 - Expert consultation
 - Knowledge sharing
-- Continuous learning 
+- Continuous learning
+
+# Content Creation Guide
+
+This guide outlines the process of creating and managing educational content for the UTAH-TTA project.
+
+## Content Types
+
+### 1. Teaching Scenarios
+- Classroom management situations
+- Subject-specific lessons
+- Student interaction examples
+- Special education cases
+
+### 2. Educational Content
+- Second grade curriculum materials
+- Teaching methodologies
+- Assessment strategies
+- Classroom management techniques
+
+### 3. Student Interactions
+- Common student questions
+- Behavioral scenarios
+- Learning difficulties
+- Parent communication
+
+## Content Creation Process
+
+### 1. Planning
+- Identify educational objectives
+- Align with curriculum standards
+- Consider age-appropriate content
+- Plan scenario progression
+
+### 2. Development
+- Write initial scenario
+- Include teaching points
+- Add student responses
+- Create variations
+
+### 3. Review
+- Educational accuracy check
+- Age-appropriateness review
+- Alignment with standards
+- Technical feasibility
+
+### 4. Implementation
+- Format for AI training
+- Add to knowledge base
+- Create test cases
+- Document usage
+
+## Content Standards
+
+### Educational Standards
+- Utah Core Standards alignment
+- Age-appropriate language
+- Clear learning objectives
+- Measurable outcomes
+
+### Technical Standards
+- Proper formatting
+- Consistent structure
+- Clear metadata
+- Version control
+
+## Review Process
+
+See [Review Process](review.md) for detailed review guidelines. 
