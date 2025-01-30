@@ -1,356 +1,205 @@
-# Data Collection Guide - Utah Elementary Teacher Training Assistant
+# Setup and Access Guide
 
-This guide outlines the data collection process for building a comprehensive knowledge base of elementary education teaching practices.
+This guide covers all aspects of setting up your development environment and accessing project resources for the UTAH-TTA project.
 
-## Table of Contents
+## Prerequisites
 
-- [Data Collection Guide - Utah Elementary Teacher Training Assistant](#data-collection-guide---utah-elementary-teacher-training-assistant)
-  - [Table of Contents](#table-of-contents)
-  - [Overview and Team Structure](#overview-and-team-structure)
-    - [Team Assignments](#team-assignments)
-    - [Collection Focus Areas](#collection-focus-areas)
-    - [Data Types and Categories](#data-types-and-categories)
-  - [Collaboration Strategy](#collaboration-strategy)
-    - [Phase 1: Independent Collection](#phase-1-independent-collection)
-    - [Phase 2: Knowledge Base Integration](#phase-2-knowledge-base-integration)
-    - [Best Practices](#best-practices)
-  - [Server Access Setup](#server-access-setup)
-    - [VPN Requirements](#vpn-requirements)
-    - [Server Information](#server-information)
-    - [Team Accounts](#team-accounts)
-    - [Connection Steps](#connection-steps)
-  - [Data Organization](#data-organization)
-    - [Directory Structure](#directory-structure)
-    - [File Management Commands](#file-management-commands)
-    - [File Type Guidelines](#file-type-guidelines)
-  - [Documentation Standards](#documentation-standards)
-    - [Metadata Template](#metadata-template)
-  - [Support Resources](#support-resources)
-    - [Technical Support](#technical-support)
-    - [Common Issues](#common-issues)
+### Development Environment
+- Python 3.10 or higher
+- Git
+- Docker and Docker Compose
+- Node.js 18+ (for frontend development)
+- VSCode or PyCharm (recommended)
 
-## Overview and Team Structure
+### Server Access Requirements
+- UVU VPN access
+- GitHub account with repository access
+- Development server credentials
 
-### Team Assignments
+## Server Information
+- **Server**: Ubuntu 24.04 LTS
+- **Hostname**: d19559
+- **Purpose**: Long-term data collection and storage
+- **Access**: Requires UVU VPN connection
 
-1. **Team 1: Math Learning Dynamics**
-   - Mathematical thinking processes
-   - "Math talk" protocols
-   - Problem-solving strategies
-   - Manipulative effectiveness
-   - Mathematical vocabulary
-
-2. **Team 2: Literacy Development**
-   - Reading comprehension
-   - Writing process
-   - Vocabulary acquisition
-   - Phonics awareness
-   - Guided reading
-
-3. **Team 3: Science Inquiry**
-   - Hands-on experiments
-   - Scientific reasoning
-   - Hypothesis formation
-   - Predictions and results
-   - Science vocabulary
-
-4. **Team 4: Social Studies Engagement**
-   - Cultural awareness
-   - Historical concepts
-   - Civic engagement
-   - Geography skills
-   - Current events
-
-5. **Team 5: Cross-Disciplinary Integration**
-   - STEAM integration
-   - Project-based learning
-   - Thematic units
-   - Arts integration
-   - Technology use
-
-6. **Team 6: Student Support and Intervention**
-   - Differentiation strategies
-   - Intervention effectiveness
-   - Support services
-   - ELL progress
-   - IEP implementation
-
-### Collection Focus Areas
-
-1. **Teaching Methods**
-   - Innovative approaches
-   - Differentiation strategies
-   - Technology integration
-   - Peer learning
-   - Time management
-
-2. **Student Learning**
-   - Learning styles
-   - Group interactions
-   - Question patterns
-   - Engagement levels
-   - Problem-solving
-
-3. **Assessment**
-   - Formative techniques
-   - Feedback methods
-   - Self-assessment
-   - Rubrics
-   - Progress monitoring
-
-### Data Types and Categories
-
-1. **Classroom Observations**
-   ```
-   - Lesson delivery
-   - Student engagement
-   - Teacher-student interactions
-   - Classroom management
-   - Technology use
-   ```
-
-2. **Teacher Interviews**
-   ```
-   - Teaching methods
-   - Challenges faced
-   - Success stories
-   - Resource needs
-   - Professional development
-   ```
-
-3. **Student Work**
-   ```
-   - Daily assignments
-   - Assessments
-   - Projects
-   - Progress records
-   - Learning patterns
-   ```
-
-## Collaboration Strategy
-
-### Phase 1: Independent Collection
-
-Each team will focus on their specialized area:
-
-1. **Independent Work Focus**
-   - Concentrate on assigned subject expertise
-   - Develop domain-specific collection methods
-   - Build deep understanding of subject area
-   - Create efficient team workflows
-   - Establish quality control processes
-
-2. **Team Autonomy Benefits**
-   - Faster decision-making
-   - Specialized expertise development
-   - Focused data collection
-   - Clear accountability
-   - Streamlined communication
-
-3. **Quality Standards**
-   - Follow standardized documentation
-   - Maintain consistent metadata
-   - Adhere to file naming conventions
-   - Regular quality checks
-   - Peer reviews within team
-
-### Phase 2: Knowledge Base Integration
-
-Teams' collected data will be integrated into a unified knowledge base:
-
-1. **Data Consolidation**
-   - Merge subject-specific insights
-   - Identify common patterns
-   - Connect related concepts
-   - Build comprehensive view
-   - Create cross-references
-
-2. **Knowledge Organization**
-   - Unified search system
-   - Cross-subject connections
-   - Integrated analysis
-   - Shared best practices
-   - Combined insights
-
-3. **Collaboration Framework**
-   - Regular team updates
-   - Shared findings
-   - Cross-team reviews
-   - Joint analysis sessions
-   - Combined reporting
-
-⚠️ **Important Guidelines**:
-- Focus on your team's assigned area
-- Maintain consistent documentation
-- Prepare for future integration
-- Follow standard protocols
-- Regular internal reviews
-- Keep detailed metadata
-
-### Best Practices
-1. **Documentation**
-   - Use standard forms
-   - Regular schedules
-   - Complete metadata
-   - Cross-reference materials
-
-2. **Quality Control**
-   - Peer review
-   - Data validation
-   - Format compliance
-   - Regular backups
-
-3. **Ethics**
-   - Student privacy
-   - Data security
-   - Consent protocols
-   - Cultural sensitivity
-
-## Server Access Setup
-
-### VPN Requirements
-- Access via [UVU VPN Service](https://www.uvu.edu/itservices/information-security/vpn_campus.html)
-- Contact UVU IT: (801) 863-8888
-- Semester-based access
-- Renewal through myUVU required each semester
-
-### Server Information
-- Server: Ubuntu 24.04 LTS
-- Hostname: d19559
-- Purpose: Long-term data collection and storage
-- Access: Requires UVU VPN connection
+### VPN Access
+1. Get VPN access: [UVU VPN Service](https://www.uvu.edu/itservices/information-security/vpn_campus.html)
+2. Contact UVU IT: (801) 863-8888
+3. VPN access is granted per semester
+4. Must renew through myUVU each semester
 
 ### Team Accounts
-| Team | Username | Initial Password | Workspace Directory |
-|------|----------|-----------------|---------------------|
-| Team 1 | team1 | Team2ndGrade12024! | /mnt/shared_education_data/raw_data/team1_data |
-| Team 2 | team2 | Team2ndGrade22024! | /mnt/shared_education_data/raw_data/team2_data |
-| Team 3 | team3 | Team2ndGrade32024! | /mnt/shared_education_data/raw_data/team3_data |
-| Team 4 | team4 | Team2ndGrade42024! | /mnt/shared_education_data/raw_data/team4_data |
-| Team 5 | team5 | Team2ndGrade52024! | /mnt/shared_education_data/raw_data/team5_data |
-| Team 6 | team6 | Team2ndGrade62024! | /mnt/shared_education_data/raw_data/team6_data |
+Each team has a dedicated account with specific workspace:
 
-⚠️ **IMPORTANT**: Password change required on first login!
+| Team | Username | Initial Password | Workspace |
+|------|----------|-----------------|-----------|
+| Team 1 | team1 | Team2ndGrade12024! | team1_data |
+| Team 2 | team2 | Team2ndGrade22024! | team2_data |
+| Team 3 | team3 | Team2ndGrade32024! | team3_data |
+| Team 4 | team4 | Team2ndGrade42024! | team4_data |
+| Team 5 | team5 | Team2ndGrade52024! | team5_data |
+| Team 6 | team6 | Team2ndGrade62024! | team6_data |
+
+⚠️ **IMPORTANT**: Change password on first login!
+
+## Initial Setup
+
+### 1. Repository Setup
+```bash
+# Clone repository
+git clone https://github.com/your-org/utah-tta.git
+cd utah-tta
+```
+
+### 2. Python Environment
+```bash
+# Create virtual environment
+python -m venv venv
+
+# Activate virtual environment
+# On Unix/macOS:
+source venv/bin/activate
+# On Windows:
+.\venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+### 3. Environment Configuration
+```bash
+# Copy example environment file
+cp .env.example .env
+
+# Edit .env with your settings
+# Required variables:
+# - DATABASE_URL
+# - AI_MODEL_PATH
+# - API_KEY
+```
+
+### 4. Database Setup
+```bash
+# Start database container
+docker-compose up -d db
+
+# Run migrations
+python manage.py migrate
+```
+
+### 5. Frontend Setup
+```bash
+cd src/frontend
+npm install
+```
+
+## Development Server Access
 
 ### Connection Steps
-1. Connect to UVU VPN using your UVU credentials
-2. SSH command: `ssh teamX@d19559` (replace X with team number)
-3. Enter initial password
-4. Set new password following requirements:
-   - Minimum 12 characters
-   - Include uppercase and lowercase letters
-   - Include numbers and special characters
-   - Don't use parts of your username
-
-## Data Organization
-
-### Directory Structure
-```
-/mnt/shared_education_data/
-├── raw_data/                           # Original data
-│   ├── team1_data/                     # Team 1 workspace
-│   │   ├── classroom_observations/     
-│   │   │   ├── math/                  
-│   │   │   ├── reading/               
-│   │   │   ├── science/               
-│   │   │   └── social_studies/        
-│   │   ├── teacher_interviews/        
-│   │   ├── student_work/             
-│   │   │   ├── assignments/          
-│   │   │   ├── assessments/          
-│   │   │   └── projects/             
-│   │   └── metadata/                 
-│   │
-│   ├── team2_data/ ... team6_data/    # Similar structure for all teams
-│
-├── processed_data/                     
-│   ├── by_subject/                    
-│   ├── by_grade_level/                
-│   └── cross_cutting/                 
-│
-└── documentation/                      
-    ├── collection_protocols/          
-    ├── metadata_templates/            
-    └── best_practices/               
-```
-
-### File Management Commands
 ```bash
-# List files
-ls -l /mnt/shared_education_data/raw_data/teamX_data
-
-# Check space usage
-du -h /mnt/shared_education_data/raw_data/teamX_data
-
-# Create directory
-mkdir /mnt/shared_education_data/raw_data/teamX_data/new_folder
-
-# Upload files (from local machine)
-scp your_file.pdf teamX@d19559:/mnt/shared_education_data/raw_data/teamX_data/
-
-# Download files (to local machine)
-scp teamX@d19559:/mnt/shared_education_data/raw_data/teamX_data/file.pdf ./
+# 1. Connect to UVU VPN
+# 2. SSH to server
+ssh teamX@d19559  # Replace X with your team number
+# 3. Change password on first login
+passwd
 ```
 
-### File Type Guidelines
-
-1. **Observations**
-   - Video: MP4
-   - Audio: MP3
-   - Notes: PDF/TXT
-   - Photos: JPG
-
-2. **Interviews**
-   - Audio: MP3
-   - Transcripts: PDF/TXT
-   - Consent forms: PDF
-
-3. **Student Work**
-   - Scanned work: PDF
-   - Digital work: Original + PDF
-   - Photos: JPG
-
-## Documentation Standards
-
-### Metadata Template
+### Workspace Structure
 ```
-filename: teamX_YYYY-MM-DD_type_description_metadata.txt
-content:
----
-Collection Date: [YYYY-MM-DD]
-Team Members: [Names]
-Subject Area: [Math/Reading/Science/Social Studies]
-Grade Level: [1st/2nd/3rd]
-Data Type: [Observation/Interview/Student Work]
-Description: [Brief description]
-Duration: [For recordings]
-Participants: [Number and roles]
-Standards: [Educational standards]
-Keywords: [3-5 keywords]
-Notes: [Additional information]
-Related Files: [Related files]
----
+/home/teamX/
+├── data/              # Team data directory
+├── models/            # AI model files
+├── logs/             # Activity logs
+└── backups/          # Local backups
 ```
 
-## Support Resources
+### Storage Quotas
+- 100GB per team
+- Monitor usage with `df -h`
+- Request increases if needed
 
-### Technical Support
-- VPN problems: UVU IT (801) 863-8888
-- Server access: System administrator [email]
-- Data collection: Team lead
+## Security Guidelines
+
+### Password Requirements
+- Minimum 12 characters
+- Mix of uppercase and lowercase letters
+- Include numbers and special characters
+- No dictionary words
+- Change every 90 days
+
+### Access Control
+- Use only assigned team account
+- No sharing of credentials
+- Report suspicious activity
+- Lock workstation when away
+
+### Data Protection
+- Keep sensitive data on server
+- No unauthorized data transfers
+- Follow backup procedures
+- Encrypt sensitive files
+
+## Development Tools
+
+### Required Software
+- Git (version control)
+- Docker (containerization)
+- Python 3.10+ (backend)
+- Node.js 18+ (frontend)
+- VSCode/PyCharm (IDE)
+
+### Recommended Extensions
+#### VSCode
+- Python
+- Docker
+- ESLint
+- Prettier
+- GitLens
+
+#### PyCharm
+- Docker integration
+- Python Scientific
+- Database Tools
+
+## Troubleshooting
 
 ### Common Issues
-1. **Connection Issues**
-   - Check VPN status
-   - Verify credentials
-   - Contact IT support
+1. **VPN Connection Failed**
+   - Check VPN credentials
+   - Verify network connection
+   - Contact UVU IT if persistent
 
-2. **Login Problems**
+2. **SSH Access Denied**
    - Verify username/password
-   - Check SSH connection
-   - Request password reset
+   - Check VPN connection
+   - Ensure within campus network
 
-3. **Permission Errors**
-   - Check directory permissions
-   - Verify team workspace
-   - Contact administrator 
+3. **Environment Setup**
+   - Check Python version
+   - Verify virtual environment
+   - Confirm all dependencies
+
+4. **Database Connection**
+   - Check Docker status
+   - Verify credentials
+   - Confirm migrations
+
+## Support Contacts
+
+### Technical Support
+- UVU IT Help Desk
+  - Phone: (801) 863-8888
+  - Email: helpdesk@uvu.edu
+  - Hours: Mon-Fri 8am-5pm MST
+
+### Project Support
+- Project Manager
+  - See [Project Management Contact](../roles/project_manager.md)
+- System Administrator
+  - See [Technical Contact](../roles/technical_lead.md)
+
+## Additional Resources
+- [Development Guide](../development/README.md)
+- [Security Policies](../security/README.md)
+- [Data Management](../data/README.md)
+- [Contributing Guidelines](../contributing/README.md) 
