@@ -1,51 +1,46 @@
 # Data Collection Guide - Utah Elementary Teacher Training Assistant
 
-This guide provides instructions for accessing the remote Ubuntu server and collecting data for the Utah Elementary Teacher Training Assistant project.
-
 ## Table of Contents
 - [Data Collection Guide - Utah Elementary Teacher Training Assistant](#data-collection-guide---utah-elementary-teacher-training-assistant)
   - [Table of Contents](#table-of-contents)
-  - [Server Access Setup](#server-access-setup)
-    - [1. UVU VPN Access Required](#1-uvu-vpn-access-required)
-    - [2. Server Information](#2-server-information)
-    - [3. Team Account Details](#3-team-account-details)
-    - [4. Connection Steps](#4-connection-steps)
-  - [Data Collection Server](#data-collection-server)
+  - [Server Access and Setup](#server-access-and-setup)
+    - [VPN Requirements](#vpn-requirements)
+    - [Server Information](#server-information)
+    - [Team Accounts](#team-accounts)
+    - [Connection Steps](#connection-steps)
+  - [Data Collection Framework](#data-collection-framework)
+    - [Team Assignments](#team-assignments)
+    - [Collection Focus Areas](#collection-focus-areas)
+    - [Data Types and Categories](#data-types-and-categories)
+  - [Data Organization and Storage](#data-organization-and-storage)
     - [Directory Structure](#directory-structure)
-    - [Data Collection Categories](#data-collection-categories)
+    - [File Management Commands](#file-management-commands)
     - [File Type Guidelines](#file-type-guidelines)
-    - [Metadata Requirements](#metadata-requirements)
-    - [File Management](#file-management)
-    - [File Naming Convention](#file-naming-convention)
-    - [Required Metadata](#required-metadata)
-  - [Troubleshooting](#troubleshooting)
-    - [Common Issues](#common-issues)
-    - [Getting Help](#getting-help)
-  - [Data Collection Plan](#data-collection-plan)
-    - [Core Data Collection Focus Areas](#core-data-collection-focus-areas)
-    - [Creative Approaches for Teams](#creative-approaches-for-teams)
-    - [Innovative Data Collection Methods](#innovative-data-collection-methods)
-    - [Data Collection Best Practices](#data-collection-best-practices)
-    - [Team Collaboration Strategy](#team-collaboration-strategy)
-      - [Current Phase: Independent Team Data Collection](#current-phase-independent-team-data-collection)
-      - [Future Integration Plans](#future-integration-plans)
+  - [Documentation Requirements](#documentation-requirements)
+    - [Metadata Template](#metadata-template)
+  - [Team Collaboration Model](#team-collaboration-model)
+    - [Independent Phase](#independent-phase)
+    - [Future Integration](#future-integration)
+    - [Best Practices](#best-practices)
+  - [Support and Help](#support-and-help)
+    - [Technical Issues](#technical-issues)
+    - [Common Problems](#common-problems)
 
-## Server Access Setup
+## Server Access and Setup
 
-### 1. UVU VPN Access Required
-- Get VPN access: [UVU VPN Service](https://www.uvu.edu/itservices/information-security/vpn_campus.html)
+### VPN Requirements
+- Access via [UVU VPN Service](https://www.uvu.edu/itservices/information-security/vpn_campus.html)
 - Contact UVU IT: (801) 863-8888
-- VPN access is granted per semester
-- Must renew through myUVU each semester
+- Semester-based access
+- Renewal through myUVU required each semester
 
-### 2. Server Information
+### Server Information
 - Server: Ubuntu 24.04 LTS
 - Hostname: d19559
 - Purpose: Long-term data collection and storage
 - Access: Requires UVU VPN connection
 
-### 3. Team Account Details
-
+### Team Accounts
 | Team | Username | Initial Password | Workspace Directory |
 |------|----------|-----------------|---------------------|
 | Team 1 | team1 | Team2ndGrade12024! | /mnt/shared_education_data/raw_data/team1_data |
@@ -55,427 +50,266 @@ This guide provides instructions for accessing the remote Ubuntu server and coll
 | Team 5 | team5 | Team2ndGrade52024! | /mnt/shared_education_data/raw_data/team5_data |
 | Team 6 | team6 | Team2ndGrade62024! | /mnt/shared_education_data/raw_data/team6_data |
 
-⚠️ **IMPORTANT**: You MUST change your password on first login!
+⚠️ **IMPORTANT**: Password change required on first login!
 
-### 4. Connection Steps
+### Connection Steps
 1. Connect to UVU VPN using your UVU credentials
-2. Use your team's SSH command:
-   ```bash
-   ssh teamX@d19559  # Replace X with your team number
-   ```
-3. Enter your initial password when prompted
-4. You will be required to change your password immediately
-5. Follow the password requirements:
+2. SSH command: `ssh teamX@d19559` (replace X with team number)
+3. Enter initial password
+4. Set new password following requirements:
    - Minimum 12 characters
    - Include uppercase and lowercase letters
    - Include numbers and special characters
    - Don't use parts of your username
 
-## Data Collection Server
+## Data Collection Framework
+
+### Team Assignments
+
+1. **Team 1: Math Learning Dynamics**
+   - Mathematical thinking processes
+   - "Math talk" protocols
+   - Problem-solving strategies
+   - Manipulative effectiveness
+   - Mathematical vocabulary
+
+2. **Team 2: Literacy Development**
+   - Reading comprehension
+   - Writing process
+   - Vocabulary acquisition
+   - Phonics awareness
+   - Guided reading
+
+3. **Team 3: Science Inquiry**
+   - Hands-on experiments
+   - Scientific reasoning
+   - Hypothesis formation
+   - Predictions and results
+   - Science vocabulary
+
+4. **Team 4: Social Studies Engagement**
+   - Cultural awareness
+   - Historical concepts
+   - Civic engagement
+   - Geography skills
+   - Current events
+
+5. **Team 5: Cross-Disciplinary Integration**
+   - STEAM integration
+   - Project-based learning
+   - Thematic units
+   - Arts integration
+   - Technology use
+
+6. **Team 6: Student Support and Intervention**
+   - Differentiation strategies
+   - Intervention effectiveness
+   - Support services
+   - ELL progress
+   - IEP implementation
+
+### Collection Focus Areas
+
+1. **Teaching Methods**
+   - Innovative approaches
+   - Differentiation strategies
+   - Technology integration
+   - Peer learning
+   - Time management
+
+2. **Student Learning**
+   - Learning styles
+   - Group interactions
+   - Question patterns
+   - Engagement levels
+   - Problem-solving
+
+3. **Assessment**
+   - Formative techniques
+   - Feedback methods
+   - Self-assessment
+   - Rubrics
+   - Progress monitoring
+
+### Data Types and Categories
+
+1. **Classroom Observations**
+   ```
+   - Lesson delivery
+   - Student engagement
+   - Teacher-student interactions
+   - Classroom management
+   - Technology use
+   ```
+
+2. **Teacher Interviews**
+   ```
+   - Teaching methods
+   - Challenges faced
+   - Success stories
+   - Resource needs
+   - Professional development
+   ```
+
+3. **Student Work**
+   ```
+   - Daily assignments
+   - Assessments
+   - Projects
+   - Progress records
+   - Learning patterns
+   ```
+
+## Data Organization and Storage
 
 ### Directory Structure
 ```
 /mnt/shared_education_data/
-├── raw_data/                           # Original, unmodified data
-│   ├── team1_data/                     # Team 1's primary workspace
-│   │   ├── classroom_observations/     # Direct classroom observations
-│   │   │   ├── math/                  # Mathematics lessons
-│   │   │   ├── reading/               # Reading and literacy
-│   │   │   ├── science/               # Science lessons
-│   │   │   └── social_studies/        # Social studies lessons
-│   │   ├── teacher_interviews/        # Teacher interview recordings and transcripts
-│   │   ├── student_work/             # Student work samples
-│   │   │   ├── assignments/          # Daily assignments
-│   │   │   ├── assessments/          # Tests and quizzes
-│   │   │   └── projects/             # Student projects
-│   │   └── metadata/                 # Metadata files for all collected data
+├── raw_data/                           # Original data
+│   ├── team1_data/                     # Team 1 workspace
+│   │   ├── classroom_observations/     
+│   │   │   ├── math/                  
+│   │   │   ├── reading/               
+│   │   │   ├── science/               
+│   │   │   └── social_studies/        
+│   │   ├── teacher_interviews/        
+│   │   ├── student_work/             
+│   │   │   ├── assignments/          
+│   │   │   ├── assessments/          
+│   │   │   └── projects/             
+│   │   └── metadata/                 
 │   │
-│   ├── team2_data/                     # Team 2's primary workspace
-│   │   ├── classroom_observations/     # Similar structure as team1
-│   │   ├── teacher_interviews/
-│   │   ├── student_work/
-│   │   └── metadata/
-│   │
-│   ├── team3_data/                     # Team 3's primary workspace
-│   │   ├── classroom_observations/
-│   │   ├── teacher_interviews/
-│   │   ├── student_work/
-│   │   └── metadata/
-│   │
-│   ├── team4_data/                     # Team 4's primary workspace
-│   │   ├── classroom_observations/
-│   │   ├── teacher_interviews/
-│   │   ├── student_work/
-│   │   └── metadata/
-│   │
-│   ├── team5_data/                     # Team 5's primary workspace
-│   │   ├── classroom_observations/
-│   │   ├── teacher_interviews/
-│   │   ├── student_work/
-│   │   └── metadata/
-│   │
-│   └── team6_data/                     # Team 6's primary workspace
-│       ├── classroom_observations/
-│       ├── teacher_interviews/
-│       ├── student_work/
-│       └── metadata/
+│   ├── team2_data/ ... team6_data/    # Similar structure for all teams
 │
-├── processed_data/                      # Cleaned and processed datasets
-│   ├── by_subject/                     # Organized by subject area
-│   │   ├── mathematics/
-│   │   │   ├── teaching_strategies/
-│   │   │   ├── common_challenges/
-│   │   │   └── best_practices/
-│   │   ├── reading_literacy/
-│   │   ├── science/
-│   │   └── social_studies/
-│   │
-│   ├── by_grade_level/                 # Organized by grade level
-│   │   ├── first_grade/
-│   │   ├── second_grade/
-│   │   └── third_grade/
-│   │
-│   └── cross_cutting/                  # Cross-cutting themes
-│       ├── classroom_management/
-│       ├── student_engagement/
-│       ├── differentiation/
-│       └── assessment_strategies/
+├── processed_data/                     
+│   ├── by_subject/                    
+│   ├── by_grade_level/                
+│   └── cross_cutting/                 
 │
-└── documentation/                       # Shared documentation
-    ├── collection_protocols/           # Data collection protocols
-    ├── metadata_templates/             # Templates for metadata
-    ├── best_practices/                # Best practices guides
-    └── analysis_guidelines/           # Guidelines for data analysis
-
+└── documentation/                      
+    ├── collection_protocols/          
+    ├── metadata_templates/            
+    └── best_practices/               
 ```
 
-### Data Collection Categories
+### File Management Commands
+```bash
+# List files
+ls -l /mnt/shared_education_data/raw_data/teamX_data
 
-1. **Classroom Observations**
-   - Lesson delivery methods
-   - Student engagement patterns
-   - Teacher-student interactions
-   - Classroom management techniques
-   - Use of educational technology
-   - Assessment strategies
+# Check space usage
+du -h /mnt/shared_education_data/raw_data/teamX_data
 
-2. **Teacher Interviews**
-   - Teaching methodologies
-   - Classroom challenges
-   - Success stories
-   - Resource needs
-   - Professional development
-   - Student support strategies
+# Create directory
+mkdir /mnt/shared_education_data/raw_data/teamX_data/new_folder
 
-3. **Student Work**
-   - Daily assignments
-   - Assessment responses
-   - Project outcomes
-   - Progress tracking
-   - Learning patterns
-   - Areas of difficulty
+# Upload files (from local machine)
+scp your_file.pdf teamX@d19559:/mnt/shared_education_data/raw_data/teamX_data/
+
+# Download files (to local machine)
+scp teamX@d19559:/mnt/shared_education_data/raw_data/teamX_data/file.pdf ./
+```
 
 ### File Type Guidelines
 
 1. **Observations**
-   - Video recordings: MP4 format
-   - Audio recordings: MP3 format
-   - Field notes: PDF or TXT
-   - Photos: JPG format
+   - Video: MP4
+   - Audio: MP3
+   - Notes: PDF/TXT
+   - Photos: JPG
 
 2. **Interviews**
-   - Audio recordings: MP3 format
-   - Transcripts: TXT or PDF
+   - Audio: MP3
+   - Transcripts: PDF/TXT
    - Consent forms: PDF
 
 3. **Student Work**
-   - Scanned documents: PDF
-   - Digital submissions: Original format + PDF
-   - Photos of physical work: JPG
+   - Scanned work: PDF
+   - Digital work: Original + PDF
+   - Photos: JPG
 
-### Metadata Requirements
+## Documentation Requirements
 
-Each file must have an accompanying metadata file following this format:
+### Metadata Template
 ```
 filename: teamX_YYYY-MM-DD_type_description_metadata.txt
 content:
 ---
 Collection Date: [YYYY-MM-DD]
-Team Members: [Names of team members present]
-Subject Area: [Mathematics/Reading/Science/Social Studies]
+Team Members: [Names]
+Subject Area: [Math/Reading/Science/Social Studies]
 Grade Level: [1st/2nd/3rd]
 Data Type: [Observation/Interview/Student Work]
-Description: [Brief description of the content]
+Description: [Brief description]
 Duration: [For recordings]
-Participants: [Number and roles of participants]
-Standards Addressed: [Relevant educational standards]
-Keywords: [3-5 relevant keywords]
-Notes: [Any additional relevant information]
-Related Files: [List of related files if any]
+Participants: [Number and roles]
+Standards: [Educational standards]
+Keywords: [3-5 keywords]
+Notes: [Additional information]
+Related Files: [Related files]
 ---
 ```
 
-### File Management
-```bash
-# Common commands (replace X with your team number)
-# List your files
-ls -l /mnt/shared_education_data/raw_data/teamX_data
+## Team Collaboration Model
 
-# Check your space usage
-du -h /mnt/shared_education_data/raw_data/teamX_data
+### Independent Phase
+- Teams work separately on assigned areas
+- Develop specialized methods
+- Build team expertise
+- Establish workflows
+- Maintain quality control
 
-# Create a new directory
-mkdir /mnt/shared_education_data/raw_data/teamX_data/new_folder
-
-# Copy files to server (run this from your local machine)
-scp your_local_file.pdf teamX@d19559:/mnt/shared_education_data/raw_data/teamX_data/
-
-# Download files from server (run this from your local machine)
-scp teamX@d19559:/mnt/shared_education_data/raw_data/teamX_data/file.pdf ./
-```
-
-### File Naming Convention
-- Use format: `teamX_YYYY-MM-DD_type_description`
-- Examples: 
-  - `team1_2024-03-20_observation_math_lesson.pdf`
-  - `team2_2024-03-21_interview_teacher_feedback.txt`
-  - `team3_2024-03-22_survey_student_responses.csv`
-
-### Required Metadata
-Each dataset must include:
-- Collection date
-- Team member names
-- Subject area
-- Brief description
-- Relevant standards addressed
-
-Example metadata file (`team1_2024-03-20_metadata.txt`):
-```
-Collection Date: March 20, 2024
-Team Members: Jane Doe, John Smith
-Subject Area: Mathematics
-Description: Classroom observation of 2nd grade addition and subtraction lesson
-Standards: 
-- 2.OA.A.1 (Use addition and subtraction within 100)
-- 2.OA.B.2 (Fluently add and subtract within 20)
-Notes: 30-minute observation, 23 students present
-```
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Cannot connect to server**
-   - Verify UVU VPN is connected
-   - Check your VPN credentials
-   - Ensure you're using the correct VPN client
-   - Contact UVU IT for VPN issues
-
-2. **Cannot log in**
-   - Verify username and password
-   - Check SSH connection to d19559
-   - Ensure VPN is still connected
-   - Contact system administrator if password reset needed
-
-3. **Permission denied**
-   - Verify you're in your team's directory
-   - Check file permissions
-   - Contact system administrator if persists
-
-### Getting Help
-1. For VPN issues: Contact UVU IT (801) 863-8888
-2. For server access: Email system administrator [admin email]
-3. For data collection questions: Contact your team lead 
-
-## Data Collection Plan
-
-### Core Data Collection Focus Areas
-
-1. **Teaching Methods and Strategies**
-   - Document innovative teaching approaches
-   - Capture successful differentiation strategies
-   - Record classroom technology integration
-   - Note student response to different methods
-   - Observe peer learning and group work dynamics
-   - Track time management and lesson pacing
-
-2. **Student Learning Patterns**
-   - Monitor individual learning styles
-   - Document group interaction patterns
-   - Record question-asking behaviors
-   - Track engagement levels throughout lessons
-   - Note areas of confusion or difficulty
-   - Observe problem-solving approaches
-
-3. **Assessment and Feedback**
-   - Gather formative assessment techniques
-   - Document feedback delivery methods
-   - Record student self-assessment practices
-   - Collect rubrics and scoring guides
-   - Note effective praise and constructive criticism
-   - Track progress monitoring methods
-
-### Creative Approaches for Teams
-
-1. **Team 1: Math Learning Dynamics**
-   - Focus on mathematical thinking processes
-   - Create "math talk" observation protocols
-   - Document manipulative use effectiveness
-   - Record problem-solving strategies
-   - Capture student explanations of solutions
-   - Track mathematical vocabulary development
-
-2. **Team 2: Literacy Development**
-   - Map reading comprehension strategies
-   - Document writing process development
-   - Create vocabulary acquisition logs
-   - Track phonics and phonemic awareness
-   - Record guided reading sessions
-   - Document peer reading interactions
-
-3. **Team 3: Science Inquiry**
-   - Document hands-on experiment processes
-   - Record hypothesis formation
-   - Track scientific reasoning development
-   - Capture student predictions and results
-   - Document science vocabulary usage
-   - Map concept understanding progression
-
-4. **Team 4: Social Studies Engagement**
-   - Track cultural awareness development
-   - Document historical concept understanding
-   - Record civic engagement activities
-   - Capture map and geography skills
-   - Document current events discussions
-   - Track community connection projects
-
-5. **Team 5: Cross-Disciplinary Integration**
-   - Document STEAM integration
-   - Record project-based learning
-   - Track thematic unit implementation
-   - Capture arts integration moments
-   - Document technology integration
-   - Map cross-subject connections
-
-6. **Team 6: Student Support and Intervention**
-   - Document differentiation strategies
-   - Record intervention effectiveness
-   - Track support service integration
-   - Capture ELL student progress
-   - Document IEP implementation
-   - Map behavioral support strategies
-
-### Innovative Data Collection Methods
-
-1. **Digital Documentation**
-   - Time-lapse classroom recordings
-   - Student work progression photos
-   - Digital portfolio development
-   - Interactive whiteboard captures
-   - Student-created video explanations
-   - Audio recordings of discussions
-
-2. **Interactive Observation**
-   - Student journey mapping
-   - Learning station rotation tracking
-   - Engagement heat maps
-   - Classroom movement patterns
-   - Question frequency charts
-   - Peer interaction sociograms
-
-3. **Collaborative Tools**
-   - Shared reflection journals
-   - Digital annotation of lessons
-   - Interactive feedback forms
-   - Progress tracking dashboards
-   - Student self-assessment logs
-   - Teacher-student conference notes
-
-### Data Collection Best Practices
-
-1. **Consistency in Documentation**
-   - Use standardized observation forms
-   - Maintain regular collection schedules
-   - Follow metadata templates strictly
-   - Document context thoroughly
-   - Cross-reference related materials
-   - Update collection logs daily
-
-2. **Quality Assurance**
-   - Peer review of documentation
-   - Regular data validation checks
-   - Metadata completeness verification
-   - File format compliance checks
-   - Regular backup procedures
-   - Version control maintenance
-
-3. **Ethical Considerations**
-   - Maintain student privacy
-   - Secure sensitive information
-   - Follow consent protocols
-   - Respect classroom dynamics
-   - Consider cultural sensitivity
-   - Protect personal information
-
-4. **Creative Documentation Ideas**
-   - Create learning journey maps
-   - Develop success story portfolios
-   - Design visual progress trackers
-   - Build strategy effectiveness matrices
-   - Create intervention impact charts
-   - Design engagement pattern visualizations
-
-⚠️ **Important Notes for Teams**:
-- Be innovative while maintaining scientific rigor
-- Document unexpected observations
-- Look for patterns and connections
-- Consider multiple perspectives
-- Track both successes and challenges
-- Share creative approaches with other teams 
-
-### Team Collaboration Strategy
-
-#### Current Phase: Independent Team Data Collection
-
-For the initial phase of this project, each team will work independently to:
-- Focus deeply on their assigned subject area
-- Develop specialized collection methods
-- Build team-specific expertise
-- Establish efficient workflows
-- Create consistent documentation practices
-
-This approach allows teams to:
-- Move quickly without coordination overhead
-- Develop unique insights
-- Test different collection methods
-- Build strong team dynamics
-- Maintain data quality control
-
-#### Future Integration Plans
-
-Later in the project, we will integrate all team data to create a comprehensive knowledge base:
+### Future Integration
 1. **Data Integration**
-   - Combine insights across subjects
-   - Identify cross-cutting patterns
-   - Share successful strategies
-   - Build comprehensive understanding
+   - Cross-subject insights
+   - Pattern identification
+   - Strategy sharing
+   - Comprehensive analysis
 
 2. **Knowledge Base Development**
-   - Create unified search capabilities
-   - Develop cross-referenced materials
-   - Build integrated analysis tools
-   - Establish shared best practices
+   - Unified search
+   - Cross-referencing
+   - Analysis tools
+   - Best practices
 
-3. **Cross-Team Learning**
-   - Share innovative approaches
-   - Compare effective methods
-   - Discuss common challenges
-   - Build on collective experiences
+### Best Practices
+1. **Documentation**
+   - Use standard forms
+   - Regular schedules
+   - Complete metadata
+   - Cross-reference materials
 
-⚠️ **Important Note on Data Organization**:
-- While working independently, always follow the standard:
-  - File naming conventions
-  - Directory structure
-  - Metadata requirements
-  - Documentation practices
-- This ensures smooth future integration of all data into the comprehensive knowledge base. 
+2. **Quality Control**
+   - Peer review
+   - Data validation
+   - Format compliance
+   - Regular backups
+
+3. **Ethics**
+   - Student privacy
+   - Data security
+   - Consent protocols
+   - Cultural sensitivity
+
+## Support and Help
+
+### Technical Issues
+- VPN problems: UVU IT (801) 863-8888
+- Server access: System administrator [email]
+- Data collection: Team lead
+
+### Common Problems
+1. **Connection Issues**
+   - Check VPN status
+   - Verify credentials
+   - Contact IT support
+
+2. **Login Problems**
+   - Verify username/password
+   - Check SSH connection
+   - Request password reset
+
+3. **Permission Errors**
+   - Check directory permissions
+   - Verify team workspace
+   - Contact administrator 
