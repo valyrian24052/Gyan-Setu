@@ -12,6 +12,9 @@ This guide provides instructions for accessing the remote Ubuntu server and coll
     - [4. Connection Steps](#4-connection-steps)
   - [Data Collection Server](#data-collection-server)
     - [Directory Structure](#directory-structure)
+    - [Data Collection Categories](#data-collection-categories)
+    - [File Type Guidelines](#file-type-guidelines)
+    - [Metadata Requirements](#metadata-requirements)
     - [File Management](#file-management)
     - [File Naming Convention](#file-naming-convention)
     - [Required Metadata](#required-metadata)
@@ -65,15 +68,143 @@ This guide provides instructions for accessing the remote Ubuntu server and coll
 ### Directory Structure
 ```
 /mnt/shared_education_data/
-├── raw_data/               # Original, unmodified data
-│   ├── team1_data/        # Team 1's primary workspace
-│   ├── team2_data/        # Team 2's primary workspace
-│   ├── team3_data/        # Team 3's primary workspace
-│   ├── team4_data/        # Team 4's primary workspace
-│   ├── team5_data/        # Team 5's primary workspace
-│   └── team6_data/        # Team 6's primary workspace
-├── processed_data/         # Cleaned and processed datasets
-└── documentation/         # Shared documentation
+├── raw_data/                           # Original, unmodified data
+│   ├── team1_data/                     # Team 1's primary workspace
+│   │   ├── classroom_observations/     # Direct classroom observations
+│   │   │   ├── math/                  # Mathematics lessons
+│   │   │   ├── reading/               # Reading and literacy
+│   │   │   ├── science/               # Science lessons
+│   │   │   └── social_studies/        # Social studies lessons
+│   │   ├── teacher_interviews/        # Teacher interview recordings and transcripts
+│   │   ├── student_work/             # Student work samples
+│   │   │   ├── assignments/          # Daily assignments
+│   │   │   ├── assessments/          # Tests and quizzes
+│   │   │   └── projects/             # Student projects
+│   │   └── metadata/                 # Metadata files for all collected data
+│   │
+│   ├── team2_data/                     # Team 2's primary workspace
+│   │   ├── classroom_observations/     # Similar structure as team1
+│   │   ├── teacher_interviews/
+│   │   ├── student_work/
+│   │   └── metadata/
+│   │
+│   ├── team3_data/                     # Team 3's primary workspace
+│   │   ├── classroom_observations/
+│   │   ├── teacher_interviews/
+│   │   ├── student_work/
+│   │   └── metadata/
+│   │
+│   ├── team4_data/                     # Team 4's primary workspace
+│   │   ├── classroom_observations/
+│   │   ├── teacher_interviews/
+│   │   ├── student_work/
+│   │   └── metadata/
+│   │
+│   ├── team5_data/                     # Team 5's primary workspace
+│   │   ├── classroom_observations/
+│   │   ├── teacher_interviews/
+│   │   ├── student_work/
+│   │   └── metadata/
+│   │
+│   └── team6_data/                     # Team 6's primary workspace
+│       ├── classroom_observations/
+│       ├── teacher_interviews/
+│       ├── student_work/
+│       └── metadata/
+│
+├── processed_data/                      # Cleaned and processed datasets
+│   ├── by_subject/                     # Organized by subject area
+│   │   ├── mathematics/
+│   │   │   ├── teaching_strategies/
+│   │   │   ├── common_challenges/
+│   │   │   └── best_practices/
+│   │   ├── reading_literacy/
+│   │   ├── science/
+│   │   └── social_studies/
+│   │
+│   ├── by_grade_level/                 # Organized by grade level
+│   │   ├── first_grade/
+│   │   ├── second_grade/
+│   │   └── third_grade/
+│   │
+│   └── cross_cutting/                  # Cross-cutting themes
+│       ├── classroom_management/
+│       ├── student_engagement/
+│       ├── differentiation/
+│       └── assessment_strategies/
+│
+└── documentation/                       # Shared documentation
+    ├── collection_protocols/           # Data collection protocols
+    ├── metadata_templates/             # Templates for metadata
+    ├── best_practices/                # Best practices guides
+    └── analysis_guidelines/           # Guidelines for data analysis
+
+```
+
+### Data Collection Categories
+
+1. **Classroom Observations**
+   - Lesson delivery methods
+   - Student engagement patterns
+   - Teacher-student interactions
+   - Classroom management techniques
+   - Use of educational technology
+   - Assessment strategies
+
+2. **Teacher Interviews**
+   - Teaching methodologies
+   - Classroom challenges
+   - Success stories
+   - Resource needs
+   - Professional development
+   - Student support strategies
+
+3. **Student Work**
+   - Daily assignments
+   - Assessment responses
+   - Project outcomes
+   - Progress tracking
+   - Learning patterns
+   - Areas of difficulty
+
+### File Type Guidelines
+
+1. **Observations**
+   - Video recordings: MP4 format
+   - Audio recordings: MP3 format
+   - Field notes: PDF or TXT
+   - Photos: JPG format
+
+2. **Interviews**
+   - Audio recordings: MP3 format
+   - Transcripts: TXT or PDF
+   - Consent forms: PDF
+
+3. **Student Work**
+   - Scanned documents: PDF
+   - Digital submissions: Original format + PDF
+   - Photos of physical work: JPG
+
+### Metadata Requirements
+
+Each file must have an accompanying metadata file following this format:
+```
+filename: teamX_YYYY-MM-DD_type_description_metadata.txt
+content:
+---
+Collection Date: [YYYY-MM-DD]
+Team Members: [Names of team members present]
+Subject Area: [Mathematics/Reading/Science/Social Studies]
+Grade Level: [1st/2nd/3rd]
+Data Type: [Observation/Interview/Student Work]
+Description: [Brief description of the content]
+Duration: [For recordings]
+Participants: [Number and roles of participants]
+Standards Addressed: [Relevant educational standards]
+Keywords: [3-5 relevant keywords]
+Notes: [Any additional relevant information]
+Related Files: [List of related files if any]
+---
 ```
 
 ### File Management
