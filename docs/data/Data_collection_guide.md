@@ -1,203 +1,184 @@
 # Data Collection Guide for UTAH-TTA
 
 ## Overview
-This guide outlines the standardized processes and requirements for collecting educational content for the second-grade teacher training assistant.
+This guide outlines the process for collecting diverse educational materials for second-grade teacher training. The goal is to gather a rich variety of raw content that can later be structured into our knowledge base.
 
-## Collection Categories
+## Types of Educational Materials
 
-### 1. Utah Core Standards Content
-- **Source**: Utah State Board of Education (www.schools.utah.gov)
-- **Update Frequency**: Quarterly or when standards change
-- **Required Metadata**:
-  - Standard Code (e.g., "2.MD.1")
-  - Subject Area
-  - Grade Level
-  - Last Updated Date
-- **Collection Process**:
-  1. Download official documents from www.schools.utah.gov
-  2. Extract second-grade specific content
-  3. Format according to our structure
-  4. Submit for expert review
-  5. Version and archive previous standards
+### 1. Published Materials
+- **Books & Textbooks**
+  - Second-grade textbooks
+  - Children's literature
+  - Teacher guides
+  - Workbooks
+  - Educational magazines
 
-### 2. Teacher-Student Interactions
-- **Sources**: 
-  - Classroom observations
-  - Expert teacher demonstrations
-  - Professional development sessions
-- **Required Metadata**:
-  - Interaction Type
-  - Subject Context
-  - Grade Level
-  - Learning Objectives
-  - Related Standards
-- **Collection Guidelines**:
-  1. Obtain necessary permissions
-  2. Record interactions following privacy protocols
-  3. Anonymize all participant information
-  4. Validate educational value
-  5. Tag with relevant standards
+- **Digital Resources**
+  - Educational websites
+  - Online lesson materials
+  - Educational videos
+  - Interactive games
+  - Learning apps
 
-### 3. Teaching Scenarios
-- **Development Process**:
-  1. Draft scenario based on real situations
-  2. Review for age appropriateness
-  3. Align with Utah Core Standards
-  4. Submit for expert validation
-  5. Include differentiation strategies
+### 2. Classroom Materials
+- **Teacher Resources**
+  - Lesson plans
+  - Worksheets
+  - Assessment materials
+  - Teaching aids
+  - Class activities
 
-## Data Quality Standards
+- **Student Materials**
+  - Completed assignments
+  - Project examples
+  - Student work samples
+  - Practice materials
+  - Learning journals
 
-### Content Requirements
-1. **Grade-Level Appropriateness**
-   - Language suitable for 7-8 year olds
-   - Age-appropriate concepts
-   - Clear learning objectives
-   - Differentiation options
+### 3. Real-world Interactions
+- **Classroom Recordings**
+  - Teacher-student dialogues
+  - Class discussions
+  - Teaching demonstrations
+  - Student presentations
+  - Group activities
 
-2. **Educational Alignment**
-   - Utah Core Standards compliance
-   - STEM integration where applicable
-   - Cross-curricular connections
-   - Cultural relevance
+- **Professional Development**
+  - Training sessions
+  - Workshop materials
+  - Expert presentations
+  - Teaching techniques
+  - Best practices
 
-3. **Practical Application**
-   - Real-world relevance
-   - Clear teaching strategies
-   - Measurable outcomes
-   - Assessment guidelines
+## Collection Guidelines
 
-### Metadata Standards
-1. **Required Fields**
-   - Unique Identifier
-   - Content Type
-   - Grade Level
-   - Subject Area(s)
-   - Standard Reference(s)
-   - Creation Date
-   - Last Modified Date
-   - Review Status
-   - Source Attribution
+### Basic Requirements
+1. **Source Information**
+   - Title/Description
+   - Author/Creator (if applicable)
+   - Source/Origin
+   - Date collected
+   - Brief notes about content
 
-2. **Optional Fields**
-   - Keywords
-   - Related Resources
-   - Difficulty Level
-   - Time Requirements
-   - Materials Needed
+2. **Educational Context**
+   - Subject area
+   - Grade level relevance
+   - Learning context
+   - Any special notes
 
-## Collection Templates
+3. **Usage Rights**
+   - Copyright status
+   - Permission documentation
+   - Attribution requirements
+   - Usage restrictions
 
-### Scenario Template
-```yaml
-scenario:
-  id: ""  # Unique identifier
-  title: ""
-  subject_area: ""
-  core_standard_reference: []  # List of applicable standards
-  learning_objectives:
-    - ""
-  context: ""
-  student_background: ""
-  teaching_approach: ""
-  differentiation_strategies:
-    - ""
-  expected_outcomes: ""
-  assessment_methods: ""
-  materials_needed: []
-  time_required: ""
-  review_status: ""
-  metadata:
-    created_at: ""
-    modified_at: ""
-    reviewed_by: []
-    version: ""
-```
+### Quality Standards
+1. **Content Quality**
+   - Age-appropriate for 7-8 year olds
+   - Educational value
+   - Clear and understandable
+   - Good condition (if physical)
 
-### Interaction Template
-```yaml
-interaction:
-  id: ""  # Unique identifier
-  type: ""
-  subject: ""
-  context: ""
-  standards_alignment: []
-  dialogue:
-    - speaker: "teacher"
-      text: ""
-      intent: ""
-    - speaker: "student"
-      text: ""
-      response_type: ""
-  teaching_points:
-    - ""
-  outcomes:
-    - ""
-  metadata:
-    recorded_date: ""
-    anonymized_date: ""
-    review_status: ""
-    reviewer_notes: ""
-```
+2. **Recording Quality** (for audio/video)
+   - Clear audio
+   - Good visibility (for video)
+   - Minimal background noise
+   - Complete recordings
 
-## Quality Assurance Process
+### Privacy Guidelines
+1. **Student Privacy**
+   - Remove/blur student names
+   - Obtain necessary permissions
+   - Follow FERPA guidelines
+   - Protect personal information
 
-### 1. Initial Validation
-- Content completeness check
-- Metadata verification
-- Standards alignment review
-- Age-appropriateness assessment
+2. **Teacher Privacy**
+   - Get consent for recordings
+   - Respect confidentiality
+   - Allow opt-out options
+   - Secure sensitive information
 
-### 2. Expert Review
-- Pedagogical soundness
-- Content accuracy
-- Cultural sensitivity
-- Implementation feasibility
+## Collection Process
 
-### 3. Final Approval
-- Documentation completeness
-- Technical requirements met
-- Privacy compliance
-- Integration readiness
+### 1. Material Gathering
+- Save digital materials in original format
+- Scan physical materials (300 DPI minimum)
+- Record clear audio/video
+- Preserve original quality
+- Keep complete materials
 
-## Version Control Guidelines
+### 2. Basic Organization
+- Create logical folder structure
+- Use descriptive file names
+- Separate by material type
+- Group related items
+- Maintain original files
 
-### 1. Content Versioning
-- Use semantic versioning (MAJOR.MINOR.PATCH)
-- Document all changes
-- Maintain changelog
-- Archive deprecated content
+### 3. Documentation
+- Note collection date
+- Record source information
+- Add brief description
+- Note any special handling
+- Track permissions
 
-### 2. Review Tracking
-- Record all review decisions
-- Document feedback
-- Track implementation of changes
-- Maintain approval history
+## Storage Guidelines
 
-## Integration Guidelines
+### Digital Materials
+- Use high-quality formats
+- Make backup copies
+- Organize in folders
+- Use clear naming
+- Preserve metadata
 
-### 1. Database Integration
-- Follow schema requirements
-- Validate data formats
-- Ensure proper indexing
-- Maintain referential integrity
+### Physical Materials
+- Store properly
+- Protect from damage
+- Label clearly
+- Track location
+- Handle carefully
 
-### 2. API Integration
-- Follow API specifications
-- Implement error handling
-- Validate responses
-- Monitor performance
-
-## Compliance Requirements
-
-### 1. Privacy Standards
-- FERPA compliance
-- Data anonymization
+### Recordings
+- Use standard formats
+- Maintain quality
+- Include context
+- Label properly
 - Secure storage
-- Access controls
 
-### 2. Educational Standards
-- Utah Core Standards alignment
-- Grade-level appropriateness
-- Educational best practices
-- Assessment alignment 
+## Legal Considerations
+
+### Copyright
+- Check usage rights
+- Get permissions
+- Document licenses
+- Follow fair use
+- Respect restrictions
+
+### Privacy
+- Protect identities
+- Secure consent
+- Follow FERPA
+- Safe storage
+- Control access
+
+## Collection Tips
+
+### Finding Materials
+- Visit school libraries
+- Check online repositories
+- Connect with teachers
+- Attend workshops
+- Browse educational sites
+
+### Recording Quality
+- Use good equipment
+- Check audio levels
+- Ensure good lighting
+- Test before recording
+- Monitor quality
+
+### Organization
+- Sort while collecting
+- Label immediately
+- Keep related items together
+- Note connections
+- Track progress 
