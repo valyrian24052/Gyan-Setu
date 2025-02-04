@@ -2,153 +2,215 @@
 ## Team-Based Hierarchical Data Collection Project
 
 ## 🎯 Project Overview
-Teams will collaborate to collect and organize elementary education content, ultimately contributing to a comprehensive shared database.
+Teams will collaborate to collect and organize elementary education content, following standardized processes to build a comprehensive, high-quality educational database.
 
-**Before you begin:**  
-Please review these essential resources to guide your work:
-- **[Data Collection Guide for UTAH-TTA](../docs/data/collection_guide.md)**  
-  This document details our standard processes, categorization, and quality standards for data collection.
-- **[Web Scraping Techniques](../docs/web_scraping.md)**  
-  If you are interested in automated data extraction, this guide introduces basic web scraping tools, practices, and ethical considerations.
+**Required Reading:**  
+Before starting, thoroughly review these essential resources:
+- **[Data Collection Guide for UTAH-TTA](../docs/data/Data_collection_guide.md)**  
+  Details our standard processes, metadata requirements, and quality standards.
+- **[Web Scraping Guide](../docs/data/web_scraping_guide.md)**  
+  For automated data collection, covering tools, best practices, and compliance requirements.
 
----
+## 📚 Pre-Assignment Requirements
 
-## 📚 Pre-Assignment Preparation
+### 1. Technical Setup
+- [ ] Install required tools and dependencies
+- [ ] Set up access to shared repositories
+- [ ] Configure development environment
+- [ ] Test data collection templates
 
-Before diving into the assignment, familiarize yourself with key concepts in research and data collection:
+### 2. Knowledge Prerequisites
+- [ ] Review Utah Core Standards for Grade 2
+- [ ] Understand metadata requirements
+- [ ] Study quality assurance processes
+- [ ] Familiarize with compliance guidelines
 
-- **Research Fundamentals:**  
-  Research involves defining clear questions and systematically seeking reliable information. Ask yourself:
-  - What specific topics or questions related to elementary education are we addressing?
-  - Which types of sources (e.g., state education sites, academic journals) best suit your needs?
+## 📋 Project Phases
 
-- **Data Collection Approaches:**  
-  You have two main options for gathering data:
-  - **Manual Methods:** Search for credible sources, bookmark relevant pages, and record key details (URLs, dates, summaries, etc.).
-  - **Automated Methods:** If you or a teammate is comfortable with programming, consider basic data mining or web scraping (refer to the Web Scraping Techniques guide).
+### Phase 1: Planning (Week 1)
+1. **Team Organization**
+   - Assign roles and responsibilities
+   - Create communication channels
+   - Set up project tracking tools
+   - Schedule regular check-ins
 
-- **Documentation & Organization:**  
-  Consistent recording of your process is crucial. Not only does it help maintain a clear workflow, but it also aids in troubleshooting and future reference. Use shared spreadsheets or documents to log:
-  - Source details
-  - Extraction/discovery methods used
-  - Any difficulties encountered
+2. **Collection Strategy**
+   - Define content priorities
+   - Choose collection methods
+   - Create work breakdown structure
+   - Set quality metrics
 
----
+### Phase 2: Initial Collection (Weeks 1-2)
+1. **Content Gathering**
+   - Follow assigned collection methods
+   - Apply metadata standards
+   - Document sources and processes
+   - Maintain collection logs
 
-## 📋 Team Responsibilities
+2. **Quality Control**
+   - Perform initial validation
+   - Check metadata completeness
+   - Verify standards alignment
+   - Address quality issues
 
-### **Initial Setup**
-- **Shared Directory:** Create the team's shared directory for all collected assets.
-- **Communication:** Establish internal channels (e.g., Microsoft Teams) and agree on a team workflow.
-- **Review Documentation:** Everyone should review both the [Data Collection Guide](../docs/data/collection_guide.md) and [Web Scraping Techniques](../docs/web_scraping.md) where applicable.
+### Phase 3: Review & Refinement (Week 3)
+1. **Peer Review**
+   - Cross-team content review
+   - Quality assurance checks
+   - Feedback documentation
+   - Revision tracking
 
-### **Data Collection**
-- **Design Hierarchical Structure:**  
-  Use the guidelines from the Data Collection Guide to develop an organized structure for the content.
-- **Content Gathering:**  
-  Decide on the method for collection:
-  - **Manual Research:** Identify credible sources, record all necessary source details, and summarize content.
-  - **Automated Extraction:** If using web scraping, follow the tutorials and ethical guidelines provided in our web scraping documentation.
-  
-- **Documentation:**  
-  Clearly document your process, including:
-  - Your chosen method (manual vs. automated)
-  - Relevant URLs and source data
-  - Any challenges encountered and how they were resolved
+2. **Expert Validation**
+   - Submit for expert review
+   - Address feedback
+   - Document changes
+   - Update metadata
 
----
+### Phase 4: Integration (Week 4)
+1. **Data Preparation**
+   - Format standardization
+   - Final quality checks
+   - Documentation completion
+   - Integration testing
 
-## 🤝 Inter-Team Collaboration
+2. **Database Integration**
+   - Follow integration guidelines
+   - Validate data integrity
+   - Test accessibility
+   - Monitor performance
 
-### **Phase 1: Individual Team Collection**
-- Work independently on your assigned segments while maintaining clear records.
-- Provide regular progress updates to the project coordinator.
-- Participate in weekly cross-team check-ins to share insights and address challenges.
+## 📊 Deliverables & Metrics
 
-### **Phase 2: Database Integration**
-- Present your team's data structure and content.
-- Engage in collaborative sessions to standardize the content approaches.
-- Help merge individual contributions into a cohesive, unified database.
-
----
-
-## 📊 Team Deliverables
-
-### **Team Documentation**
-- Detailed description of your internal workflow and team communication.
-- Meeting minutes and records of decisions made during the process.
-
-### **Collection Deliverables**
-- **Hierarchy Design Document:** Outline the structure of your collected data.
-- **Organized Content:** All content should be stored in the team's shared directory.
-- **Navigation Guide:** A document detailing how to access and use the organized data.
-- **Integration Preparation Report:** Summarize your data collection processes and any challenges in preparation for the database integration phase.
-
-### Collection Metrics
-Your final submission should include:
-- **Quantity Report:** Total number of items collected per category
-- **Coverage Analysis:** Distribution across subject areas
-- **Quality Checklist:** Verification that all items meet the quality requirements
-- **Time Log:** Documentation of hours spent on collection and organization
-
----
-
-## 🔄 Integration Process
-After the two-week collection period:
-- Teams will present their organizational structures.
-- Join collaborative sessions to standardize methods and structure.
-- Contribute to the creation of a unified database structure.
-- Follow through with systematic content migration into the integrated system.
-
-## 🌐 Standard Alignment
-To strengthen the alignment between your gathered content and our organizational standards, please consider the following:
-
-1. **Refer to the Data Collection Guide**  
-   - Revisit the [Data Collection Guide for UTAH-TTA](../docs/data/collection_guide.md) and verify that your items meet all established quality, age-appropriateness, and Utah Core Standards criteria.  
-   - Double-check metadata completeness: source URLs, publication dates, learning objectives, etc.
-
-2. **Leverage the Web Scraping Techniques**  
-   - If automated scraping was used at any stage, ensure you followed the [Web Scraping Techniques](../docs/web_scraping.md) document closely, paying particular attention to the legal compliance and ethical constraints (rate-limiting, respecting ``robots.txt``, etc.).  
-   - Incorporate relevant scripts or code snippets in your final submission to demonstrate how data was responsibly captured.
-
-3. **Use a Consistent Template**  
-   - When dealing with lesson plans, activities, or assessments, apply a uniform structure: title, grade level, subject area, relevant standard code (e.g., 2.MD.1), and a short summary.  
-   - Following the "Scenario Template" or "Interaction Template" in the guide (where applicable) promotes a cohesive data set across all teams.
-
-4. **Conduct Periodic Self-Audits**  
-   - At least once per week, perform a quick rubric-based review: Are all items well-documented and properly aligned with Grade 2 curriculum standards?  
-   - If you identify gaps (e.g., incomplete metadata, unclear alignment), correct them before the final integration phase.
-
-5. **Document All Changes and Rationale**  
-   - Keep records of any modifications made to your collection strategy or structure, including code changes in web scraping tools.  
-   - Provide short notes or comments explaining why each modification was necessary for standard alignment.
-
-By following these steps, your team will ensure that all data complies with UTAH-TTA standards and is ready for a smooth integration into the unified database.
-
-## 📊 Collection Requirements
-
-### Quantity Guidelines
-Each team should aim to collect:
-- **Core Educational Content:** 15-20 unique items
-  - 5-7 lesson plans
-  - 5-7 classroom activities
-  - 5-6 assessment materials
+### Required Content Volume
+Each team must collect and process:
+- **Core Educational Content:** 20-25 unique items
+  - 7-8 lesson plans
+  - 7-8 classroom activities
+  - 6-7 assessment materials
+  - 2-3 multimedia resources
 
 ### Quality Requirements
-Each collected item must include:
-- Complete metadata (source, date, grade level, subject area)
-- Clear alignment with Utah Core Standards
-- Age-appropriate content for 2nd grade
-- Proper attribution and licensing information
+Each item must include:
+1. **Complete Metadata**
+   - Unique identifier
+   - Content type
+   - Grade level
+   - Subject area(s)
+   - Standard reference(s)
+   - Creation/modification dates
+   - Review status
+   - Source attribution
+
+2. **Educational Alignment**
+   - Clear learning objectives
+   - Standards alignment
+   - Age-appropriate content
+   - Assessment guidelines
+
+3. **Documentation**
+   - Collection methodology
+   - Quality assurance results
+   - Review history
+   - Integration notes
 
 ### Content Distribution
-Balance your collection across these subject areas:
-- Mathematics (25-30%)
-- Language Arts (25-30%)
-- Science (20-25%)
-- Social Studies (20-25%)
+Balance across subject areas:
+- Mathematics (30%)
+- Language Arts (30%)
+- Science (20%)
+- Social Studies (20%)
 
-### Time Investment Guidelines
-- Expected time: 10-12 hours per team member over 2 weeks
-- Recommended daily collection: 1-2 items per team member
-- Team coordination: 2-3 hours per week
+### Performance Metrics
+Track and report:
+1. **Collection Metrics**
+   - Items collected per category
+   - Quality approval rate
+   - Review cycle time
+   - Integration success rate
+
+2. **Team Metrics**
+   - Collection velocity
+   - Quality scores
+   - Collaboration effectiveness
+   - Documentation completeness
+
+## 🔄 Quality Assurance Process
+
+### 1. Self-Review
+- Use provided checklists
+- Verify metadata completeness
+- Check standards alignment
+- Validate age-appropriateness
+
+### 2. Peer Review
+- Cross-team validation
+- Content quality check
+- Documentation review
+- Integration readiness
+
+### 3. Expert Review
+- Pedagogical review
+- Content accuracy
+- Implementation feasibility
+- Final approval
+
+## 📈 Progress Tracking
+
+### Weekly Milestones
+1. **Week 1**
+   - Team setup complete
+   - Collection strategy defined
+   - Initial items collected
+   - Quality process established
+
+2. **Week 2**
+   - 50% content collected
+   - Initial reviews completed
+   - Documentation updated
+   - Integration testing started
+
+3. **Week 3**
+   - All content collected
+   - Peer reviews completed
+   - Expert review started
+   - Integration preparation
+
+4. **Week 4**
+   - Expert review completed
+   - Final revisions made
+   - Integration completed
+   - Documentation finalized
+
+### Progress Reports
+Submit weekly reports including:
+- Items collected/processed
+- Quality metrics
+- Challenges encountered
+- Solutions implemented
+- Next week's goals
+
+## 🎓 Evaluation Criteria
+
+### 1. Content Quality (40%)
+- Accuracy and relevance
+- Standards alignment
+- Age-appropriateness
+- Educational value
+
+### 2. Documentation (30%)
+- Process documentation
+- Metadata completeness
+- Review history
+- Integration notes
+
+### 3. Team Collaboration (20%)
+- Communication effectiveness
+- Task distribution
+- Problem-solving
+- Knowledge sharing
+
+### 4. Innovation (10%)
+- Process improvements
+- Tool development
+- Efficiency gains
+- Best practices
