@@ -1,216 +1,199 @@
 # Data Collection Assignment  
-## Team-Based Hierarchical Data Collection Project
+## Educational Materials Collection Project
 
 ## 🎯 Project Overview
-Teams will collaborate to collect and organize elementary education content, following standardized processes to build a comprehensive, high-quality educational database.
+Teams will collaborate to collect a diverse range of educational materials for second-grade teaching. The goal is to gather high-quality content that can be used to build our teacher training knowledge base.
 
 **Required Reading:**  
-Before starting, thoroughly review these essential resources:
-- **[Data Collection Guide for UTAH-TTA](../docs/data/Data_collection_guide.md)**  
-  Details our standard processes, metadata requirements, and quality standards.
-- **[Web Scraping Guide](../docs/data/web_scraping_guide.md)**  
-  For automated data collection, covering tools, best practices, and compliance requirements.
+Before starting, review the essential guide:
+- **[Data Collection Guide](../docs/data/Data_collection_guide.md)**  
+  Details the types of materials to collect and best practices for collection.
 
 ## 📚 Pre-Assignment Requirements
 
-### 1. Technical Setup
-- [ ] Install required tools and dependencies
-- [ ] Set up access to shared repositories
-- [ ] Configure development environment
-- [ ] Test data collection templates
+### 1. Setup
+- [ ] Create shared storage space for team
+- [ ] Set up recording equipment (if needed)
+- [ ] Test file sharing and backup systems
+- [ ] Prepare collection tracking sheets
 
-### 2. Knowledge Prerequisites
-- [ ] Review Utah Core Standards for Grade 2
-- [ ] Understand metadata requirements
-- [ ] Study quality assurance processes
-- [ ] Familiarize with compliance guidelines
+### 2. Knowledge Preparation
+- [ ] Review second-grade education basics
+- [ ] Understand privacy requirements
+- [ ] Learn proper recording techniques
+- [ ] Study copyright guidelines
 
 ## 📋 Project Phases
 
 ### Phase 1: Planning (Week 1)
 1. **Team Organization**
-   - Assign roles and responsibilities
-   - Create communication channels
-   - Set up project tracking tools
-   - Schedule regular check-ins
+   - Assign collection areas
+   - Set up communication
+   - Create shared folders
+   - Plan collection schedule
 
-2. **Collection Strategy**
-   - Define content priorities
-   - Choose collection methods
-   - Create work breakdown structure
-   - Set quality metrics
+2. **Resource Identification**
+   - List potential sources
+   - Contact schools/teachers
+   - Identify online resources
+   - Schedule recordings
 
-### Phase 2: Initial Collection (Weeks 1-2)
-1. **Content Gathering**
-   - Follow assigned collection methods
-   - Apply metadata standards
-   - Document sources and processes
-   - Maintain collection logs
+### Phase 2: Collection (Weeks 1-3)
+1. **Physical Materials**
+   - Visit libraries
+   - Gather textbooks
+   - Collect worksheets
+   - Find teaching aids
 
-2. **Quality Control**
-   - Perform initial validation
-   - Check metadata completeness
-   - Verify standards alignment
-   - Address quality issues
+2. **Digital Content**
+   - Download resources
+   - Save online materials
+   - Record video/audio
+   - Archive websites
 
-### Phase 3: Review & Refinement (Week 3)
-1. **Peer Review**
-   - Cross-team content review
-   - Quality assurance checks
-   - Feedback documentation
-   - Revision tracking
+3. **Real-world Materials**
+   - Record classroom sessions
+   - Document teaching practices
+   - Collect student work samples
+   - Gather teacher resources
 
-2. **Expert Validation**
-   - Submit for expert review
-   - Address feedback
-   - Document changes
-   - Update metadata
+### Phase 3: Organization (Week 4)
+1. **Material Processing**
+   - Sort collected items
+   - Label everything clearly
+   - Create basic inventory
+   - Check material quality
 
-### Phase 4: Integration (Week 4)
-1. **Data Preparation**
-   - Format standardization
-   - Final quality checks
-   - Documentation completion
-   - Integration testing
+2. **Documentation**
+   - Record sources
+   - Note permissions
+   - Add descriptions
+   - Track usage rights
 
-2. **Database Integration**
-   - Follow integration guidelines
-   - Validate data integrity
-   - Test accessibility
-   - Monitor performance
+## 📊 Collection Goals
 
-## 📊 Deliverables & Metrics
+### Material Types to Collect
+Each team should gather:
+- **Books & Texts:** 10-15 items
+  - Textbooks
+  - Teacher guides
+  - Workbooks
+  - Children's books
 
-### Required Content Volume
-Each team must collect and process:
-- **Core Educational Content:** 20-25 unique items
-  - 7-8 lesson plans
-  - 7-8 classroom activities
-  - 6-7 assessment materials
-  - 2-3 multimedia resources
+- **Digital Resources:** 15-20 items
+  - Websites
+  - Educational videos
+  - Learning games
+  - Online activities
 
-### Quality Requirements
-Each item must include:
-1. **Complete Metadata**
-   - Unique identifier
-   - Content type
-   - Grade level
-   - Subject area(s)
-   - Standard reference(s)
-   - Creation/modification dates
-   - Review status
-   - Source attribution
+- **Classroom Materials:** 20-25 items
+  - Lesson plans
+  - Worksheets
+  - Student work
+  - Teaching aids
 
-2. **Educational Alignment**
-   - Clear learning objectives
-   - Standards alignment
-   - Age-appropriate content
-   - Assessment guidelines
+- **Recordings:** 8-10 sessions
+  - Class interactions
+  - Teaching demonstrations
+  - Student presentations
+  - Group activities
 
-3. **Documentation**
-   - Collection methodology
-   - Quality assurance results
-   - Review history
-   - Integration notes
+### Quality Guidelines
+Each item should be:
+1. **Usable Quality**
+   - Clear and readable
+   - Complete content
+   - Good condition
+   - Working properly (digital)
 
-### Content Distribution
-Balance across subject areas:
-- Mathematics (30%)
-- Language Arts (30%)
-- Science (20%)
-- Social Studies (20%)
+2. **Properly Documented**
+   - Source noted
+   - Date collected
+   - Brief description
+   - Usage rights clear
 
-### Performance Metrics
-Track and report:
-1. **Collection Metrics**
-   - Items collected per category
-   - Quality approval rate
-   - Review cycle time
-   - Integration success rate
+3. **Age Appropriate**
+   - Suitable for 7-8 year olds
+   - Grade 2 level
+   - Clear educational value
+   - Engaging content
 
-2. **Team Metrics**
-   - Collection velocity
-   - Quality scores
-   - Collaboration effectiveness
-   - Documentation completeness
+## 🔄 Collection Process
 
-## 🔄 Quality Assurance Process
+### 1. Gathering
+- Follow source guidelines
+- Get necessary permissions
+- Maintain material quality
+- Document everything
 
-### 1. Self-Review
-- Use provided checklists
-- Verify metadata completeness
-- Check standards alignment
-- Validate age-appropriateness
+### 2. Processing
+- Sort by type
+- Label clearly
+- Check completeness
+- Note any issues
 
-### 2. Peer Review
-- Cross-team validation
-- Content quality check
-- Documentation review
-- Integration readiness
-
-### 3. Expert Review
-- Pedagogical review
-- Content accuracy
-- Implementation feasibility
-- Final approval
+### 3. Organization
+- Use folder structure
+- Group related items
+- Add basic descriptions
+- Track inventory
 
 ## 📈 Progress Tracking
 
-### Weekly Milestones
+### Weekly Goals
 1. **Week 1**
-   - Team setup complete
-   - Collection strategy defined
-   - Initial items collected
-   - Quality process established
+   - Team organized
+   - Sources identified
+   - Initial collection started
+   - Systems set up
 
 2. **Week 2**
-   - 50% content collected
-   - Initial reviews completed
-   - Documentation updated
-   - Integration testing started
+   - Physical materials gathered
+   - Digital collection ongoing
+   - Recordings scheduled
+   - Documentation started
 
 3. **Week 3**
-   - All content collected
-   - Peer reviews completed
-   - Expert review started
-   - Integration preparation
+   - Most materials collected
+   - Recordings completed
+   - Initial organization done
+   - Quality checks started
 
 4. **Week 4**
-   - Expert review completed
-   - Final revisions made
-   - Integration completed
-   - Documentation finalized
+   - All materials gathered
+   - Everything organized
+   - Documentation complete
+   - Collection reviewed
 
-### Progress Reports
-Submit weekly reports including:
-- Items collected/processed
-- Quality metrics
-- Challenges encountered
-- Solutions implemented
-- Next week's goals
+### Weekly Reports
+Include:
+- Materials collected
+- Source list
+- Collection issues
+- Next steps
 
-## 🎓 Evaluation Criteria
+## 🎓 Evaluation
 
-### 1. Content Quality (40%)
-- Accuracy and relevance
-- Standards alignment
-- Age-appropriateness
-- Educational value
+### 1. Collection Completeness (40%)
+- Variety of materials
+- Coverage of subjects
+- Quality of items
+- Quantity goals met
 
-### 2. Documentation (30%)
-- Process documentation
-- Metadata completeness
-- Review history
-- Integration notes
+### 2. Organization (30%)
+- Clear structure
+- Good labeling
+- Complete documentation
+- Easy to navigate
 
-### 3. Team Collaboration (20%)
-- Communication effectiveness
-- Task distribution
-- Problem-solving
-- Knowledge sharing
+### 3. Team Effort (20%)
+- Regular progress
+- Good communication
+- Problem solving
+- Collaboration
 
-### 4. Innovation (10%)
-- Process improvements
-- Tool development
-- Efficiency gains
-- Best practices
+### 4. Extra Value (10%)
+- Unique materials
+- Creative sources
+- Helpful organization
+- Thorough documentation
