@@ -77,10 +77,13 @@ For contributing to the project:
 Project Lead:
 - Dr. Majid Memari
 - Assistant Professor, Utah Valley University
+- Ph.D. in Generative AI
+- Research Focus: Artificial Intelligence and AI Applications
 - Email: mmemari@uvu.edu
 
 For questions about:
-- Documentation and Development: Contact Dr. Memari
+- AI Development and Research: Contact Dr. Memari
+- Documentation and Implementation: Contact Dr. Memari
 - General Inquiries: mmemari@uvu.edu
 
 ## License
