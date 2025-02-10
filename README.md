@@ -8,7 +8,7 @@ An innovative educational training system integrated directly with Elementary Ed
 This repository is organized into two main branches:
 
 - `main` (current branch): Contains project documentation, architecture descriptions, and planning materials
-- `phase-1-chatbot`: Implementation of Phase 1 - the chatbot-based teacher training system (formerly `gh-pages`)
+- `phase-1-chatbot`: Implementation of Phase 1 - the chatbot-based teacher training system.
 
 Future phases (voice interactions and VR experiences) will be developed in new branches as the project progresses.
 
@@ -74,10 +74,14 @@ For contributing to the project:
 
 ## Contact
 
+Project Lead:
+- Dr. Majid Memari
+- Assistant Professor, Utah Valley University
+- Email: mmemari@uvu.edu
+
 For questions about:
-- Documentation: [documentation-team@utah-tta.edu]
-- Development: [development-team@utah-tta.edu]
-- General Inquiries: [info@utah-tta.edu]
+- Documentation and Development: Contact Dr. Memari
+- General Inquiries: mmemari@uvu.edu
 
 ## License
 
