@@ -59,3 +59,6 @@ knowledge_base_backup/
 
 # Large files - explicitly ignore
 knowledge_base/vector_db.sqlite
+
+# Model cache
+model_cache/models--*/blobs/*
