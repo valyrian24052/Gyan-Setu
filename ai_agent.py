@@ -1,1561 +1,1086 @@
 """
-Teacher Training Agent Module
+Teacher Training Agent - Conversational AI for Teacher Training Simulation
 
-This module implements the core AI agent responsible for simulating and managing
-teacher training scenarios. It coordinates between the LLM interface, knowledge management,
-and pedagogical processing components.
+This module implements a conversational AI agent for simulating teacher-student
+interactions in a training environment. The goal is to help teachers
+practice and improve their teaching skills through realistic simulations
+with scaffolded feedback.
 
-Key Components:
-    - TeacherTrainingAgent: Main class that orchestrates the training simulation
-    - EnhancedTeacherTrainingAgent: Advanced agent with knowledge base integration
-    - Knowledge Base Integration: Loads and manages teaching strategies and student behaviors
-    - LLM Integration: Handles communication with the language model for response generation
-    - Scenario Management: Creates and manages teaching scenarios
-    - Evaluation System: Provides feedback on teaching responses
+The agent implements several key capabilities:
+1. Scenario generation based on educational parameters
+2. Student simulation with varying characteristics
+3. Analysis of teaching strategies
+4. Constructive feedback on teaching approaches
+
+The module includes:
+- TeacherTrainingGraph: LangGraph-based implementation for the teacher training simulation
+- EnhancedTeacherTrainingGraph: Extended implementation with advanced features
 
 Dependencies:
-    - llm_handler: Handles language model interactions
-    - knowledge_manager: Contains teaching strategies and student characteristics
-    - evaluator: Evaluates teacher responses
-    - llm_interface: Provides interface to the language model
-    - document_processor: Processes educational books
-    - vector_database: Manages vectorized knowledge
-    - scenario_generator: Creates enhanced teaching scenarios
+- langgraph: For structuring the agent as a state machine
+- langchain: For language model interactions
+- llm_handler: For interactions with the language model
 
-Example:
-    agent = TeacherTrainingAgent()
-    scenario = agent.create_teaching_scenario("mathematics", "intermediate", student_profile)
-    feedback = agent.evaluate_teaching_response(teacher_input, scenario)
-
-Advanced Example:
-    enhanced_agent = EnhancedTeacherTrainingAgent()
-    enhanced_agent.setup_teacher_profile()
-    scenario = enhanced_agent.generate_enhanced_scenario()
-    enhanced_agent.start_enhanced_interactive_session()
+Usage:
+    agent = TeacherTrainingGraph(model="gpt-4")
+    response = agent.run(user_input="How would you explain fractions to a student?")
 """
 
-import random
-import json
-from llm_handler import PedagogicalLanguageProcessor, LLMInterface
-from knowledge_manager import PedagogicalKnowledgeManager, SECOND_GRADE_CHARACTERISTICS, TEACHING_STRATEGIES
-from evaluator import evaluate_teacher_response
-from typing import Dict, Any
-from document_processor import DocumentProcessor
-from vector_database import VectorDatabase
-from scenario_generator import ClassroomScenarioGenerator
 import os
-import sqlite3
-import csv
+import json
+import uuid
+import logging
+from typing import Dict, List, Any, Optional, TypedDict, Annotated, Union, cast
+from enum import Enum
+from pydantic import Field, BaseModel
 
-class TeacherTrainingAgent:
+# LangChain and LangGraph imports
+from langchain.schema import HumanMessage, SystemMessage, AIMessage
+from langchain_core.messages import BaseMessage
+from langgraph.graph import StateGraph, END
+from langgraph.prebuilt import ToolNode
+from langgraph.checkpoint.memory import MemorySaver
+
+# Local imports
+from llm_handler import EnhancedLLMInterface, PedagogicalLanguageProcessor
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Define state types
+class Sentiment(str, Enum):
+    """Sentiment of the student response"""
+    POSITIVE = "positive"
+    NEUTRAL = "neutral"
+    NEGATIVE = "negative"
+    CONFUSED = "confused"
+    
+class AgentState(TypedDict):
+    """State for the teacher training agent"""
+    messages: List[BaseMessage]  # Conversation history
+    student_profile: Dict[str, Any]  # Student characteristics
+    scenario: Dict[str, Any]  # Current teaching scenario
+    teaching_approach: Optional[str]  # Current teaching approach
+    student_responses: List[str]  # History of student responses
+    analysis: Optional[Dict[str, Any]]  # Analysis of teaching approaches
+    agent_feedback: Optional[str]  # Feedback on teaching approach
+    sentiment: Optional[Sentiment]  # Sentiment of the latest student response
+    
+class TeacherTrainingGraph:
     """
-    Main agent class for managing teacher training simulations.
+    LangGraph-based implementation of the Teacher Training Simulator
     
-    This class orchestrates the interaction between different components and manages
-    the entire teaching simulation lifecycle, including scenario creation, response
-    evaluation, and feedback generation.
+    This class uses LangGraph to create a directed graph state machine
+    for simulating teacher-student interactions for training purposes.
     
-    Key Features:
-        - Dynamic scenario generation based on subject and difficulty
-        - Realistic student behavior simulation
-        - Comprehensive teaching response evaluation
-        - Personalized feedback generation
-        - Interactive session management
+    The graph includes nodes for:
+    - Scenario generation
+    - Teaching approach analysis
+    - Student response generation
+    - Feedback provision
+    - Sentiment analysis
     
     Attributes:
-        llm (LLMInterface): Interface to the language model for response generation
-        processor (PedagogicalLanguageProcessor): Processor for pedagogical analysis
-        learning_style (str): Current student's learning style preference
-        current_challenges (list): List of current student's learning challenges
-        teacher_profile (dict): Profile containing teacher characteristics
-        personality (dict): Simulated student's personality traits and state
+        model_name (str): Name of the LLM model to use
+        graph (StateGraph): The LangGraph state machine
+        _memory_storage (dict): Dictionary for preserving conversation state
+        llm (EnhancedLLMInterface): Interface to the language model
+        processor (PedagogicalLanguageProcessor): For processing educational language
     """
     
-    def __init__(self):
+    def __init__(self, model_name="gpt-4"):
         """
-        Initialize the TeacherTrainingAgent with required components.
-        
-        Sets up:
-            - LLM interface for AI model communication
-            - Language processor for response analysis
-            - Default learning style and challenges
-            - Empty teacher profile
-            - Initial student state with randomized personality traits
-        """
-        self.llm = LLMInterface()
-        self.processor = PedagogicalLanguageProcessor()
-        self.learning_style = "visual"  # Default learning style
-        self.current_challenges = ["staying focused", "asking for help"]  # Default challenges
-        self.teacher_profile = {"name": "", "experience_level": "", "grade_level_interest": "", "subject_preferences": [], "teaching_style": "", "areas_for_growth": []}
-        self._initialize_student_state()
-        
-    def create_teaching_scenario(
-        self, 
-        subject: str, 
-        difficulty: str, 
-        student_profile: Dict[str, Any]
-    ) -> Dict[str, Any]:
-        """
-        Create a teaching scenario based on given parameters.
-        
-        This method generates a complete teaching scenario by combining the subject matter,
-        difficulty level, and student characteristics. It uses the language processor
-        to create a contextually appropriate teaching situation.
+        Initialize the Teacher Training Graph
         
         Args:
-            subject (str): The subject area for the scenario (e.g., "mathematics", "reading")
-            difficulty (str): The difficulty level (e.g., "beginner", "intermediate", "advanced")
-            student_profile (Dict[str, Any]): Dictionary containing:
-                - learning_style: Student's preferred learning method
-                - grade_level: Current grade level
-                - strengths: Areas where the student excels
-                - challenges: Areas needing improvement
+            model_name (str): Name of the LLM model to use
+        """
+        self.model_name = model_name
+        self.llm = EnhancedLLMInterface(model_name=model_name)
+        self.processor = PedagogicalLanguageProcessor(model=model_name)
+        
+        # Initialize checkpointing with InMemoryStorage
+        # Changed from MemorySaver to directly use a dictionary for storage
+        self._memory_storage = {}
+        
+        # Build the graph
+        self.graph = self._build_graph()
+    
+    def _build_graph(self) -> StateGraph:
+        """
+        Build the LangGraph state machine
+        
+        This creates a directed graph for the teacher training simulation
+        with nodes for different steps in the simulation process.
+        
+        Returns:
+            StateGraph: The constructed graph
+        """
+        # Initialize the graph with the state
+        builder = StateGraph(AgentState)
+        
+        # Note: This version of LangGraph doesn't support recursion_limit
+        # We'll implement recursion checks in the _should_continue method instead
+        
+        # Add nodes for the different agent functions
+        builder.add_node("scenario_generation", self._generate_scenario)
+        builder.add_node("teaching_analysis", self._analyze_teaching)
+        builder.add_node("student_response", self._generate_student_response)
+        builder.add_node("feedback", self._generate_feedback)
+        builder.add_node("sentiment_analysis", self._analyze_sentiment)
+        
+        # Add conditional edge
+        builder.add_conditional_edges(
+            "sentiment_analysis",
+            self._should_continue,
+            {
+                "continue": "teaching_analysis",
+                "end": END
+            }
+        )
+        
+        # Define the main flow
+        builder.add_edge("scenario_generation", "teaching_analysis")
+        builder.add_edge("teaching_analysis", "student_response")
+        builder.add_edge("student_response", "feedback")
+        builder.add_edge("feedback", "sentiment_analysis")
+        
+        # Set the entry point
+        builder.set_entry_point("scenario_generation")
+        
+        # Compile the graph
+        return builder.compile()
+    
+    def _generate_scenario(self, state: AgentState) -> AgentState:
+        """
+        Generate a teaching scenario based on the current state
+        
+        Args:
+            state: Current agent state
             
         Returns:
-            Dict[str, Any]: A comprehensive scenario including:
-                - context: The teaching situation and environment
-                - objectives: Specific learning goals
-                - student_background: Relevant student information
-                - suggested_approaches: Initial teaching strategy suggestions
-                - potential_challenges: Anticipated difficulties
-        
-        Example:
-            scenario = agent.create_teaching_scenario(
-                "mathematics",
-                "intermediate",
-                {
-                    "learning_style": "visual",
-                    "grade_level": "3rd",
-                    "strengths": ["pattern recognition"],
-                    "challenges": ["word problems"]
-                }
-            )
+            Updated state with scenario
         """
+        # Extract context parameters from messages if available
         context = {
-            "subject": subject,
-            "difficulty": difficulty,
-            "student_profile": student_profile
+            "subject": "mathematics",  # Default subject
+            "difficulty": "intermediate",  # Default difficulty
+            "student_profile": {  # Default student profile
+                "grade_level": "5th",
+                "learning_style": ["visual", "kinesthetic"],
+                "challenges": ["focusing", "abstract concepts"],
+                "strengths": ["creativity", "collaboration"]
+            }
         }
-        return self.processor.create_scenario(context)
         
-    def evaluate_teaching_response(
-        self, 
-        teacher_input: str, 
-        scenario: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        # Generate the scenario
+        scenario = self.processor.create_scenario(context)
+        
+        # Update the state
+        state["scenario"] = scenario
+        state["student_profile"] = context["student_profile"]
+        
+        # Add the scenario to messages
+        system_prompt = f"""
+        You are a teacher training assistant. You help teachers practice their teaching skills.
+        
+        CURRENT SCENARIO:
+        {json.dumps(scenario, indent=2)}
+        
+        STUDENT PROFILE:
+        {json.dumps(context["student_profile"], indent=2)}
+        
+        Please provide a teaching approach for this scenario.
         """
-        Evaluate a teacher's response and generate detailed feedback.
         
-        This method analyzes the teacher's response in the context of the current
-        scenario, considering factors such as pedagogical approach, student needs,
-        and teaching effectiveness.
+        state["messages"] = [SystemMessage(content=system_prompt)]
+        
+        # Initialize other state fields
+        state["teaching_approach"] = None
+        state["student_responses"] = []
+        state["analysis"] = None
+        state["agent_feedback"] = None
+        state["sentiment"] = None
+        
+        return state
+    
+    def _analyze_teaching(self, state: AgentState) -> AgentState:
+        """
+        Analyze the teaching approach in the current state
+        
+        This node is triggered when:
+        1. A new teaching approach is provided by the user
+        2. The conversation continues after feedback
         
         Args:
-            teacher_input (str): The teacher's response or action in the scenario
-            scenario (Dict[str, Any]): The current teaching scenario containing:
-                - context: Teaching situation
-                - objectives: Learning goals
-                - student_background: Student information
+            state: Current agent state
             
         Returns:
-            Dict[str, Any]: Comprehensive evaluation results including:
-                - effectiveness: Overall effectiveness score (0-1)
-                - strengths: List of identified strong points
-                - areas_for_improvement: Specific suggestions for improvement
-                - alternative_approaches: Other teaching strategies to consider
-                - alignment: How well the response aligns with objectives
-                - student_impact: Predicted impact on student learning
-            
-        Example:
-            feedback = agent.evaluate_teaching_response(
-                "I would use visual aids to demonstrate fraction concepts and 
-                 connect them to real-world examples like pizza slices",
-                current_scenario
-            )
+            Updated state with teaching analysis
         """
+        # Extract the latest message from the user
+        messages = state.get("messages", [])
+        user_messages = [msg for msg in messages if isinstance(msg, HumanMessage)]
+        
+        if not user_messages:
+            # If no user messages yet, return state unchanged
+            return state
+        
+        latest_msg = user_messages[-1].content
+        
+        # Set the teaching approach
+        state["teaching_approach"] = latest_msg
+        
+        # Analyze the teaching approach
         analysis = self.processor.analyze_teaching_response(
-            teacher_input=teacher_input,
-            context=scenario
-        )
-        return self.generate_feedback(analysis)
-        
-    def generate_feedback(self, analysis: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Generate structured feedback based on teaching response analysis.
-        
-        Args:
-            analysis: Analysis results from the language processor
-            
-        Returns:
-            Structured feedback dictionary with specific recommendations
-            and improvement suggestions
-        """
-        # Get relevant teaching strategies
-        strategies = TEACHING_STRATEGIES.get(analysis["context"], [])
-        
-        # Combine analysis with teaching strategies
-        return {
-            "effectiveness": analysis["effectiveness_score"],
-            "strengths": analysis["identified_strengths"],
-            "areas_for_improvement": analysis["improvement_areas"],
-            "alternative_approaches": strategies
-        }
-
-    def _load_teaching_strategies(self):
-        """
-        Load teaching strategies from knowledge base files.
-        
-        Attempts to load teaching strategies from the text file in the knowledge base.
-        If the file is not found, falls back to default strategies.
-        
-        Returns:
-            dict: A dictionary containing teaching strategies organized by categories
-        
-        Note:
-            Falls back to default strategies if the file is not found
-            to ensure the system remains functional.
-        """
-        try:
-            strategies = {}
-            current_category = None
-            
-            with open('knowledge_base/default_strategies/teaching_strategies.txt', 'r') as f:
-                lines = f.readlines()
-                
-                for line in lines:
-                    line = line.strip()
-                    if not line:
-                        continue
-                        
-                    if not line.startswith('-'):
-                        # This is a category header
-                        current_category = line
-                        strategies[current_category] = []
-                    else:
-                        # This is a strategy item
-                        if current_category:
-                            strategy = line[2:].strip()  # Remove the dash and space
-                            strategies[current_category].append(strategy)
-            
-            return strategies
-            
-        except FileNotFoundError:
-            print("! Teaching strategies file not found")
-            return self._get_default_teaching_strategies()
-
-    def _load_student_behaviors(self):
-        """
-        Load student behavior patterns from knowledge base files.
-        
-        Loads predefined patterns of student behavior and appropriate
-        responses from the behavior_management.csv file.
-        
-        Returns:
-            dict: A dictionary containing:
-                - Behavior types, their triggers, manifestations
-                - Appropriate teaching strategies and rationales
-        
-        Note:
-            Uses default behaviors if the knowledge base file is not found.
-        """
-        try:
-            behaviors = {}
-            
-            with open('knowledge_base/default_strategies/behavior_management.csv', 'r') as f:
-                reader = csv.DictReader(f)
-                for row in reader:
-                    behavior_type = row['behavior_type']
-                    
-                    if behavior_type not in behaviors:
-                        behaviors[behavior_type] = {
-                            'triggers': [],
-                            'manifestations': [],
-                            'strategies': [],
-                            'rationale': row.get('rationale', '')
-                        }
-                    
-                    # Add triggers, manifestations, and strategies if they exist and aren't already in the lists
-                    if 'triggers' in row and row['triggers'] and row['triggers'] not in behaviors[behavior_type]['triggers']:
-                        behaviors[behavior_type]['triggers'].append(row['triggers'])
-                    
-                    if 'manifestations' in row and row['manifestations'] and row['manifestations'] not in behaviors[behavior_type]['manifestations']:
-                        behaviors[behavior_type]['manifestations'].append(row['manifestations'])
-                    
-                    if 'strategies' in row and row['strategies'] and row['strategies'] not in behaviors[behavior_type]['strategies']:
-                        behaviors[behavior_type]['strategies'].append(row['strategies'])
-            
-            return behaviors
-            
-        except (FileNotFoundError, KeyError) as e:
-            print(f"! Student behaviors file error: {e}")
-            return self._get_default_student_behaviors()
-
-    def _load_subject_content(self):
-        """
-        Load subject-specific content and teaching strategies.
-        
-        Retrieves detailed information about different subjects from the
-        math_strategies.csv and reading_strategies.csv files.
-        
-        Returns:
-            dict: Subject-specific information organized by:
-                - Subject area (math, reading)
-                - Topics within each subject
-                - Common challenges, strategies, and examples
-        """
-        try:
-            import csv
-            subjects = {
-                "math": {"topics": {}},
-                "reading": {"topics": {}}
+            latest_msg, 
+            {
+                "scenario": state["scenario"],
+                "student_profile": state["student_profile"]
             }
-            
-            # Load math strategies
-            try:
-                with open('knowledge_base/default_strategies/math_strategies.csv', 'r') as f:
-                    reader = csv.DictReader(f)
-                    for row in reader:
-                        topic = row.get('topic', '')
-                        if topic:
-                            subjects["math"]["topics"][topic] = {
-                                "common_challenges": row.get('common_challenges', ''),
-                                "strategies": row.get('strategies', ''),
-                                "examples": row.get('examples', '')
-                            }
-            except FileNotFoundError:
-                print("! Math strategies file not found")
-            
-            # Load reading strategies
-            try:
-                with open('knowledge_base/default_strategies/reading_strategies.csv', 'r') as f:
-                    reader = csv.DictReader(f)
-                    for row in reader:
-                        topic = row.get('topic', '')
-                        if topic:
-                            subjects["reading"]["topics"][topic] = {
-                                "common_challenges": row.get('common_challenges', ''),
-                                "strategies": row.get('strategies', ''),
-                                "examples": row.get('examples', '')
-                            }
-            except FileNotFoundError:
-                print("! Reading strategies file not found")
-            
-            if not subjects["math"]["topics"] and not subjects["reading"]["topics"]:
-                raise FileNotFoundError("No subject content files found")
-                
-            return subjects
-            
-        except Exception as e:
-            print(f"! Subject content error: {e}")
-            return self._get_default_subject_content()
-
-    def _get_fallback_knowledge(self):
-        """
-        Provide basic fallback knowledge if files can't be loaded.
-        
-        This is a safety mechanism that ensures the system has basic
-        functional knowledge even if the knowledge base files are
-        inaccessible or corrupted.
-        
-        Returns:
-            dict: A comprehensive set of default knowledge including:
-                - Basic teaching strategies
-                - Common student behaviors
-                - Core subject content
-                - Essential pedagogical approaches
-        
-        Note:
-            This knowledge is more generic than the full knowledge base
-            but ensures basic functionality of the system.
-        """
-        return {
-            "teaching_strategies": self._get_default_teaching_strategies(),
-            "student_behaviors": self._get_default_student_behaviors(),
-            "subject_content": self._get_default_subject_content()
-        }
-
-    def _get_default_teaching_strategies(self):
-        """Default teaching strategies if file loading fails."""
-        return {
-            "time_strategies": {
-                "morning": {
-                    "strategies": ["morning routine", "clear expectations", "structured start"],
-                    "explanation": "Morning is ideal for setting clear expectations and structured activities when students are fresh."
-                },
-                "after lunch": {
-                    "strategies": ["movement break", "active learning", "energy release"],
-                    "explanation": "After lunch, students need movement and engaging activities to maintain focus."
-                },
-                "late afternoon": {
-                    "strategies": ["short tasks", "varied activities", "brain breaks"],
-                    "explanation": "Late afternoon requires shorter, varied tasks due to decreased attention spans."
-                }
-            },
-            "learning_styles": {
-                "visual": {
-                    "strategies": ["look at", "watch", "see", "show", "draw"],
-                    "explanation": "Visual learners need to see concepts represented through diagrams, demonstrations, or written instructions."
-                },
-                "auditory": {
-                    "strategies": ["listen", "hear", "tell", "say", "sound"],
-                    "explanation": "Auditory learners benefit from verbal instructions, discussions, and sound-based learning."
-                },
-                "kinesthetic": {
-                    "strategies": ["try", "move", "touch", "build", "practice"],
-                    "explanation": "Kinesthetic learners need hands-on activities and physical movement to engage with learning."
-                }
-            }
-        }
-
-    def _get_default_student_behaviors(self):
-        """Default student behaviors if file loading fails."""
-        return {
-            "attention": {
-                "strategies": ["let's focus", "watch carefully", "look at this"],
-                "explanation": "Students with attention challenges need clear, direct prompts to maintain focus."
-            },
-            "frustration": {
-                "strategies": ["you can do this", "let's try together", "take your time"],
-                "explanation": "When frustrated, students need encouragement and support to rebuild confidence."
-            }
-        }
-
-    def _get_default_subject_content(self):
-        """Default subject content if file loading fails."""
-        return {
-            "math": {
-                "strategies": ["break down", "step by step", "use manipulatives", "draw it out"],
-                "explanation": "Mathematical concepts need concrete representations and step-by-step guidance."
-            },
-            "reading": {
-                "strategies": ["sound it out", "look for clues", "picture walk", "sight words"],
-                "explanation": "Reading skills develop through phonics, comprehension strategies, and visual supports."
-            }
-        }
-
-    def _initialize_student_state(self):
-        """
-        Initialize student personality and state with randomized characteristics.
-        
-        Creates a realistic student profile with:
-            - Base personality traits (attention span, learning style, etc.)
-            - Current emotional and cognitive state
-            - Subject preferences and challenges
-            - Social and academic characteristics
-        
-        The state is dynamic and can change during the simulation based on:
-            - Teacher interactions
-            - Time of day
-            - Activity type
-            - Previous experiences
-        """
-        self.personality = {
-            "base_traits": {
-                "attention_span": random.uniform(0.4, 0.8),
-                "learning_style": random.choice(["visual", "auditory", "kinesthetic"]),
-                "social_confidence": random.uniform(0.3, 0.8),
-                "favorite_subjects": random.sample(["math", "reading", "art", "science"], 2),
-                "challenges": random.sample([
-                    "reading comprehension",
-                    "number sense",
-                    "staying focused",
-                    "asking for help"
-                ], 2)
-            },
-            "current_state": {
-                "engagement": 0.5,
-                "understanding": 0.5,
-                "mood": 0.5,
-                "energy": 0.8
-            }
-        }
-
-    def setup_teacher_profile(self):
-        """Initial setup to gather teacher information."""
-        print("\n=== Teacher Profile Setup ===")
-        print("\nLet's get to know you better to personalize your training experience.")
-        print("(Press Enter to use default values for quick testing)")
-        
-        name = input("\nWhat's your name? [Test Teacher]: ").strip()
-        self.teacher_profile["name"] = name if name else "Test Teacher"
-        
-        print("\nWhat's your teaching experience level?")
-        print("1. Novice (Student or New Teacher)")
-        print("2. Intermediate (1-3 years)")
-        print("3. Experienced (3+ years)")
-        experience_choice = input("Choose (1-3) [1]: ").strip()
-        self.teacher_profile["experience_level"] = {
-            "1": "novice",
-            "2": "intermediate",
-            "3": "experienced"
-        }.get(experience_choice, "novice")
-
-        print("\nWhich grade levels are you most interested in teaching?")
-        print("1. Lower Elementary (K-2)")
-        print("2. Upper Elementary (3-5)")
-        print("3. Middle School (6-8)")
-        grade_choice = input("Choose (1-3) [1]: ").strip()
-        self.teacher_profile["grade_level_interest"] = {
-            "1": "lower_elementary",
-            "2": "upper_elementary",
-            "3": "middle_school"
-        }.get(grade_choice, "lower_elementary")
-
-        print("\nWhich subjects are you most interested in teaching? (Enter numbers, separated by commas)")
-        print("1. Math")
-        print("2. Reading/Language Arts")
-        print("3. Science")
-        print("4. Social Studies")
-        subjects = input("Choose (e.g., 1,2) [1,2]: ").strip()
-        subject_map = {
-            "1": "math",
-            "2": "reading",
-            "3": "science",
-            "4": "social_studies"
-        }
-        if subjects:
-            self.teacher_profile["subject_preferences"] = [
-                subject_map[s.strip()] for s in subjects.split(",") if s.strip() in subject_map
-            ]
-        # Default to math and reading if no input
-        if not self.teacher_profile["subject_preferences"]:
-            self.teacher_profile["subject_preferences"] = ["math", "reading"]
-
-        print("\nWhat's your preferred teaching style?")
-        print("1. Interactive/Hands-on")
-        print("2. Traditional/Structured")
-        print("3. Mixed Approach")
-        style_choice = input("Choose (1-3) [1]: ").strip()
-        self.teacher_profile["teaching_style"] = {
-            "1": "interactive",
-            "2": "traditional",
-            "3": "mixed"
-        }.get(style_choice, "interactive")
-
-        print("\nWhat areas would you like to improve? (Enter numbers, separated by commas)")
-        print("1. Classroom Management")
-        print("2. Student Engagement")
-        print("3. Differentiated Instruction")
-        print("4. Behavior Management")
-        print("5. Assessment Strategies")
-        areas = input("Choose (e.g., 1,2) [1,2]: ").strip()
-        area_map = {
-            "1": "classroom_management",
-            "2": "student_engagement",
-            "3": "differentiated_instruction",
-            "4": "behavior_management",
-            "5": "assessment_strategies"
-        }
-        if areas:
-            self.teacher_profile["areas_for_growth"] = [
-                area_map[a.strip()] for a in areas.split(",") if a.strip() in area_map
-            ]
-        # Default areas if no input
-        if not self.teacher_profile["areas_for_growth"]:
-            self.teacher_profile["areas_for_growth"] = ["classroom_management", "student_engagement"]
-
-        print("\nThank you! Your profile has been set up.")
-        self._show_profile_summary()
-
-    def _show_profile_summary(self):
-        """Display a summary of the teacher's profile."""
-        print("\n=== Your Teaching Profile ===")
-        print(f"Name: {self.teacher_profile['name']}")
-        print(f"Experience Level: {self.teacher_profile['experience_level'].title()}")
-        print(f"Grade Level Interest: {self.teacher_profile['grade_level_interest'].replace('_', ' ').title()}")
-        print(f"Preferred Subjects: {', '.join(s.title() for s in self.teacher_profile['subject_preferences'])}")
-        print(f"Teaching Style: {self.teacher_profile['teaching_style'].title()}")
-        print(f"Areas for Growth: {', '.join(a.replace('_', ' ').title() for a in self.teacher_profile['areas_for_growth'])}")
-
-    def generate_scenario(self, subject=None):
-        """Generate a detailed teaching scenario with student and classroom context."""
-        if not subject:
-            subject = random.choice(["math", "reading"])
-        
-        # Student context
-        student_context = {
-            "learning_style": self.learning_style,
-            "attention_span": self.personality["base_traits"]["attention_span"],
-            "social_confidence": self.personality["base_traits"]["social_confidence"],
-            "current_challenges": self.current_challenges,
-            "seating": random.choice(["front row", "middle row", "back row"]),
-            "peer_interactions": random.choice([
-                "works well in groups",
-                "prefers working alone",
-                "easily distracted by peers",
-                "shy in group settings"
-            ])
-        }
-        
-        # Classroom context
-        time_of_day = random.choice(["morning", "after lunch", "late afternoon"])
-        class_energy = {
-            "morning": "Students are generally alert but may need time to settle",
-            "after lunch": "Energy levels are varied, some students restless",
-            "late afternoon": "Attention spans are shorter, more frequent breaks needed"
-        }
-        
-        # Get subject-specific details
-        subject_skills = SECOND_GRADE_CHARACTERISTICS["cognitive"]["academic_skills"][subject]
-        difficulty = random.choice(subject_skills["challenging"])
-        
-        # Get behavioral context
-        behavior_type = random.choice(["attention", "frustration"])
-        behavior_info = SECOND_GRADE_CHARACTERISTICS["behavioral_scenarios"][behavior_type]
-        trigger = random.choice(behavior_info["triggers"])
-        manifestation = random.choice(behavior_info["manifestations"])
-        
-        # Build detailed scenario description
-        scenario_description = (
-            f"Time: {time_of_day}. {class_energy[time_of_day]}.\n\n"
-            f"Student Profile:\n"
-            f"- Learning style: {student_context['learning_style']}\n"
-            f"- Seating: {student_context['seating']}\n"
-            f"- Peer interaction: {student_context['peer_interactions']}\n"
-            f"- Current challenges: {', '.join(student_context['current_challenges'])}\n\n"
-            f"Situation:\n"
-            f"During {subject} class, while working on {difficulty}, "
-            f"the student is {manifestation} after {trigger}."
         )
         
-        return {
-            "subject": subject,
-            "description": scenario_description,
-            "difficulty": difficulty,
-            "time_of_day": time_of_day,
-            "student_context": student_context,
-            "behavioral_context": {
-                "type": behavior_type,
-                "trigger": trigger,
-                "manifestation": manifestation,
-                "effective_interventions": behavior_info["effective_interventions"]
-            },
-            "learning_objectives": [
-                f"Master {difficulty}",
-                f"Develop {behavior_type} management strategies",
-                "Build confidence through successful experiences"
-            ],
-            "student_state": self.personality["current_state"].copy()
-        }
-
-    def _generate_student_state(self, trigger):
-        """
-        Generate an updated student state based on triggers and context.
+        # Update state with analysis
+        state["analysis"] = analysis
         
-        This internal method updates the student's emotional and cognitive
-        state based on various triggers and the current context.
-        
-        Args:
-            trigger: Event or action that may affect student state
-        
-        Updates:
-            - Engagement level
-            - Understanding
-            - Emotional state
-            - Energy level
-            - Focus and attention
-        
-        Note:
-            State changes are influenced by:
-            - Previous state
-            - Time of day
-            - Recent interactions
-            - Environmental factors
-        """
-        # Adjust current state based on trigger and personality
-        self.personality["current_state"]["engagement"] += random.uniform(-0.2, 0.2)
-        self.personality["current_state"]["mood"] += random.uniform(-0.1, 0.1)
-        
-        # Ensure values stay within bounds
-        for state in self.personality["current_state"]:
-            self.personality["current_state"][state] = max(0.0, min(1.0, self.personality["current_state"][state]))
-        
-        return self.personality["current_state"].copy()
-
-    def simulate_student_response(self, teacher_response: str, scenario: dict) -> str:
-        """
-        Simulate a realistic student response to a teacher's action.
-        
-        This method generates contextually appropriate student responses by considering:
-            - Current student state (mood, energy, engagement)
-            - Teacher's approach and effectiveness
-            - Subject matter and difficulty
-            - Student's personality traits
-            - Time of day and previous interactions
-        
-        Args:
-            teacher_response (str): The teacher's action or statement
-            scenario (dict): Current teaching scenario context including:
-                - Subject matter
-                - Learning objectives
-                - Previous interactions
-                - Environmental factors
-        
-        Returns:
-            str: A realistic student response that reflects:
-                - Understanding level
-                - Emotional state
-                - Engagement level
-                - Learning style preferences
-        """
-        try:
-            # Check if the scenario is valid
-            if not scenario or not isinstance(scenario, dict):
-                scenario = {"scenario": "Classroom management situation"}
-                
-            # Use LLM to generate response
-            response = self.llm.generate_response(teacher_response, scenario)
-            
-            # Check if the response is an error fallback
-            if "I apologize" in response and "trouble" in response:
-                # Use fallback responses
-                raise Exception("LLM error detected")
-                
-            return response
-            
-        except Exception as e:
-            print(f"Student response fallback used: {e}")
-            # Fallback to template responses based on behavioral context
-            behavior_type = "general"
-            if scenario and isinstance(scenario, dict) and "behavioral_context" in scenario:
-                behavior_type = scenario["behavioral_context"].get("type", "general")
-                
-            if behavior_type == "attention":
-                return random.choice([
-                    "*tries to focus* Okay...",
-                    "*looks back at the work* Can you show me again?",
-                    "*fidgets less* I'll try to pay attention"
-                ])
-            elif behavior_type == "frustration":
-                return random.choice([
-                    "*takes a deep breath* This is hard...",
-                    "*looks less tense* Can you help me?",
-                    "Maybe I can try one more time..."
-                ])
-            elif behavior_type == "disruptive":
-                return random.choice([
-                    "*stops talking* Fine...",
-                    "*looks slightly embarrassed* Sorry...",
-                    "*folds arms* Okay, I'll stop."
-                ])
-            else:
-                return random.choice([
-                    "Okay...",
-                    "*nods quietly*",
-                    "Can you explain again?",
-                    "I'll try that.",
-                    "Alright, I understand."
-                ])
-
-    def evaluate_response(self, teacher_response: str, scenario: dict) -> dict:
-        """Evaluate teacher's response with enhanced criteria."""
-        # Calculate base score and feedback
-        score = 0.0
-        feedback = []
-        suggestions = []
-        explanations = []
-        
-        # Extract context
-        time_of_day = scenario["time_of_day"]
-        student_context = scenario["student_context"]
-        behavior_type = scenario["behavioral_context"]["type"]
-        subject = scenario["subject"]
-        
-        # 1. Time-appropriate strategies (20% of score)
-        time_strategies = TEACHING_STRATEGIES["engagement"]
-        if any(strategy.lower() in teacher_response.lower() for strategy in time_strategies):
-            score += 0.2
-            feedback.append(f"✓ Good use of engaging strategy")
-        else:
-            suggestions.append(f"Consider engagement strategies like: {time_strategies[0]}")
-            explanations.append(f"Different times of day require different approaches")
-        
-        # 2. Learning style alignment (20% of score)
-        style_strategies = TEACHING_STRATEGIES["differentiation"]
-        if any(strategy.lower() in teacher_response.lower() for strategy in style_strategies):
-            score += 0.2
-            feedback.append(f"✓ Good alignment with {student_context['learning_style']} learning style")
-        else:
-            suggestions.append(f"Include differentiated learning approaches")
-            explanations.append(f"{student_context['learning_style']} learners benefit from specific strategies")
-        
-        # 3. Behavioral response (30% of score)
-        behavior_strategies = TEACHING_STRATEGIES["support"]
-        if any(strategy.lower() in teacher_response.lower() for strategy in behavior_strategies):
-            score += 0.3
-            feedback.append("✓ Good behavioral management approach")
-        else:
-            suggestions.append(f"Try supportive strategies for {behavior_type} behavior")
-            explanations.append(f"Students showing {behavior_type} need specific support")
-        
-        # Generate student reaction based on score
-        if score >= 0.8:
-            reaction = self._generate_positive_reaction()
-        elif score >= 0.4:
-            reaction = self._generate_neutral_reaction()
-        else:
-            reaction = self._generate_negative_reaction()
-        
-        return {
-            'score': score,
-            'feedback': feedback,
-            'suggestions': suggestions,
-            'explanations': explanations,
-            'student_reaction': reaction,
-            'state_changes': {
-                'engagement': score/2,
-                'understanding': score/2,
-                'mood': score/2
-            }
-        }
-
-    def _generate_positive_reaction(self) -> str:
-        """Generate a positive student reaction."""
-        return random.choice([
-            "*sits up straighter* Oh, I think I get it now!",
-            "*nods enthusiastically* Can I try the next one?",
-            "*smiles* That makes it easier to understand!",
-            "*looks more confident* I want to try it myself!",
-            "*focuses on the work* This isn't as hard as I thought!"
-        ])
-
-    def _generate_neutral_reaction(self) -> str:
-        """Generate a neutral student reaction."""
-        return random.choice([
-            "*listens carefully* Okay, I'll try...",
-            "*thinks about it* Maybe... can you show me again?",
-            "*nods slowly* I think I'm starting to understand...",
-            "*looks uncertain* Should I try it this way?",
-            "*pays more attention* Can you explain that part again?"
-        ])
-
-    def _generate_negative_reaction(self) -> str:
-        """Generate a negative student reaction."""
-        return random.choice([
-            "*still looks confused* I don't understand...",
-            "*slumps in chair* This is too hard...",
-            "*seems discouraged* Everyone else gets it except me...",
-            "*fidgets more* Can we do something else?",
-            "*avoids eye contact* I'm not good at this..."
-        ])
-
-    def start_interactive_session(self, category=None):
-        """
-        Start an interactive teaching simulation session.
-        
-        This method initiates a dynamic teaching scenario where the agent:
-            - Sets up the initial teaching context
-            - Manages the flow of interaction
-            - Provides real-time feedback
-            - Adapts to teaching approaches
-            - Simulates student responses
-        
-        Args:
-            category (str, optional): Specific category or subject focus.
-                Defaults to None for general teaching scenarios.
-        
-        The session progresses through several phases:
-            1. Initial scenario setup
-            2. Teacher response collection
-            3. Student behavior simulation
-            4. Real-time feedback generation
-            5. Scenario adaptation based on interaction
-        
-        Note:
-            The session continues until explicitly ended or learning
-            objectives are met.
-        """
-        # Check if profile is set up
-        if not self.teacher_profile["name"]:
-            self.setup_teacher_profile()
-
-        # Generate initial scenario based on teacher's profile
-        scenario = self.generate_scenario(
-            subject=random.choice(self.teacher_profile["subject_preferences"]) if self.teacher_profile["subject_preferences"] else None
-        )
-        session_history = []
-        
-        print(f"\n=== Interactive Teaching Session for {self.teacher_profile['name']} ===")
-        print("\nScenario:", scenario['description'])
-        print("\nTeaching Context:")
-        print(f"- Subject: {scenario['subject'].title()}")
-        print(f"- Specific Challenge: {scenario['difficulty']}")
-        print(f"- Recommended Strategy: {scenario['recommended_strategy']}")
-        print("\nLearning Objectives:")
-        for i, objective in enumerate(scenario['learning_objectives'], 1):
-            print(f"{i}. {objective}")
-        
-        print("\nStudent's Initial State:")
-        for state, value in scenario['student_state'].items():
-            print(f"- {state}: {value:.2f}")
-        
-        # Generate initial student reaction based on scenario
-        behavior_type = scenario["behavioral_context"]["type"]
-        manifestation = scenario["behavioral_context"]["manifestation"]
-        initial_reactions = {
-            "attention": {
-                "fidgeting": "*fidgets in chair* Is it time to go home yet?",
-                "looking around": "*looks out the window* What's happening outside?",
-                "doodling": "*continues drawing* Math is boring...",
-                "asking off-topic questions": "Can we have recess now?"
-            },
-            "frustration": {
-                "giving up quickly": "*puts head down* I can't do this...",
-                "saying 'I can't do it'": "This is too hard! I'm not good at math.",
-                "becoming withdrawn": "*stares at paper silently*",
-                "acting out": "*pushes worksheet away* I don't want to do this!"
-            }
-        }
-        
-        # Get initial reaction
-        initial_reaction = initial_reactions.get(behavior_type, {}).get(
-            manifestation, 
-            random.choice(SECOND_GRADE_CHARACTERISTICS["social_emotional"]["common_expressions"])
-        )
-        
-        print("\nStudent:", initial_reaction)
-        
-        while True:
-            print("\n" + "="*50)
-            print("\nWhat would you like to do?")
-            print("1. Respond to the student")
-            print("2. View student's current state")
-            print("3. View session history")
-            print("4. View teaching context")
-            print("5. Start new scenario")
-            print("6. End session")
-            
-            choice = input("\nEnter your choice (1-6): ").strip()
-            
-            if choice == "1":
-                print(f"\n[{self.teacher_profile['name']}]")
-                teacher_response = input("Your response: ").strip()
-                if not teacher_response:
-                    print("Please enter a valid response.")
-                    continue
-                
-                # Evaluate response and get student's reaction
-                result = self.evaluate_response(teacher_response, scenario)
-                
-                # Store interaction in session history
-                session_history.append({
-                    "teacher_response": teacher_response,
-                    "student_reaction": result["student_reaction"],
-                    "feedback": result["feedback"],
-                    "score": result["score"]
-                })
-                
-                # Display results
-                print("\nStudent:", result["student_reaction"])
-                if result["feedback"]:
-                    print("\nFeedback:", " | ".join(result["feedback"]))
-                print(f"Response Score: {result['score']:.2f}")
-                
-            elif choice == "2":
-                print("\nCurrent Student State:")
-                for state, value in self.personality["current_state"].items():
-                    print(f"- {state}: {value:.2f}")
-                    
-            elif choice == "3":
-                if not session_history:
-                    print("\nNo interactions yet.")
-                else:
-                    print("\n=== Session History ===")
-                    for i, interaction in enumerate(session_history, 1):
-                        print(f"\nInteraction {i}:")
-                        print(f"Teacher: {interaction['teacher_response']}")
-                        print(f"Student: {interaction['student_reaction']}")
-                        print(f"Score: {interaction['score']:.2f}")
-                        print(f"Feedback: {interaction['feedback']}")
-                        
-            elif choice == "4":
-                print("\nTeaching Context:")
-                print(f"- Subject: {scenario['subject'].title()}")
-                print(f"- Specific Challenge: {scenario['difficulty']}")
-                print(f"- Recommended Strategy: {scenario['recommended_strategy']}")
-                print("\nLearning Objectives:")
-                for i, objective in enumerate(scenario['learning_objectives'], 1):
-                    print(f"{i}. {objective}")
-                    
-            elif choice == "5":
-                scenario = self.generate_scenario(
-                    subject=random.choice(self.teacher_profile["subject_preferences"]) if self.teacher_profile["subject_preferences"] else None
-                )
-                session_history = []
-                print("\nNew Scenario:", scenario['description'])
-                print("\nTeaching Context:")
-                print(f"- Subject: {scenario['subject'].title()}")
-                print(f"- Specific Challenge: {scenario['difficulty']}")
-                print(f"- Recommended Strategy: {scenario['recommended_strategy']}")
-                print("\nLearning Objectives:")
-                for i, objective in enumerate(scenario['learning_objectives'], 1):
-                    print(f"{i}. {objective}")
-            
-            elif choice == "6":
-                if session_history:
-                    print(f"\n=== Session Summary for {self.teacher_profile['name']} ===")
-                    avg_score = sum(i["score"] for i in session_history) / len(session_history)
-                    print(f"Average Response Score: {avg_score:.2f}")
-                    print(f"Total Interactions: {len(session_history)}")
-                print("\nThank you for participating in this training session!")
-                break
-                
-            else:
-                print("\nInvalid choice. Please enter a number between 1 and 6.")
-
-    def get_initial_reaction(self, scenario: dict) -> str:
-        """Generate initial student reaction based on scenario."""
-        behavior_type = scenario["behavioral_context"]["type"]
-        manifestation = scenario["behavioral_context"]["manifestation"]
-        
-        # Get emotional state
-        engagement = scenario["student_state"]["engagement"]
-        understanding = scenario["student_state"]["understanding"]
-        mood = scenario["student_state"]["mood"]
-        
-        initial_reactions = {
-            "attention": {
-                "fidgeting": [
-                    "*fidgets in chair* Is it time to go home yet?",
-                    "*can't sit still* This is taking forever...",
-                    "*moves around restlessly* When's recess?"
-                ],
-                "looking around": [
-                    "*looks out the window* What's happening outside?",
-                    "*glances around the room* The clock is so slow today...",
-                    "*distracted* Did you see that bird?"
-                ],
-                "doodling": [
-                    "*continues drawing* Math is boring...",
-                    "*focused on doodling* I like drawing better than math.",
-                    "*adds details to drawing* Can I color instead?"
-                ]
-            },
-            "frustration": {
-                "giving up quickly": [
-                    "*puts head down* I can't do this...",
-                    "*pushes paper away* It's too hard!",
-                    "*slumps in chair* I'm not good at math..."
-                ],
-                "saying 'I can't do it'": [
-                    "This is too hard! I'm not good at math.",
-                    "*looks discouraged* I'll never understand this.",
-                    "*close to tears* Everyone else gets it except me..."
-                ],
-                "becoming withdrawn": [
-                    "*stares at paper silently*",
-                    "*avoids eye contact* ...",
-                    "*hunches over desk* I don't know how to start..."
-                ]
-            }
-        }
-        
-        # Get appropriate reactions for the behavior
-        reactions = initial_reactions.get(behavior_type, {}).get(manifestation, [
-            "I don't know what to do...",
-            "*looks confused* This is hard.",
-            "Can we do something else?"
-        ])
-        
-        # Choose reaction based on emotional state
-        if understanding < 0.4:
-            reactions.extend([
-                "I don't get any of this...",
-                "*looks lost* What are we supposed to do?",
-                "This doesn't make sense..."
-            ])
-        
-        if mood < 0.4:
-            reactions.extend([
-                "*sighs heavily* I hate math...",
-                "Why do we have to do this?",
-                "*frowns* This is the worst..."
-            ])
-        
-        return random.choice(reactions)
-
-    def _load_student_profiles(self):
-        """
-        Load student profiles from knowledge base.
-        
-        Loads diverse student profiles that can be used to create realistic
-        teaching scenarios involving students with different learning styles,
-        strengths, challenges, and needs.
-        
-        Returns:
-            list: A list of student profile dictionaries containing:
-                - Basic demographic information (name, age, grade)
-                - Learning preferences and styles
-                - Academic strengths and challenges
-                - Social-emotional characteristics
-                - Interests and motivations
-        
-        Note:
-            Returns an empty list if the profiles file cannot be loaded.
-        """
-        try:
-            with open('knowledge_base/student_profiles.json', 'r') as f:
-                data = json.load(f)
-                return data.get("profiles", [])
-        except FileNotFoundError:
-            print("! Student profiles file not found")
-            return []
-        except json.JSONDecodeError:
-            print("! Error parsing student profiles JSON file")
-            return []
-
-class EnhancedTeacherTrainingAgent(TeacherTrainingAgent):
-    """
-    Enhanced agent class with knowledge base integration for teacher training simulations.
+        return state
     
-    This class extends the base TeacherTrainingAgent by incorporating a sophisticated
-    knowledge processing pipeline that reads educational books, processes them into
-    a vector database, and uses this knowledge to generate more realistic and
-    evidence-based teaching scenarios.
-    
-    Key Features:
-        - Educational book processing and knowledge extraction
-        - Vector database for semantic knowledge retrieval
-        - Enhanced scenario generation based on educational research
-        - Performance tracking to identify effective knowledge
-        - Knowledge-based response evaluation
-    
-    Attributes:
-        document_processor (DocumentProcessor): Processes educational books
-        vector_db (VectorDatabase): Manages vectorized knowledge chunks
-        scenario_generator (ClassroomScenarioGenerator): Creates enhanced scenarios
-    """
-    
-    def __init__(self, use_existing=False):
+    def _generate_student_response(self, state: AgentState) -> AgentState:
         """
-        Initialize the EnhancedTeacherTrainingAgent with knowledge processing components.
+        Generate a simulated student response based on the teaching approach
         
         Args:
-            use_existing (bool): Whether to use the existing knowledge base without reprocessing
-        
-        Sets up:
-            - All components from the base TeacherTrainingAgent
-            - Document processor for educational books
-            - Vector database for knowledge storage and retrieval
-            - Enhanced scenario generator
-        """
-        super().__init__()
-        
-        # Initialize new components
-        self.document_processor = DocumentProcessor()
-        self.vector_db = VectorDatabase()
-        self.scenario_generator = ClassroomScenarioGenerator(self.vector_db, self.llm)
-        
-        # Process books if needed
-        self._check_and_process_books(use_existing)
-        
-    def _check_and_process_books(self, use_existing=False):
-        """
-        Check if books need processing and process them if needed.
-        
-        Args:
-            use_existing (bool): Whether to use the existing knowledge base without reprocessing
-        
-        This method:
-            1. Checks if the vector database already contains knowledge chunks
-            2. If empty and use_existing is False, processes educational books from the knowledge_base/books directory
-            3. Extracts and categorizes knowledge from the books
-            4. Stores the knowledge in the vector database
-        """
-        try:
-            # Create knowledge_base and books directory if they don't exist
-            books_dir = os.path.join("knowledge_base", "books")
-            os.makedirs(books_dir, exist_ok=True)
-            
-            # Check if database needs initialization
-            if hasattr(self.vector_db, 'db_path') and os.path.exists(self.vector_db.db_path):
-                conn = sqlite3.connect(self.vector_db.db_path)
-                cursor = conn.cursor()
-                try:
-                    cursor.execute("SELECT COUNT(*) FROM chunks")
-                    count = cursor.fetchone()[0]
-                    conn.close()
-                except sqlite3.OperationalError:
-                    # Table doesn't exist yet
-                    conn.close()
-                    count = 0
-            else:
-                count = 0
-            
-            if count == 0 and not use_existing:
-                print("Processing educational books for knowledge base...")
-                
-                # Check if any books exist
-                if not os.path.exists(books_dir) or not os.listdir(books_dir):
-                    print("No books found in knowledge_base/books directory.")
-                    print("Using available strategy files from knowledge_base/default_strategies.")
-                    return
-                
-                # Process books and extract knowledge
-                self.document_processor.process_books(books_dir=books_dir)
-                chunks = self.document_processor.get_chunks()
-                
-                if not chunks:
-                    print("No content extracted from books.")
-                    print("Using available strategy files from knowledge_base/default_strategies.")
-                    return
-                
-                # Categorize chunks (simplified version)
-                classroom_management_chunks = [
-                    chunk for chunk in chunks 
-                    if any(term in chunk["text"].lower() for term in 
-                          ["classroom management", "behavior", "discipline", "classroom control"])
-                ]
-                
-                teaching_strategies_chunks = [
-                    chunk for chunk in chunks 
-                    if any(term in chunk["text"].lower() for term in 
-                          ["strategy", "teaching method", "instruction", "pedagogy"])
-                ]
-                
-                student_development_chunks = [
-                    chunk for chunk in chunks 
-                    if any(term in chunk["text"].lower() for term in 
-                          ["development", "learning style", "cognitive", "social emotional"])
-                ]
-                
-                # Add to vector database with appropriate categories
-                if hasattr(self.vector_db, 'add_chunks'):
-                    if classroom_management_chunks:
-                        self.vector_db.add_chunks(classroom_management_chunks, "classroom_management")
-                    
-                    if teaching_strategies_chunks:
-                        self.vector_db.add_chunks(teaching_strategies_chunks, "teaching_strategies")
-                    
-                    if student_development_chunks:
-                        self.vector_db.add_chunks(student_development_chunks, "student_development")
-                    
-                    # Add remaining chunks to a general category
-                    remaining_chunks = [
-                        chunk for chunk in chunks 
-                        if chunk not in classroom_management_chunks 
-                        and chunk not in teaching_strategies_chunks
-                        and chunk not in student_development_chunks
-                    ]
-                    
-                    if remaining_chunks:
-                        self.vector_db.add_chunks(remaining_chunks, "general_education")
-                    
-                    # Print statistics
-                    if hasattr(self.vector_db, 'get_stats'):
-                        db_stats = self.vector_db.get_stats()
-                        print(f"Knowledge base created with {db_stats.get('total_chunks', 0)} chunks:")
-                        for category, count in db_stats.get('categories', {}).items():
-                            print(f"- {category}: {count} chunks")
-            else:
-                if count > 0:
-                    print(f"Using existing knowledge base with {count} chunks.")
-                else:
-                    print("Using integrated knowledge base from default strategies.")
-        except Exception as e:
-            print(f"Error during book processing: {e}")
-            print("Using available strategy files from knowledge_base/default_strategies.")
-    
-    def generate_enhanced_scenario(self, grade_level=None, subject=None, challenge_type=None, student_profile_id=None):
-        """
-        Generate an enhanced scenario using the knowledge base.
-        
-        Args:
-            grade_level (str, optional): Educational level (elementary, middle, high)
-            subject (str, optional): Subject area (math, reading, etc.)
-            challenge_type (str, optional): Type of classroom challenge
-            student_profile_id (str, optional): ID of a specific student profile to use
+            state: Current agent state
             
         Returns:
-            dict: Enhanced scenario with knowledge sources
+            Updated state with student response
         """
-        if not grade_level:
-            if self.teacher_profile["grade_level_interest"] == "lower_elementary":
-                grade_level = "elementary"
-            elif self.teacher_profile["grade_level_interest"] == "upper_elementary":
-                grade_level = "elementary"
-            else:
-                grade_level = "middle school"
+        # Get the teaching approach
+        teaching_approach = state.get("teaching_approach", "")
+        
+        if not teaching_approach:
+            # Default response if no teaching approach
+            student_response = "I'm not sure what we're talking about today."
+        else:
+            # Generate a realistic student response
+            student_response = self.processor.generate_student_reaction(
+                teaching_approach,
+                state["student_profile"],
+                state["scenario"]
+            )
+        
+        # Add to student responses history
+        student_responses = state.get("student_responses", [])
+        student_responses.append(student_response)
+        state["student_responses"] = student_responses
+        
+        # Add to messages
+        messages = state.get("messages", [])
+        messages.append(AIMessage(content=f"Student: {student_response}"))
+        state["messages"] = messages
+        
+        return state
+    
+    def _generate_feedback(self, state: AgentState) -> AgentState:
+        """
+        Generate feedback on the teaching approach based on analysis
+        
+        Args:
+            state: Current agent state
             
-        if not subject and self.teacher_profile["subject_preferences"]:
-            subject = random.choice(self.teacher_profile["subject_preferences"])
+        Returns:
+            Updated state with feedback
+        """
+        # Get analysis and teaching approach
+        analysis = state.get("analysis", {})
+        teaching_approach = state.get("teaching_approach", "")
         
-        # Load student profiles
-        student_profiles = self._load_student_profiles()
-        selected_profile = None
+        # Construct a prompt for feedback
+        feedback_prompt = f"""
+        Analyze the following teaching approach and provide constructive feedback:
         
-        if student_profiles:
-            if student_profile_id:
-                # Find the specific profile if ID is provided
-                for profile in student_profiles:
-                    if profile.get("id") == student_profile_id:
-                        selected_profile = profile
+        TEACHING APPROACH:
+        {teaching_approach}
+        
+        ANALYSIS:
+        {json.dumps(analysis, indent=2)}
+        
+        STUDENT RESPONSE:
+        {state["student_responses"][-1] if state["student_responses"] else "No response yet."}
+        
+        Please provide specific, actionable feedback that would help improve the teaching approach.
+        """
+        
+        # Get feedback from LLM
+        feedback_response = self.llm.get_llm_response([
+            {"role": "system", "content": "You are an expert teacher trainer providing feedback."},
+            {"role": "user", "content": feedback_prompt}
+        ])
+        
+        # Update state with feedback
+        state["agent_feedback"] = feedback_response
+        
+        # Add to messages
+        messages = state.get("messages", [])
+        messages.append(AIMessage(content=f"Feedback: {feedback_response}"))
+        state["messages"] = messages
+        
+        return state
+    
+    def _analyze_sentiment(self, state: AgentState) -> AgentState:
+        """
+        Analyze the sentiment of the student response
+        
+        Args:
+            state: Current agent state
+            
+        Returns:
+            Updated state with sentiment analysis
+        """
+        # Get the latest student response
+        student_responses = state.get("student_responses", [])
+        
+        if not student_responses:
+            # Default to neutral if no responses
+            state["sentiment"] = Sentiment.NEUTRAL
+            return state
+        
+        latest_response = student_responses[-1]
+        
+        # Prompt for sentiment analysis
+        sentiment_prompt = f"""
+        Analyze the sentiment of the following student response:
+        
+        STUDENT RESPONSE:
+        {latest_response}
+        
+        Choose one sentiment category:
+        - positive: The student is engaged and understanding
+        - neutral: The student is neither particularly engaged nor disengaged
+        - negative: The student is disengaged, frustrated, or unhappy
+        - confused: The student is confused or not understanding
+        
+        Return ONLY the category name, nothing else.
+        """
+        
+        # Get sentiment from LLM
+        sentiment_response = self.llm.get_llm_response([
+            {"role": "system", "content": "You are analyzing student sentiment."},
+            {"role": "user", "content": sentiment_prompt}
+        ])
+        
+        # Parse sentiment
+        sentiment_lower = sentiment_response.strip().lower()
+        
+        if "positive" in sentiment_lower:
+            sentiment = Sentiment.POSITIVE
+        elif "negative" in sentiment_lower:
+            sentiment = Sentiment.NEGATIVE
+        elif "confused" in sentiment_lower:
+            sentiment = Sentiment.CONFUSED
+        else:
+            sentiment = Sentiment.NEUTRAL
+        
+        # Update state with sentiment
+        state["sentiment"] = sentiment
+        
+        return state
+    
+    def _should_continue(self, state: AgentState) -> str:
+        """
+        Determine whether to continue the conversation or end it
+        
+        Args:
+            state: Current agent state
+            
+        Returns:
+            "continue" or "end"
+        """
+        # Get sentiment
+        sentiment = state.get("sentiment", Sentiment.NEUTRAL)
+        
+        # Get number of responses
+        responses = state.get("student_responses", [])
+        response_count = len(responses)
+        
+        # Hard safety check - force end after too many iterations to prevent infinite loops
+        if response_count >= 3:
+            logger.info("Ending conversation - max turns reached")
+            return "end"
+        
+        # End the conversation if:
+        # 1. The student is satisfied (positive sentiment after 1+ turns)
+        # 2. The conversation has gone on too long (2+ turns)
+        if (sentiment == Sentiment.POSITIVE and response_count >= 1) or response_count >= 2:
+            logger.info(f"Ending conversation - positive sentiment after {response_count} turns")
+            return "end"
+        
+        logger.info(f"Continuing conversation after {response_count} turns")
+        return "continue"
+    
+    def run(self, user_input: str, context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """
+        Run the agent with user input
+        
+        Args:
+            user_input: The user's input text
+            context: Optional context for the conversation
+            
+        Returns:
+            Dict with the agent's response
+        """
+        # Generate a unique conversation ID
+        conversation_id = str(uuid.uuid4())
+        
+        # Initialize state if needed
+        if not hasattr(self, '_state'):
+            self._state = {
+                "messages": [],
+                "student_profile": {},
+                "scenario": {},
+                "teaching_approach": None,
+                "student_responses": [],
+                "analysis": None,
+                "agent_feedback": None,
+                "sentiment": None
+            }
+        
+        # Add user input to messages
+        self._state["messages"].append(HumanMessage(content=user_input))
+        
+        # Run the graph with error handling
+        try:
+            # Set a maximum iteration counter since LangGraph version doesn't support recursion_limit
+            max_iterations = 5
+            current_iteration = 0
+            
+            # Get the initial state size to track changes
+            initial_message_count = len(self._state.get("messages", []))
+            initial_response_count = len(self._state.get("student_responses", []))
+            
+            # Process until we reach stability or max iterations
+            while current_iteration < max_iterations:
+                prev_state = self._state.copy()
+                self._state = self.graph.invoke(self._state)
+                current_iteration += 1
+                
+                # Check if the state has converged (no more changes to key fields)
+                message_count = len(self._state.get("messages", []))
+                response_count = len(self._state.get("student_responses", []))
+                
+                # If we've added at least one student response and feedback, and no new messages
+                # are being added in this iteration, we can stop
+                if response_count > initial_response_count and message_count > initial_message_count + 2:
+                    # If no new messages were added in this iteration, we're done
+                    if message_count == len(prev_state.get("messages", [])):
+                        logger.info(f"Converged after {current_iteration} iterations")
                         break
             
-            # If no specific profile found or requested, select a random one
-            if not selected_profile:
-                selected_profile = random.choice(student_profiles)
+            if current_iteration >= max_iterations:
+                logger.warning("Reached maximum number of iterations!")
             
-            print(f"Using student profile: {selected_profile.get('name', 'Unknown')}")
-        else:
-            print("No student profiles available, using generic profile.")
+            # Ensure all required state fields exist even after graph execution
+            for field in ["student_profile", "scenario", "teaching_approach", 
+                          "student_responses", "analysis", "agent_feedback", "sentiment"]:
+                if field not in self._state or self._state[field] is None:
+                    if field in ["student_profile", "scenario", "analysis"]:
+                        self._state[field] = {}
+                    elif field == "student_responses":
+                        self._state[field] = []
+                    else:
+                        self._state[field] = None
+                        
+        except Exception as e:
+            logger.error(f"Error running the graph: {str(e)}")
             
-        # Generate knowledge-based scenario
-        scenario = self.scenario_generator.generate_scenario(
-            grade_level=grade_level, 
-            subject=subject,
-            challenge_type=challenge_type,
-            student_profile=selected_profile
+            # Create a fallback response
+            messages = self._state.get("messages", [])
+            messages.append(AIMessage(content="I'm sorry, I encountered an issue processing your input. Let's continue with the simulation."))
+            self._state["messages"] = messages
+            
+            # Add a default student response if none exists
+            if not self._state.get("student_responses"):
+                self._state["student_responses"] = ["I'm not sure I understand. Can you explain again?"]
+            
+            # Set a default sentiment
+            self._state["sentiment"] = Sentiment.NEUTRAL
+        
+        # Store state for reference
+        self._memory_storage[conversation_id] = self._state
+        
+        # Extract the response
+        messages = self._state.get("messages", [])
+        ai_messages = [msg for msg in messages if isinstance(msg, AIMessage)]
+        
+        response = ai_messages[-1].content if ai_messages else "I'm ready to help with teacher training."
+        
+        return {
+            "response": response,
+            "state": self._state,
+            "conversation_id": conversation_id
+        }
+
+class EnhancedTeacherTrainingGraph(TeacherTrainingGraph):
+    """
+    Enhanced Teacher Training Graph with additional advanced features
+    
+    This extends the basic TeacherTrainingGraph with:
+    - Customizable student profiles and scenarios
+    - Targeted feedback on specific teaching dimensions
+    - Enhanced state tracking for multi-turn conversations
+    - Additional analysis nodes
+    """
+    
+    def __init__(self, model_name="gpt-4"):
+        """
+        Initialize the Enhanced Teacher Training Graph
+        
+        Args:
+            model_name (str): Name of the LLM model to use
+        """
+        super().__init__(model_name=model_name)
+        
+        # Override the graph with the enhanced version
+        self.graph = self._build_enhanced_graph()
+    
+    def _build_enhanced_graph(self) -> StateGraph:
+        """
+        Build the enhanced LangGraph state machine
+        
+        Returns:
+            StateGraph: The constructed graph
+        """
+        # Initialize the graph with the state
+        builder = StateGraph(AgentState)
+        
+        # Note: This version of LangGraph doesn't support recursion_limit
+        # We'll implement recursion checks in the _enhanced_should_continue method instead
+        
+        # Add nodes for the different agent functions (including base nodes)
+        builder.add_node("scenario_generation", self._generate_scenario)
+        builder.add_node("teaching_analysis", self._analyze_teaching)
+        builder.add_node("student_response", self._generate_student_response)
+        builder.add_node("feedback", self._generate_feedback)
+        builder.add_node("sentiment_analysis", self._analyze_sentiment)
+        
+        # Add enhanced nodes
+        builder.add_node("detailed_teaching_analysis", self._detailed_teaching_analysis)
+        builder.add_node("learning_objective_assessment", self._assess_learning_objectives)
+        builder.add_node("reflection_prompt", self._generate_reflection_prompt)
+        
+        # Add conditional edge for sentiment
+        builder.add_conditional_edges(
+            "sentiment_analysis",
+            self._enhanced_should_continue,
+            {
+                "continue": "teaching_analysis",
+                "reflect": "reflection_prompt",
+                "end": END
+            }
         )
         
-        # If student profile was used, add it to the scenario
-        if selected_profile:
-            scenario["student_profile"] = selected_profile
+        # Special edge from reflection to END to prevent recursion
+        builder.add_edge("reflection_prompt", END)
+        
+        # Define the enhanced flow
+        builder.add_edge("scenario_generation", "teaching_analysis")
+        builder.add_edge("teaching_analysis", "detailed_teaching_analysis")
+        builder.add_edge("detailed_teaching_analysis", "student_response")
+        builder.add_edge("student_response", "learning_objective_assessment")
+        builder.add_edge("learning_objective_assessment", "feedback")
+        builder.add_edge("feedback", "sentiment_analysis")
+        
+        # Set the entry point
+        builder.set_entry_point("scenario_generation")
+        
+        # Compile the graph
+        return builder.compile()
+    
+    def _detailed_teaching_analysis(self, state: AgentState) -> AgentState:
+        """
+        Perform a more detailed analysis of the teaching approach
+        
+        Args:
+            state: Current agent state
+            
+        Returns:
+            Updated state with detailed analysis
+        """
+        # Get the teaching approach
+        teaching_approach = state.get("teaching_approach", "")
+        
+        if not teaching_approach:
+            return state
+        
+        # Prompt for detailed analysis
+        analysis_prompt = f"""
+        Perform a detailed analysis of the following teaching approach:
+        
+        TEACHING APPROACH:
+        {teaching_approach}
+        
+        SCENARIO:
+        {json.dumps(state["scenario"], indent=2)}
+        
+        STUDENT PROFILE:
+        {json.dumps(state["student_profile"], indent=2)}
+        
+        Analyze the following dimensions:
+        1. Content accuracy and relevance
+        2. Pedagogical approach and methodology
+        3. Engagement and motivation techniques
+        4. Differentiation and inclusivity
+        5. Assessment and feedback strategies
+        
+        For each dimension, provide:
+        - A score from 1-10
+        - Specific strengths
+        - Areas for improvement
+        - Suggestions for enhancement
+        
+        Return your analysis as a structured evaluation.
+        """
+        
+        # Get analysis from LLM
+        detailed_analysis = self.llm.get_llm_response([
+            {"role": "system", "content": "You are an expert teaching analyst."},
+            {"role": "user", "content": analysis_prompt}
+        ])
+        
+        # Update the analysis with detailed information
+        if "analysis" not in state or not state["analysis"]:
+            state["analysis"] = {}
+        
+        state["analysis"]["detailed"] = detailed_analysis
+        
+        return state
+    
+    def _assess_learning_objectives(self, state: AgentState) -> AgentState:
+        """
+        Assess how well the approach addresses learning objectives
+        
+        Args:
+            state: Current agent state
+            
+        Returns:
+            Updated state with learning objective assessment
+        """
+        # Get scenario, teaching approach, and student response
+        scenario = state.get("scenario", {})
+        teaching_approach = state.get("teaching_approach", "")
+        student_responses = state.get("student_responses", [])
+        
+        if not teaching_approach or not student_responses or not scenario:
+            return state
+        
+        # Extract learning objectives
+        learning_objectives = scenario.get("learning_objectives", [])
+        if not learning_objectives:
+            return state
+        
+        latest_response = student_responses[-1]
+        
+        # Prompt for assessment
+        assessment_prompt = f"""
+        Assess how well the teaching approach addresses the learning objectives:
+        
+        LEARNING OBJECTIVES:
+        {json.dumps(learning_objectives, indent=2)}
+        
+        TEACHING APPROACH:
+        {teaching_approach}
+        
+        STUDENT RESPONSE:
+        {latest_response}
+        
+        For each learning objective, provide:
+        - Assessment of whether it was addressed (Yes/Partially/No)
+        - Evidence from the teaching approach
+        - Evidence from the student response
+        - Suggestions for better addressing it
+        
+        Return your assessment as a structured evaluation.
+        """
+        
+        # Get assessment from LLM
+        objectives_assessment = self.llm.get_llm_response([
+            {"role": "system", "content": "You are assessing learning objectives."},
+            {"role": "user", "content": assessment_prompt}
+        ])
+        
+        # Update the analysis
+        if "analysis" not in state or not state["analysis"]:
+            state["analysis"] = {}
+        
+        state["analysis"]["objectives_assessment"] = objectives_assessment
+        
+        return state
+    
+    def _generate_reflection_prompt(self, state: AgentState) -> AgentState:
+        """
+        Generate a reflection prompt for the teacher
+        
+        Args:
+            state: Current agent state
+            
+        Returns:
+            Updated state with reflection prompt
+        """
+        # Get teaching approach and analysis
+        teaching_approach = state.get("teaching_approach", "")
+        analysis = state.get("analysis", {})
+        student_responses = state.get("student_responses", [])
+        
+        # Default reflection - used if anything goes wrong
+        default_reflection = "Reflection: Consider how your teaching approach affected student engagement and understanding. What might you do differently next time?"
+        
+        if not teaching_approach or not analysis:
+            # Return state with a default reflection to avoid recursion issues
+            logger.warning("Missing teaching approach or analysis, using default reflection")
+            messages = state.get("messages", [])
+            messages.append(AIMessage(content=default_reflection))
+            state["messages"] = messages
+            return state
+        
+        # Safety check - don't try to generate reflection if too many responses already
+        if len(student_responses) >= 3:
+            logger.warning("Too many responses, using default reflection")
+            messages = state.get("messages", [])
+            messages.append(AIMessage(content=default_reflection))
+            state["messages"] = messages
+            return state
+        
+        # Prompt for reflection
+        reflection_prompt = f"""
+        Generate a reflective prompt for the teacher based on:
+        
+        TEACHING APPROACH:
+        {teaching_approach}
+        
+        STUDENT RESPONSES:
+        {json.dumps(student_responses, indent=2)}
+        
+        ANALYSIS:
+        {json.dumps(analysis, indent=2)}
+        
+        The reflection prompt should:
+        1. Highlight key strengths to build upon
+        2. Identify areas for growth
+        3. Ask thought-provoking questions for self-reflection
+        4. Suggest specific strategies to try
+        
+        Format the reflection as a constructive guidance for professional development.
+        Limit your response to 250 words or less.
+        """
+        
+        try:
+            # Get reflection from LLM with timeout
+            reflection = self.llm.get_llm_response([
+                {"role": "system", "content": "You are a reflective coaching specialist."},
+                {"role": "user", "content": reflection_prompt}
+            ])
+            
+            # Add to messages
+            messages = state.get("messages", [])
+            messages.append(AIMessage(content=f"Reflection: {reflection}"))
+            state["messages"] = messages
+        except Exception as e:
+            # Handle errors gracefully to avoid recursion issues
+            logger.error(f"Error generating reflection: {str(e)}")
+            messages = state.get("messages", [])
+            messages.append(AIMessage(content=default_reflection))
+            state["messages"] = messages
+        
+        return state
+    
+    def _enhanced_should_continue(self, state: AgentState) -> str:
+        """
+        Enhanced decision logic for continuing the conversation
+        
+        Args:
+            state: Current agent state
+            
+        Returns:
+            "continue", "reflect", or "end"
+        """
+        # Get sentiment
+        sentiment = state.get("sentiment", Sentiment.NEUTRAL)
+        
+        # Get number of responses
+        responses = state.get("student_responses", [])
+        response_count = len(responses)
+        
+        # Always end immediately after a single pass through to prevent unnecessary recursion
+        # This is the most important change for performance - force a single complete pass
+        if "messages" in state and len(state["messages"]) > 2:
+            logger.info("Ending enhanced conversation after first complete pass")
+            return "end"
+        
+        # Hard safety check - force end after too many iterations to prevent infinite loops
+        if response_count >= 1:
+            logger.info("Ending enhanced conversation - max turns reached")
+            return "end"
+        
+        # Force end if negative sentiment persists or confusion after initial response
+        if response_count >= 1 and (sentiment == Sentiment.NEGATIVE or sentiment == Sentiment.CONFUSED):
+            logger.info(f"Ending enhanced conversation - negative/confused sentiment after {response_count} turns")
+            return "end"
+            
+        # Provide feedback immediately rather than waiting for multiple turns
+        if response_count >= 1 and sentiment == Sentiment.POSITIVE:
+            logger.info("Ending with positive sentiment - generating feedback")
+            return "reflect"
+        
+        # Default to end to prevent unnecessary recursion
+        return "end"
+    
+    def create_custom_scenario(self, subject: str, grade_level: str, 
+                              learning_objectives: List[str],
+                              student_characteristics: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Create a custom teaching scenario with specific parameters
+        
+        Args:
+            subject: The subject being taught
+            grade_level: The student's grade level
+            learning_objectives: List of learning objectives
+            student_characteristics: Dictionary of student characteristics
+            
+        Returns:
+            Dict with the created scenario
+        """
+        # Create context for scenario generation
+        context = {
+            "subject": subject,
+            "difficulty": "custom",
+            "student_profile": {
+                "grade_level": grade_level,
+                **student_characteristics
+            }
+        }
+        
+        # Generate scenario
+        scenario = self.processor.create_scenario(context)
+        
+        # Override learning objectives
+        scenario["learning_objectives"] = learning_objectives
         
         return scenario
-        
-    def evaluate_enhanced_response(self, teacher_response, scenario):
+    
+    def run_with_custom_scenario(self, user_input: str, scenario: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Evaluate a teacher's response using the knowledge base.
+        Run the agent with a custom scenario
         
         Args:
-            teacher_response (str): The teacher's response text
-            scenario (dict): The scenario dictionary
+            user_input: The user's input text
+            scenario: Custom scenario to use
             
         Returns:
-            str: Detailed evaluation of the teacher's response
+            Dict with the agent's response
         """
-        # Get knowledge chunks used in the scenario
-        knowledge_ids = [source["id"] for source in scenario["knowledge_sources"]]
+        # Generate a unique conversation ID
+        conversation_id = str(uuid.uuid4())
         
-        # Retrieve the actual chunks
-        knowledge_chunks = []
-        for chunk_id in knowledge_ids:
-            try:
-                conn = sqlite3.connect(self.vector_db.db_path)
-                cursor = conn.cursor()
-                cursor.execute("SELECT text, metadata FROM chunks WHERE id = ?", (chunk_id,))
-                result = cursor.fetchone()
-                if result:
-                    text, metadata = result
-                    knowledge_chunks.append({
-                        "id": chunk_id,
-                        "text": text,
-                        "metadata": json.loads(metadata)
-                    })
-                conn.close()
-            except Exception as e:
-                print(f"Error retrieving chunk {chunk_id}: {e}")
-        
-        # Evaluate the response
-        evaluation = self.scenario_generator.evaluate_response(
-            teacher_response=teacher_response,
-            scenario=scenario,
-            knowledge_chunks=knowledge_chunks
-        )
-        
-        return evaluation
-        
-    def get_knowledge_performance_insights(self):
-        """
-        Get insights about which knowledge improves performance.
-        
-        Returns:
-            dict: Detailed insights about knowledge effectiveness
-        """
-        return self.scenario_generator.get_performance_insights()
-        
-    def start_enhanced_interactive_session(self, category=None):
-        """
-        Start an interactive teaching simulation session with enhanced knowledge base.
-        
-        Args:
-            category (str, optional): Specific category focus for the session
+        # Make sure scenario has all required fields
+        if not scenario.get("student_profile"):
+            scenario["student_profile"] = {}
             
-        This interactive session:
-            1. Uses knowledge from processed educational books
-            2. Creates evidence-based teaching scenarios
-            3. Tracks which knowledge is most effective
-            4. Provides detailed feedback based on educational research
+        # Initialize state with custom scenario
+        self._state = {
+            "messages": [],
+            "student_profile": scenario.get("student_profile", {}),
+            "scenario": scenario,
+            "teaching_approach": user_input,  # Set teaching approach directly from user input
+            "student_responses": [],
+            "analysis": None,
+            "agent_feedback": None,
+            "sentiment": None
+        }
+        
+        # Add scenario to messages - streamlined for faster processing
+        system_prompt = f"""
+        You are a teacher training assistant. Help teachers practice their teaching skills.
+        
+        CURRENT SCENARIO:
+        {json.dumps(scenario, indent=2)}
+        
+        STUDENT PROFILE:
+        {json.dumps(scenario.get("student_profile", {}), indent=2)}
         """
-        # Check if profile is set up
-        if not self.teacher_profile["name"]:
-            self.setup_teacher_profile()
-
-        # Generate initial scenario based on teacher's profile
-        scenario = self.generate_enhanced_scenario(
-            challenge_type=random.choice([
-                "attention issues", 
-                "disruptive behavior", 
-                "motivation", 
-                "conflict"
-            ])
-        )
-        session_history = []
         
-        print(f"\n=== Enhanced Interactive Teaching Session for {self.teacher_profile['name']} ===")
-        print("\nScenario:", scenario['scenario'])
-        print("\nThis scenario was created using knowledge from:")
-        if scenario["knowledge_sources"]:
-            for source in scenario["knowledge_sources"]:
-                print(f"- {source['source']}, {source['section']}")
-                
-            print(f"\nRecommended Strategy: {scenario.get('recommended_strategy', 'Use effective classroom management techniques')}")
-        else:
-            print("- Using default knowledge (no books processed)")
+        self._state["messages"] = [SystemMessage(content=system_prompt)]
         
-        # Main interaction loop
-        while True:
-            print("\n" + "="*50)
-            print("\nWhat would you like to do?")
-            print("1. Respond to the scenario")
-            print("2. View session history")
-            print("3. Generate new scenario")
-            print("4. View knowledge performance insights")
-            print("5. End session")
+        try:
+            # Add user input to messages and set as teaching approach
+            self._state["messages"].append(HumanMessage(content=user_input))
             
-            choice = input("\nEnter your choice (1-5): ").strip()
+            # Set a maximum iteration counter since LangGraph version doesn't support recursion_limit
+            max_iterations = 1  # REDUCED to just 1 to prevent excessive API calls
+            current_iteration = 0
             
-            if choice == "1":
-                print(f"\n[{self.teacher_profile['name']}]")
-                teacher_response = input("Your response: ").strip()
-                if not teacher_response:
-                    print("Please enter a valid response.")
-                    continue
+            # Track API calls for optimization
+            api_call_count = 0
+            max_api_calls = 4
+            
+            # Process until we reach stability or max iterations
+            while current_iteration < max_iterations and api_call_count < max_api_calls:
+                logger.info(f"Starting iteration {current_iteration + 1} of {max_iterations}")
                 
-                # Evaluate response
-                evaluation = self.evaluate_enhanced_response(teacher_response, scenario)
-                
-                # Generate student response
+                # Process one iteration - use try/except to handle potential errors
                 try:
-                    student_response = self.simulate_student_response(teacher_response, scenario)
-                    print("\nStudent response:", student_response)
+                    self._state = self.graph.invoke(self._state)
+                    api_call_count += 1
+                    current_iteration += 1
+                    
+                    # Early exit condition: if we have a student response, exit early
+                    if self._state.get("student_responses") and len(self._state["student_responses"]) > 0:
+                        logger.info("Successfully received student response, exiting iterations")
+                        break
+                    
+                    # If sentiment indicates we should end, exit early
+                    sentiment = self._state.get("sentiment", "")
+                    if sentiment and (sentiment == Sentiment.NEGATIVE or sentiment == Sentiment.CONFUSED):
+                        logger.info(f"Ending enhanced conversation - {sentiment} sentiment")
+                        break
+                        
+                    # After 3 API calls, force an early exit to prevent excessive calls
+                    if api_call_count >= 3:
+                        logger.info("API call limit reached, exiting early")
+                        break
+                        
                 except Exception as e:
-                    print(f"\nCould not generate student response: {e}")
-                
-                # Store interaction in session history
-                session_history.append({
-                    "teacher_response": teacher_response,
-                    "student_response": student_response if 'student_response' in locals() else "No response",
-                    "evaluation": evaluation
-                })
-                
-                # Display results
-                print("\nEvaluation:")
-                print(evaluation)
-                    
-            elif choice == "2":
-                if not session_history:
-                    print("\nNo interactions yet.")
-                else:
-                    print("\n=== Session History ===")
-                    for i, interaction in enumerate(session_history, 1):
-                        print(f"\nInteraction {i}:")
-                        print(f"Teacher: {interaction['teacher_response']}")
-                        print(f"Student: {interaction['student_response']}")
-                        print(f"Evaluation: {interaction['evaluation']}")
-                        
-            elif choice == "3":
-                challenge_types = ["attention issues", "disruptive behavior", "motivation", "conflict"]
-                
-                print("\nChoose a challenge type:")
-                for i, challenge in enumerate(challenge_types, 1):
-                    print(f"{i}. {challenge.title()}")
-                
-                try:
-                    challenge_choice = int(input("\nEnter your choice (1-4) or 0 for random: "))
-                    if 1 <= challenge_choice <= 4:
-                        challenge_type = challenge_types[challenge_choice-1]
-                    else:
-                        challenge_type = random.choice(challenge_types)
-                except (ValueError, IndexError):
-                    challenge_type = random.choice(challenge_types)
-                    
-                scenario = self.generate_enhanced_scenario(challenge_type=challenge_type)
-                session_history = []
-                
-                print("\nNew Scenario:", scenario['scenario'])
-                print("\nThis scenario was created using knowledge from:")
-                if scenario["knowledge_sources"]:
-                    for source in scenario["knowledge_sources"]:
-                        print(f"- {source['source']}, {source['section']}")
-                    print(f"\nRecommended Strategy: {scenario.get('recommended_strategy', 'Use effective classroom management techniques')}")
-                else:
-                    print("- Using default knowledge (no books processed)")
-                    
-            elif choice == "4":
-                insights = self.get_knowledge_performance_insights()
-                print("\n=== Knowledge Performance Insights ===")
-                
-                if insights["most_effective_knowledge"]:
-                    print("\nMost Effective Knowledge Sources:")
-                    for knowledge in insights["most_effective_knowledge"]:
-                        source = knowledge['metadata']['source']
-                        section = knowledge['metadata'].get('section', 'N/A')
-                        score = knowledge['effectiveness_score']
-                        print(f"- {source} ({section}): {score:.2f}")
-                else:
-                    print("\nNo knowledge effectiveness data yet.")
-                    
-                print(f"\nTotal Knowledge Chunks Used: {insights['knowledge_usage_stats']['total_chunks_used']}")
-                print(f"Total Usage Count: {insights['knowledge_usage_stats']['total_usage_count']}")
+                    logger.error(f"Error during iteration: {str(e)}")
+                    break
             
-            elif choice == "5":
-                if session_history:
-                    print(f"\n=== Session Summary for {self.teacher_profile['name']} ===")
-                    print(f"Total Interactions: {len(session_history)}")
-                    
-                    # Get final insights
-                    insights = self.get_knowledge_performance_insights()
-                    if insights["most_effective_knowledge"]:
-                        print("\nMost Effective Knowledge Sources:")
-                        for knowledge in insights["most_effective_knowledge"]:
-                            source = knowledge['metadata']['source']
-                            score = knowledge['effectiveness_score']
-                            print(f"- {source}: {score:.2f}")
-                        
-                print("\nThank you for participating in this enhanced training session!")
-                break
+            # If we still don't have a student response, create one
+            if not self._state.get("student_responses") or len(self._state.get("student_responses", [])) == 0:
+                logger.warning("No student response generated, creating fallback")
+                self._state["student_responses"] = ["I'm not sure what we're talking about today. Can you explain the topic we're covering?"]
                 
+                # Add to messages if not already there
+                student_msg = f"Student: {self._state['student_responses'][-1]}"
+                if not any(student_msg in str(msg) for msg in self._state.get("messages", [])):
+                    self._state["messages"].append(AIMessage(content=student_msg))
+                
+                # Also force feedback generation
+                if not self._state.get("agent_feedback"):
+                    logger.info("Generating fallback feedback")
+                    self._state["agent_feedback"] = "Consider introducing the topic clearly and checking for student understanding. Your approach would benefit from more specific learning objectives."
+            
+            # Ensure all required state fields exist with meaningful defaults
+            required_fields = {
+                "student_profile": scenario.get("student_profile", {}),
+                "scenario": scenario,
+                "teaching_approach": user_input,
+                "student_responses": ["I'm here and ready to learn. What will we be covering today?"],
+                "analysis": {
+                    "overall_assessment": "Your teaching approach is still being evaluated.",
+                    "identified_strengths": ["Engaging with the student"],
+                    "improvement_areas": ["Be more specific about learning objectives"]
+                },
+                "agent_feedback": "To improve your teaching approach, try to be more specific about the learning objectives and engage the student with questions.",
+                "sentiment": Sentiment.NEUTRAL
+            }
+            
+            for field, default_value in required_fields.items():
+                if field not in self._state or self._state[field] is None:
+                    self._state[field] = default_value
+                    # If adding student response, also update messages
+                    if field == "student_responses":
+                        self._state["messages"].append(AIMessage(content=f"Student: {self._state['student_responses'][-1]}"))
+            
+            # Store state for reference
+            import copy
+            self._memory_storage[conversation_id] = copy.deepcopy(self._state)
+            
+            # Extract the most relevant response for the user
+            response = ""
+            if self._state.get("agent_feedback"):
+                response = f"Feedback: {self._state['agent_feedback']}"
             else:
-                print("\nInvalid choice. Please enter a number between 1 and 5.")
+                # Find the latest student response
+                messages = self._state.get("messages", [])
+                student_messages = [msg.content for msg in messages if isinstance(msg, AIMessage) and "Student:" in msg.content]
+                if student_messages:
+                    response = student_messages[-1]
+                else:
+                    response = "I'm ready to help with teacher training."
+            
+            # Always include feedback after student interaction
+            if not response.startswith("Feedback:") and self._state.get("agent_feedback"):
+                response += f"\n\nFeedback: {self._state['agent_feedback']}"
+            
+            return {
+                "response": response,
+                "state": self._state,
+                "conversation_id": conversation_id
+            }
+            
+        except Exception as e:
+            logger.error(f"Error running with custom scenario: {str(e)}")
+            import traceback
+            logger.error(traceback.format_exc())
+            
+            # Create a fallback response with student message for better user experience
+            fallback_student_response = "Hello teacher! I'm ready to learn about the topic. Can you tell me what we're covering today?"
+            fallback_feedback = "Your teaching approach could be more specific. Try to clearly state the learning objectives and engage the student with questions."
+            
+            # Make sure we have a student response
+            if "student_responses" not in self._state or not self._state["student_responses"]:
+                self._state["student_responses"] = [fallback_student_response]
+            
+            # Add a student message to the conversation
+            self._state["messages"].append(AIMessage(content=f"Student: {fallback_student_response}"))
+            
+            # Always provide feedback in case of error
+            self._state["agent_feedback"] = fallback_feedback
+            
+            return {
+                "response": f"Student: {fallback_student_response}\n\nFeedback: {fallback_feedback}",
+                "state": self._state,
+                "conversation_id": conversation_id
+            }
 
-def process_teacher_response(teacher_response, current_scenario, student_state):
-    """
-    Process and evaluate a teacher's response in the current context.
-    
-    This method performs a comprehensive analysis of the teacher's
-    response considering multiple factors and contexts.
-    
-    Args:
-        teacher_response (str): The teacher's action or statement
-        current_scenario (dict): Current teaching context
-        student_state (dict): Current student state and characteristics
-    
-    Evaluation aspects:
-        - Pedagogical appropriateness
-        - Student needs alignment
-        - Learning objective progress
-        - Engagement effectiveness
-        - Classroom management
-    
-    Returns:
-        dict: Detailed analysis including:
-            - Effectiveness score
-            - Specific strengths
-            - Areas for improvement
-            - Alternative approaches
-            - Impact prediction
-    """
-    # Evaluate teacher response based on scenario context and student state.
-    evaluation = evaluate_teacher_response(teacher_response, current_scenario, student_state)
-    
-    # Use f-strings so that teacher_response is printed safely without manual sanitation.
-    print(f"Teacher response evaluated: {teacher_response}")
-    print(f"Evaluation Score: {evaluation['score']}")
-    if evaluation["feedback"]:
-        print("Feedback:")
-        for feedback in evaluation["feedback"]:
-            print(f"- {feedback}")
-    else:
-        print("Great job!") 
+    def initialize_agent(self, model_name="gpt-4", context=None, scenario=None):
+        """
+        Initialize the LangGraph agent with a specific model and context.
+        
+        Args:
+            model_name (str): Name of the LLM model to use
+            context (dict, optional): Context information for the simulation
+            scenario (dict, optional): Scenario settings for the simulation
+            
+        Returns:
+            bool: Success status
+        """
+        try:
+            self.model_name = model_name
+            
+            # Log model initialization
+            logging.info(f"Initializing agent with model: {model_name}")
+            
+            # For Llama models, use the enhanced interface
+            if "llama" in model_name.lower():
+                logging.info("Using local Llama model - checking for model file or Ollama")
+                self.llm_interface = EnhancedLLMInterface(model_name=model_name)
+            else:
+                # For OpenAI or Claude models, use standard initialization
+                self.llm_interface = EnhancedLLMInterface(model_name=model_name)
+            
+            # If scenario is provided, set it directly
+            if scenario:
+                self.scenario = scenario
+            
+            # Set the context (if provided)
+            if context:
+                self.context = context
+            
+            # Build the graph with the configured LLM
+            self.graph = self._build_enhanced_graph()
+            
+            return True
+            
+        except Exception as e:
+            logging.error(f"Failed to initialize agent: {str(e)}")
+            return False

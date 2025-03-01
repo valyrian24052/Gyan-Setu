@@ -24,15 +24,15 @@ Components:
     - Prompt Management: Context-aware prompt construction
 
 Dependencies:
-    - transformers: For model loading and pipeline management
+    - langchain: For LLM and chat models
+    - langchain_openai, langchain_anthropic: For specific model providers
     - torch: For GPU operations and tensor manipulation
-    - bitsandbytes: For quantization support
     - typing: For type hints
 
 Example:
     llm = EnhancedLLMInterface()
-    response = llm.generate(
-        prompt="Explain addition to a second grader",
+    response = llm.get_llm_response(
+        [{"role": "user", "content": "Explain addition to a second grader"}],
         context={"grade_level": "2nd", "subject": "math"}
     )
     
@@ -156,1098 +156,636 @@ to automatically distribute model weights across available GPUs.
 """
 
 import os
-import requests
 import json
 import time
-import torch
-import signal
-import subprocess
-from typing import Dict, Any, List, Optional
-from dataclasses import dataclass
-from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, pipeline
+import random
+import logging
+from typing import List, Dict, Any, Optional, Union
 
-@dataclass
-class TeachingContext:
+# LangChain imports
+from langchain.prompts import PromptTemplate
+from langchain_openai import ChatOpenAI
+from langchain_anthropic import ChatAnthropic
+from langchain.schema.messages import HumanMessage, SystemMessage, AIMessage
+
+# Add imports for local LLM support
+from langchain_community.llms import LlamaCpp
+from langchain_community.chat_models import ChatOllama
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain.callbacks.manager import CallbackManager
+from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
+
+class LLMInterface:
     """
-    Data class for maintaining teaching context and state.
+    Interface for interacting with language models.
     
-    This class encapsulates all relevant information about the current
-    teaching situation, student characteristics, and interaction history.
-    It serves as a central point for context management in the teaching
-    simulation.
+    This class provides a standardized interface for all LLM interactions
+    in the teaching simulation system, supporting different models and
+    configurations.
     
     Attributes:
-        subject (str): The subject being taught (e.g., "math", "reading")
-        grade_level (str): The grade level of the student (e.g., "2nd", "3rd")
-        learning_objectives (List[str]): Specific goals for the lesson
-        student_characteristics (Dict[str, Any]): Student traits including:
-            - learning_style: Preferred learning method
-            - attention_span: Attention capacity
-            - strengths: Areas of proficiency
-            - challenges: Areas needing support
-        previous_interactions (Optional[List[Dict[str, str]]]): History of
-            recent teacher-student interactions
-    
-    Example:
-        context = TeachingContext(
-            subject="mathematics",
-            grade_level="2nd",
-            learning_objectives=["Add two-digit numbers"],
-            student_characteristics={
-                "learning_style": "visual",
-                "attention_span": "moderate"
-            }
-        )
-    """
-    subject: str
-    grade_level: str
-    learning_objectives: List[str]
-    student_characteristics: Dict[str, Any]
-    previous_interactions: Optional[List[Dict[str, str]]] = None
-
-class EnhancedLLMInterface:
-    """
-    Enhanced interface for running large language models across multiple GPUs
-    with precise control over quantization and memory optimization.
-    
-    Features:
-        - Tensor parallelism across multiple GPUs
-        - Advanced quantization techniques
-        - Memory-efficient attention mechanisms
-        - Configurable model loading parameters
-        - Optimized inference pipelines
-    
-    Attributes:
-        model_name (str): HuggingFace model identifier
-        max_tokens (int): Maximum response length
-        temperature (float): Response randomness (0-1)
-        gpu_count (int): Number of available GPUs
-    
-    Example:
-        llm = EnhancedLLMInterface()
-        response = llm.generate(
-            prompt="How would you explain fractions?",
-            context={"student_level": "beginner"}
-        )
+        model_name (str): Name of the LLM model to use
+        chat_model: LangChain chat model instance
     """
     
-    # List of open-access models that don't require authentication
-    OPEN_ACCESS_MODELS = {
-        "microsoft/phi-2": {
-            "parameters": 2.7e9,
-            "parameters_str": "2.7 billion",
-            "architecture": "Phi-2",
-            "context_length": 2048
-        },
-        "TinyLlama/TinyLlama-1.1B-Chat-v1.0": {
-            "parameters": 1.1e9,
-            "parameters_str": "1.1 billion",
-            "architecture": "TinyLlama",
-            "context_length": 2048
-        },
-        "google/gemma-2b": {
-            "parameters": 2e9,
-            "parameters_str": "2 billion",
-            "architecture": "Gemma",
-            "context_length": 8192
-        }
-    }
-    
-    # Define a default fallback model that is guaranteed to work
-    DEFAULT_FALLBACK_MODEL = "microsoft/phi-2"
-    
-    # Gated models requiring Hugging Face authentication
-    GATED_MODELS = {
-        "meta-llama/Llama-2-7b-hf": {
-            "parameters": 7e9,
-            "parameters_str": "7 billion",
-            "architecture": "Llama 2",
-            "context_length": 4096
-        },
-        "meta-llama/Llama-2-13b-hf": {
-            "parameters": 13e9,
-            "parameters_str": "13 billion",
-            "architecture": "Llama 2",
-            "context_length": 4096
-        },
-        "meta-llama/Llama-3-8b-hf": {
-            "parameters": 8e9,
-            "parameters_str": "8 billion",
-            "architecture": "Llama 3",
-            "context_length": 8192
-        },
-        "mistralai/Mistral-7B-v0.1": {
-            "parameters": 7e9,
-            "parameters_str": "7 billion",
-            "architecture": "Mistral",
-            "context_length": 8192
-        }
-    }
-    
-    def __init__(self, model_name=None, quantization="8-bit", token=None):
+    def __init__(self, model_name="gpt-3.5-turbo"):
         """
-        Initialize the enhanced LLM interface with multi-GPU optimization
-        
-        This method sets up the configuration for running models across multiple GPUs
-        with optimized memory usage. It does not load the model immediately (lazy loading)
-        to conserve resources until generation is actually needed.
+        Initialize the LLM interface.
         
         Args:
-            model_name (str, optional): The HuggingFace model identifier. If None, a default
-                                      open-access model will be selected based on available resources.
-            quantization (str): Quantization level to use - "FP16", "8-bit", or "4-bit"
-            token (str, optional): Hugging Face access token for accessing gated models. If None, will try
-                                to use HF_TOKEN environment variable.
+            model_name (str): Name of the LLM model to use
         """
-        # Store Hugging Face access token
-        self.hf_token = token or os.environ.get("HF_TOKEN", None)
+        self.model_name = model_name
+        self.chat_model = self._initialize_model(model_name)
+    
+    def _initialize_model(self, model_name):
+        """
+        Initialize the appropriate chat model based on the model name.
         
-        # Detect available GPU resources
-        # The code automatically adjusts to the number of GPUs available in the system
-        self.gpu_count = torch.cuda.device_count()
-        if self.gpu_count < 2:
-            print("Warning: Only one GPU detected. Multi-GPU optimizations won't be applied.")
-        
-        # Calculate available GPU memory in GB
-        total_gpu_memory = 0
-        for i in range(self.gpu_count):
+        Args:
+            model_name (str): Name of the model to initialize
+            
+        Returns:
+            LangChain chat model instance
+        """
+        if "gpt" in model_name.lower():
+            return ChatOpenAI(
+                model_name=model_name,
+                temperature=0.7
+            )
+        elif "claude" in model_name.lower():
+            return ChatAnthropic(
+                model=model_name,
+                temperature=0.7
+            )
+        elif "llama-3" in model_name.lower():
+            # Use Ollama for Llama 3 models if available
             try:
-                total_gpu_memory += torch.cuda.get_device_properties(i).total_memory / (1024**3)
-            except:
-                pass
-        
-        # Define default model configuration - automatically select based on available resources
-        # If the user didn't specify a model, choose an appropriate one based on available GPU memory
-        if model_name is None:
-            # Default to Phi-2 which is reliable and works well in most cases
-            self.model_name = "microsoft/phi-2"  # 2.7B model, good performance for size
-            
-            # For systems with more memory, suggest larger models but don't auto-select
-            if total_gpu_memory > 24:  # Lots of GPU memory
-                print(f"Using microsoft/phi-2 model. With {total_gpu_memory:.1f} GB GPU memory, you could use larger models.")
-                print("Consider specifying a larger model like 'meta-llama/Llama-3-8b-hf' (requires authentication)")
-            else:
-                print(f"Using microsoft/phi-2 model based on available GPU memory ({total_gpu_memory:.1f} GB)")
-        else:
-            self.model_name = model_name
-        
-        # Response generation parameters
-        self.max_tokens = 2000   # Controls maximum length of generated text
-        self.temperature = 0.7   # Controls randomness: 0=deterministic, 1=creative
-        
-        # Track loaded models
-        # These are initialized as None for lazy loading
-        # Models will only be loaded when first required for generation
-        self.loaded_model = None
-        self.loaded_tokenizer = None
-        self.generation_pipeline = None
-        self.quantization_mode = quantization  # Set quantization based on parameter
-        
-        # Check if model requires authentication
-        is_gated = self.model_name in self.GATED_MODELS
-        if is_gated:
-            if self.hf_token:
-                print(f"⚠️  Note: {self.model_name} is a gated model. Authentication token has been provided.")
-            else:
-                print(f"⚠️  Note: {self.model_name} is a gated model requiring Hugging Face authentication.")
-                print("   If you encounter authentication errors, you may need to:")
-                print("   1. Create a Hugging Face account at https://huggingface.co/")
-                print("   2. Accept the model's license terms on the model's page")
-                print("   3. Run `huggingface-cli login` in your terminal and follow the prompts")
-                print("   4. Or use an open-access model instead")
-                print(f"   Available open-access models: {', '.join(self.OPEN_ACCESS_MODELS.keys())}")
-        
-        # Print detailed model configuration information
-        self.print_model_info(detailed=False)
-        
-        # Log initialization
-        print(f"EnhancedLLMInterface initialized. Will use {self.gpu_count} GPUs for model distribution.")
-    
-    def set_token(self, token):
-        """
-        Set Hugging Face access token after initialization
-        
-        Args:
-            token (str): Hugging Face access token for accessing gated models
-            
-        Returns:
-            bool: True if token was set successfully, False otherwise
-        """
-        if not token or token.strip() == "":
-            print("⚠️ No token provided. Gated models will not be accessible.")
-            self.hf_token = None
-            return False
-            
-        # Store the token
-        self.hf_token = token
-        print("✅ Hugging Face token set successfully.")
-        
-        # Check if current model is gated
-        is_gated = self.model_name in self.GATED_MODELS
-        if is_gated:
-            # Verify the token works with this model
-            is_accessible, _, _ = self._check_model_accessibility(self.model_name)
-            if is_accessible:
-                print(f"✅ Token successfully verified for {self.model_name}")
-            else:
-                print(f"⚠️ Token authentication failed for {self.model_name}. The model may be inaccessible.")
-                print(f"You may need to accept the model terms at: https://huggingface.co/{self.model_name}")
-            
-            print(f"Current model {self.model_name} is gated. Token will be used for authentication.")
-        else:
-            print(f"Note: Current model {self.model_name} is open-access and doesn't require authentication.")
-            print(f"Token will be used if you switch to a gated model.")
-            
-        return True
-        
-    def _check_model_accessibility(self, model_name):
-        """
-        Check if a model is accessible before attempting to load it
-        
-        Args:
-            model_name: Hugging Face model identifier
-            
-        Returns:
-            tuple: (is_accessible, fallback_model, error_message)
-        """
-        import requests
-        
-        # First check if model is in our known good lists
-        is_open_access = model_name in self.OPEN_ACCESS_MODELS
-        is_gated = model_name in self.GATED_MODELS
-        
-        # If not in either list, we should be cautious about its existence
-        if not (is_open_access or is_gated):
-            try:
-                # Try to see if the model exists at all by checking the model page
-                response = requests.head(f"https://huggingface.co/{model_name}", timeout=5)
-                if response.status_code != 200:
-                    return False, self.DEFAULT_FALLBACK_MODEL, f"Model {model_name} does not appear to exist on Hugging Face"
-            except Exception:
-                # If there's any error, assume model might not exist
-                return False, self.DEFAULT_FALLBACK_MODEL, f"Could not verify if model {model_name} exists"
-                
-        # Check if model config is accessible - this is a lightweight check
-        try:
-            headers = {}
-            if self.hf_token:
-                headers["Authorization"] = f"Bearer {self.hf_token}"
-                
-            config_url = f"https://huggingface.co/{model_name}/resolve/main/config.json"
-            response = requests.head(config_url, headers=headers, timeout=5)
-            
-            if response.status_code == 200:
-                return True, None, None
-            elif response.status_code == 401:  # Authentication required
-                if self.hf_token:
-                    return False, self.DEFAULT_FALLBACK_MODEL, f"Authentication failed for {model_name}. Your token may not have access to this model."
-                
-                # If it's a known gated model, suggest similar sized model
-                if is_gated:
-                    # Find an open-access model with similar parameters
-                    model_info = self._get_model_info(model_name)
-                    params = model_info.get('parameters', 0)
+                logging.info("Attempting to initialize Llama 3 with Ollama...")
+                # Convert model name format for Ollama (llama-3-8b → llama3:8b)
+                ollama_model_name = "llama3:8b"
+                if "70b" in model_name.lower():
+                    ollama_model_name = "llama3:70b"
                     
-                    # Find closest match based on parameter count
-                    fallback_model = self.DEFAULT_FALLBACK_MODEL
-                    min_diff = float('inf')
-                    
-                    for open_model, info in self.OPEN_ACCESS_MODELS.items():
-                        diff = abs(info['parameters'] - params)
-                        if diff < min_diff:
-                            min_diff = diff
-                            fallback_model = open_model
-                    
-                    error_msg = f"Authentication required for {model_name}. Please provide a token with set_token()."
-                    return False, fallback_model, error_msg
-                else:
-                    # If it's not in our lists, use default fallback
-                    return False, self.DEFAULT_FALLBACK_MODEL, f"Model {model_name} requires authentication but no token was provided."
-            else:
-                # For other errors, use default fallback
-                return False, self.DEFAULT_FALLBACK_MODEL, f"HTTP error {response.status_code} accessing {model_name}"
-        
-        except Exception as e:
-            return False, self.DEFAULT_FALLBACK_MODEL, f"Error checking model accessibility: {str(e)}"
-    
-    def print_model_info(self, detailed=False):
-        """
-        Print detailed information about the current model configuration
-        
-        Args:
-            detailed (bool): Whether to print detailed information including
-                           memory requirements and hardware recommendations
-        """
-        # Get model details based on ID (if available)
-        model_info = self._get_model_info(self.model_name)
-        
-        if detailed:
-            print("\n" + "="*80)
-            print("ENHANCED LLM CONFIGURATION".center(80))
-            print("="*80 + "\n")
-            
-            # Print basic model information
-            print(f"🤖 MODEL:           {self.model_name}")
-            
-            # Print parameter count if available
-            if model_info and 'parameters_str' in model_info:
-                print(f"📏 PARAMETERS:      {model_info['parameters_str']}")
-            
-            # Print quantization mode and estimated memory usage
-            print(f"💾 QUANTIZATION:    {self.quantization_mode}")
-            
-            # Print architecture if available
-            if model_info and 'architecture' in model_info:
-                print(f"🧠 ARCHITECTURE:    {model_info['architecture']}")
-            
-            # Print context length if available
-            if model_info and 'context_length' in model_info:
-                print(f"🔄 CONTEXT LENGTH:  {model_info['context_length']} tokens")
-            
-            # Calculate and print memory usage based on parameters and quantization
-            params = model_info.get('parameters', 0) if model_info else 0
-            if params > 0:
-                # Memory usage estimates in different precisions
-                if self.quantization_mode == "FP16":
-                    mem_weights = params * 2 / 1e9  # 2 bytes per parameter
-                elif self.quantization_mode == "8-bit":
-                    mem_weights = params * 1 / 1e9  # 1 byte per parameter 
-                elif self.quantization_mode == "4-bit":
-                    mem_weights = params * 0.5 / 1e9  # 0.5 bytes per parameter
-                else:
-                    mem_weights = params * 2 / 1e9  # Default to FP16
+                logging.info(f"Using Ollama model: {ollama_model_name}")
+                return ChatOllama(
+                    model=ollama_model_name,
+                    temperature=0.7
+                )
+            except Exception as e:
+                logging.warning(f"Error initializing Ollama: {e}")
+                # Fall back to LlamaCpp if Ollama isn't available
+                logging.info("Falling back to LlamaCpp for Llama 3")
                 
-                # Add estimate for activations
-                mem_activations = mem_weights * 0.15  # Rough estimate: activations ~15% of weights
-                mem_total = mem_weights + mem_activations
-                
-                print(f"📊 MEMORY USAGE:    ~{mem_total:.1f} GB total")
-                print(f"                    • Model weights: ~{mem_weights:.1f} GB")
-                print(f"                    • Activations:   ~{mem_activations:.1f} GB")
-            
-            # Print generation settings
-            print("\n⚙️  GENERATION SETTINGS:")
-            print(f"   • Max tokens:        {self.max_tokens}")
-            print(f"   • Temperature:       {self.temperature}")
-            print(f"   • Distribution mode: Tensor Parallelism")
-            print(f"   • Authentication:    {'Using token' if self.hf_token else 'Open access'} ({chr(9989) if self.hf_token else chr(10060)} {'Token provided' if self.hf_token else 'No token'})")
-            
-            # Print model status
-            print(f"\n📋 MODEL STATUS:     {'Loaded' if self.loaded_model is not None else 'Not loaded (lazy loading)'}")
-            print("="*80)
-        else:
-            # Print just basic info for non-detailed mode
-            model_type = "gated" if self.model_name in self.GATED_MODELS else "open-access"
-            param_str = f" ({model_info['parameters_str']} parameters)" if model_info and 'parameters_str' in model_info else ""
-            print(f"Model: {self.model_name}{param_str} [{model_type}]")
-            print(f"Quantization: {self.quantization_mode}")
-            print(f"Authentication: {'Token provided' if self.hf_token else 'No token'}")
-    
-    def _get_model_info(self, model_name):
-        """
-        Get information about a model from our predefined lists
-        
-        Args:
-            model_name: The HuggingFace model identifier
-            
-        Returns:
-            dict: Model information or empty dict if not found
-        """
-        # Check open access models
-        if model_name in self.OPEN_ACCESS_MODELS:
-            return self.OPEN_ACCESS_MODELS[model_name]
-            
-        # Check gated models
-        if model_name in self.GATED_MODELS:
-            return self.GATED_MODELS[model_name]
-            
-        # Unknown model - collect basic info from name
-        if "/" in model_name:
-            architecture = model_name.split("/")[1]
-            return {
-                "architecture": architecture
-            }
-            
-        return {}
-    
-    def _load_model(self):
-        """
-        Load model across multiple GPUs with optimized memory usage
-        
-        This method:
-        1. Configures advanced quantization for memory efficiency
-        2. Loads the specified model with tensor parallelism across available GPUs
-        3. Sets up an optimized text generation pipeline
-        
-        The method uses several advanced techniques:
-        - 8-bit or 4-bit quantization: Reduces memory usage vs FP16 with minimal quality loss
-        - Tensor parallelism: Automatically distributes model across GPUs
-        - Nested quantization: Further optimizes memory usage
-        - Mixed precision: Uses FP16 for outlier weights to preserve quality
-        - CPU offloading: Can offload parts to CPU if needed
-        """
-        # Skip loading if model is already loaded
-        if self.loaded_model is not None:
-            return
-        
-        print(f"\nLoading {self.model_name} across {self.gpu_count} GPUs with {self.quantization_mode} quantization...")
-        print("This may take a few minutes. Loading large language model...")
-        
-        # Update quantization mode and print detailed information before loading
-        self.print_model_info(detailed=True)
-        
-        # Check if model is accessible and get fallback if needed
-        is_accessible, fallback_model, error_msg = self._check_model_accessibility(self.model_name)
-        
-        if not is_accessible:
-            if fallback_model:
-                print(f"\n⚠️  Warning: {error_msg}")
-                print(f"🔄 Using fallback model: {fallback_model}")
-                self.model_name = fallback_model
-                # Print updated model info
-                self.print_model_info(detailed=False)
-            else:
-                print(f"\n❌ Error: {error_msg}")
-                print("Please ensure you have proper authentication for this model.")
-                print("To authenticate with Hugging Face:")
-                print("1. Create an account at https://huggingface.co/")
-                print("2. Accept the model license terms on the model's page")
-                print("3. Set your Hugging Face token with llm.set_token('your_token')")
-                print("4. Alternatively, choose an open-access model")
-                available_models = ", ".join(self.OPEN_ACCESS_MODELS.keys())
-                print(f"Available open-access models: {available_models}")
-                raise ValueError(f"Cannot access model {self.model_name}. Authentication may be required.")
-            
-        # Configure quantization based on specified mode
-        quantization_config = None
-        
-        if self.quantization_mode == "4-bit":
-            # Configure 4-bit quantization - most memory efficient
-            quantization_config = BitsAndBytesConfig(
-                load_in_4bit=True,                    # 4-bit quantization
-                bnb_4bit_compute_dtype=torch.float16, # Compute in half precision
-                bnb_4bit_use_double_quant=True,       # Use nested quantization
-                bnb_4bit_quant_type="nf4",            # Use normalized float 4-bit
-            )
-        elif self.quantization_mode == "8-bit":
-            # Configure 8-bit quantization - good balance of quality and efficiency
-            quantization_config = BitsAndBytesConfig(
-                load_in_8bit=True,                    # 8-bit quantization
-                llm_int8_threshold=6.0,               # Threshold for outlier detection
-                llm_int8_has_fp16_weight=True,        # Keep outlier weights in fp16
-                bnb_8bit_compute_dtype=torch.float16, # Compute in half precision
-                bnb_8bit_use_double_quant=True,       # Use nested quantization
-            )
-        # Otherwise use FP16 (no quantization config needed)
-        
-        # Measure loading time
-        start_time = time.time()
-        
-        try:
-            # Load tokenizer first - required before model loading
-            # The tokenizer is responsible for converting text to tokens and vice versa
-            # use_fast=True uses the optimized Rust implementation for faster processing
-            print("Loading tokenizer...")
-            self.loaded_tokenizer = AutoTokenizer.from_pretrained(
-                self.model_name,
-                use_fast=True,  # Use faster Rust-based tokenizer when available
-                token=self.hf_token  # Use stored token (might be None)
-            )
-            
-            # Load model with tensor parallelism across GPUs
-            # device_map="auto" automatically distributes the model weights across available GPUs
-            # for the UTTA server with dual GPUs, this will split the model across both GPUs
-            print("Loading model with tensor parallelism...")
-            
-            model_args = {
-                "device_map": "auto",         # Automatically distribute across available GPUs
-                "torch_dtype": torch.float16, # Use half precision for non-quantized operations
-                "low_cpu_mem_usage": True,    # Optimize CPU memory usage during loading
-                "offload_folder": "offload_folder",  # Folder for potential CPU offloading
-                "offload_state_dict": True,   # Offload state dict to CPU during loading
-                "trust_remote_code": True,    # Allow model implementations with custom code
-                "token": self.hf_token        # Use stored token (might be None)
-            }
-            
-            # Add quantization config if using 4-bit or 8-bit
-            if quantization_config:
-                model_args["quantization_config"] = quantization_config
-                
-            self.loaded_model = AutoModelForCausalLM.from_pretrained(
-                self.model_name,
-                **model_args
-            )
-            
-            # Create optimized pipeline for text generation
-            # This pipeline integrates the model and tokenizer into a single interface for text generation
-            # It allows for advanced configurations while providing a simple API
-            print("Creating generation pipeline...")
-            self.generation_pipeline = pipeline(
-                "text-generation",                # Task type
-                model=self.loaded_model,          # The loaded model
-                tokenizer=self.loaded_tokenizer,  # The loaded tokenizer
-                device_map="auto",                # Use same device mapping as model
-            )
-            
-            # Calculate loading time
-            loading_time = time.time() - start_time
-            
-            # Print post-loading info including actual memory usage
-            total_gpu_memory = 0
-            for i in range(self.gpu_count):
-                total_gpu_memory += torch.cuda.memory_allocated(i) / (1024**3)
-            
-            print(f"\n✅ Model loaded successfully in {loading_time:.2f} seconds!")
-            print(f"   - Actual GPU memory used: {total_gpu_memory:.2f} GB")
-            
-            # Get model details like hidden size, num layers if available
-            model_details = ""
-            try:
-                config = self.loaded_model.config
-                if hasattr(config, 'hidden_size'):
-                    model_details += f", hidden size: {config.hidden_size}"
-                if hasattr(config, 'num_hidden_layers'):
-                    model_details += f", layers: {config.num_hidden_layers}"
-                if hasattr(config, 'vocab_size'):
-                    model_details += f", vocab: {config.vocab_size}"
-            except:
-                pass
-                
-            print(f"   - Model details: {self.model_name}{model_details}")
-            print(f"   - Device mapping: {self.loaded_model.hf_device_map if hasattr(self.loaded_model, 'hf_device_map') else 'auto'}")
-            
-        except Exception as e:
-            error_message = str(e)
-            
-            # Handle authentication error specifically
-            if "401" in error_message or "gated repo" in error_message:
-                print(f"\n❌ Authentication Error: Cannot access {self.model_name}")
-                print("This model requires Hugging Face authentication.")
-                print("To authenticate with Hugging Face:")
-                print("1. Create an account at https://huggingface.co/")
-                print("2. Accept the model license terms on the model's page")
-                print("3. Run `huggingface-cli login` and enter your token")
-                print("\nAlternatively, use an open-access model:")
-                
-                # List available open-access models with parameter sizes
-                for model, info in self.OPEN_ACCESS_MODELS.items():
-                    print(f"   - {model} ({info['parameters_str']} parameters)")
-                    
-                print("\nTo use an open-access model, initialize with:")
-                print("   processor = PedagogicalLanguageProcessor(model_name='google/gemma-2b')")
-                
-            # Re-raise the exception for the caller to handle
-            raise
-    
-    def generate(
-        self,
-        prompt: str,
-        context: Optional[Dict[str, Any]] = None,
-        **kwargs
-    ) -> Dict[str, Any]:
-        """
-        Generate a response from the LLM using optimized multi-GPU inference
-        
-        This method handles the complete process of:
-            1. Building the context-aware prompt
-            2. Loading the model across GPUs if not already loaded
-            3. Processing the response with optimized pipeline
-            4. Handling any errors
-        
-        Args:
-            prompt (str): The main instruction or question for the LLM
-            context (Optional[Dict[str, Any]]): Additional context including:
-                - student_info: Student characteristics
-                - subject_area: Current subject
-                - grade_level: Student's grade
-                - previous_context: Prior interactions
-            **kwargs: Additional parameters including:
-                - temperature: Response randomness (0-1)
-                - max_tokens: Maximum response length
-        
-        Returns:
-            Dict[str, Any]: A structured response containing:
-                - text: The LLM's response
-                - status: Success or error status
-                - model: Name of the model used
-                - error: Error message if applicable
-        """
-        try:
-            # Check if model needs to be loaded first time
-            # This implements lazy loading - model is only loaded when first needed
-            if self.loaded_model is None:
-                # First try loading the model
                 try:
-                    self._load_model()
-                except Exception as load_error:
-                    # If model loading fails, return informative error
-                    print(f"Error loading model: {str(load_error)}")
-                    return {
-                        "text": f"I apologize, but there was an error loading the language model. Error: {str(load_error)}",
-                        "status": "error",
-                        "error": str(load_error)
-                    }
-                
-            # Combine prompt with context if provided
-            # This creates a properly formatted prompt that includes all relevant context
-            full_prompt = self._build_prompt(prompt, context) if context else prompt
-            
-            # Set up generation parameters
-            # These parameters control the behavior of the text generation process
-            gen_kwargs = {
-                "max_new_tokens": kwargs.get("max_tokens", self.max_tokens),  # Max tokens to generate
-                "temperature": kwargs.get("temperature", self.temperature),   # Randomness parameter
-                "do_sample": kwargs.get("temperature", self.temperature) > 0, # Enable sampling for temperature > 0
-                "top_p": kwargs.get("top_p", 0.95),                        # Nucleus sampling parameter
-                "top_k": kwargs.get("top_k", 50),                          # Top-k sampling parameter
-                "repetition_penalty": kwargs.get("repetition_penalty", 1.1),  # Penalty for repeating tokens
-                "pad_token_id": self.loaded_tokenizer.eos_token_id,        # Use EOS token for padding
-            }
-            
-            # Generate response using the pipeline
-            # The pipeline handles tokenization, model forward pass, and token generation
-            outputs = self.generation_pipeline(
-                full_prompt,
-                **gen_kwargs
+                    # Set up callback manager for streaming with error handling
+                    callbacks = [StreamingStdOutCallbackHandler()]
+                    callback_manager = CallbackManager(callbacks)
+                    
+                    # Get the path to the model
+                    model_path = os.environ.get("LLAMA_MODEL_PATH", "./models/llama-3-8b.gguf")
+                    
+                    # Check if model exists
+                    if not os.path.exists(model_path):
+                        logging.error(f"Model file not found at {model_path}")
+                        logging.info("Please download Llama 3 and set LLAMA_MODEL_PATH environment variable")
+                        raise FileNotFoundError(f"Model file not found at {model_path}")
+                    
+                    # Determine model size (8B or 70B) to adjust parameters accordingly
+                    is_large_model = "70b" in model_path.lower()
+                    
+                    logging.info(f"Initializing LlamaCpp with {model_path}")
+                    logging.info("Using optimized settings for dual RTX A4000 GPUs")
+                    
+                    # Start with minimal settings to avoid errors
+                    model = LlamaCpp(
+                        model_path=model_path,
+                        temperature=0.7,
+                        max_tokens=2000,
+                        # Reduce context size for better performance
+                        n_ctx=2048 if not is_large_model else 1024,
+                        # Use both GPUs
+                        n_gpu_layers=-1,  # Auto-detect layers for GPU
+                        # Specify primary GPU
+                        main_gpu=0,
+                        # Split the model evenly across both GPUs (50/50)
+                        tensor_split=[0.5, 0.5],
+                        # Increase batch size for better throughput
+                        n_batch=512 if not is_large_model else 256,
+                        # For streaming output
+                        callback_manager=callback_manager,
+                        # Logging for performance tuning
+                        verbose=True,
+                        # Use half precision
+                        f16_kv=True
+                    )
+                    
+                    logging.info("LlamaCpp model initialized successfully!")
+                    return model
+                    
+                except Exception as detailed_error:
+                    logging.error(f"Critical error initializing LlamaCpp: {detailed_error}")
+                    logging.error("Falling back to default model")
+                    # Fall back to a simpler initialization or a different model
+                    return ChatOpenAI(
+                        model_name="gpt-3.5-turbo",
+                        temperature=0.7
+                    )
+        else:
+            # Default to GPT-3.5-turbo
+            return ChatOpenAI(
+                model_name="gpt-3.5-turbo",
+                temperature=0.7
             )
-            
-            # Extract the generated text, removing the input prompt
-            # This ensures we only return the newly generated content
-            generated_text = outputs[0]['generated_text']
-            response_text = generated_text[len(full_prompt):] if generated_text.startswith(full_prompt) else generated_text
-            
-            return {
-                "text": response_text.strip(),   # Return cleaned response text
-                "status": "success",             # Indicate successful generation
-                "model": self.model_name         # Include model information
-            }
-            
-        except Exception as e:
-            # Robust error handling
-            print(f"Error generating LLM response: {e}")
-            return {
-                "text": "I apologize, but I'm having trouble processing that request. Error: " + str(e),
-                "status": "error",
-                "error": str(e)
-            }
     
-    def _build_prompt(self, prompt: str, context: Dict[str, Any]) -> str:
+    def get_llm_response(self, messages, output_format=None, max_retries=3):
         """
-        Build a complete prompt by combining the input with context.
-        
-        This method creates a structured prompt that includes both the
-        main instruction and any relevant context information in a
-        format optimized for LLM understanding.
+        Get a response from the language model.
         
         Args:
-            prompt (str): The main instruction or question
-            context (Dict[str, Any]): Contextual information including:
-                - Student characteristics
-                - Learning objectives
-                - Previous interactions
-                - Environmental factors
+            messages: List of message dictionaries with role and content
+            output_format: Optional format specification (json, markdown, etc.)
+            max_retries: Maximum number of retries for API errors
             
         Returns:
-            str: A formatted prompt string that combines:
-                - Context information
-                - Main prompt
-                - Any necessary formatting or structure
+            str: The model's response
         """
-        # Format context as key-value pairs, one per line
-        context_str = "\n".join(f"{k}: {v}" for k, v in context.items())
+        retry_count = 0
         
-        # Create a structured prompt with clear section separation
-        return f"Context:\n{context_str}\n\nPrompt:\n{prompt}" 
+        # Convert message dictionaries to LangChain message objects
+        lc_messages = []
+        for msg in messages:
+            role = msg.get("role", "user")
+            content = msg.get("content", "")
+            
+            if role == "system":
+                lc_messages.append(SystemMessage(content=content))
+            elif role == "assistant":
+                lc_messages.append(AIMessage(content=content))
+            else:  # Default to user
+                lc_messages.append(HumanMessage(content=content))
         
-    def generate_response(self, teacher_response: str, scenario: dict = None) -> str:
-        """
-        Generate a student response to a teacher's action in a scenario.
+        # Add output format instruction if needed
+        if output_format == "json":
+            format_msg = HumanMessage(content="Return your response in valid JSON format.")
+            lc_messages.append(format_msg)
         
-        This method is specifically used by the Enhanced Teacher Training Agent
-        to generate realistic student responses based on the teacher's input
-        and the current scenario context.
-        
-        Args:
-            teacher_response (str): The teacher's action or statement
-            scenario (dict, optional): The current teaching scenario containing:
-                - description: The scenario description
-                - knowledge_sources: Sources used to create the scenario
-                - recommended_strategy: Suggested teaching approach
-        
-        Returns:
-            str: A realistic student response that reflects:
-                - Understanding of the teaching context
-                - Appropriate reaction to the teacher's approach
-                - Age-appropriate language and behavior
-        """
-        try:
-            # Handle the case when scenario is None or not provided
-            # This provides a fallback default scenario
-            if scenario is None:
-                scenario = {"scenario": "Classroom management situation"}
-            
-            # Build a prompt specifically for student response generation
-            # This prompt provides clear instructions to generate an authentic student response
-            prompt = f"""
-            As an AI simulating a student's response in a teacher training scenario:
-            
-            SCENARIO:
-            {scenario.get('scenario', 'Classroom management situation')}
-            
-            TEACHER RESPONSE:
-            "{teacher_response}"
-            
-            Please generate a realistic, brief response from the student that would make sense
-            in this context. The response should reflect how a real student might react to the
-            teacher's approach. Keep the response under 100 words and make it authentic to a
-            student's perspective.
-            
-            STUDENT RESPONSE:
-            """
-            
-            # Generate response
-            response = self.generate(prompt=prompt)
-            
-            # Return just the text part of the response
-            return response.get("text", "I'm not sure how to respond to that.")
-            
-        except Exception as e:
-            # Provide fallback response if generation fails
-            print(f"Error generating student response: {e}")
-            return "Hmm... I'm not sure what to say to that."
-
-    def set_model(self, model_name: str):
-        """
-        Change the model being used. Will unload any previously loaded model.
-        
-        This allows for dynamically switching between different models based on task requirements.
-        For example, using a larger model for complex reasoning and a smaller, more efficient
-        model for simple responses.
-        
-        The method properly unloads the current model to free GPU memory before changing
-        the model name. The new model will be loaded on the next generation request.
-        
-        Args:
-            model_name: The HuggingFace model identifier
+        # Retry logic for API calls
+        while retry_count < max_retries:
+            try:
+                response = self.chat_model.invoke(lc_messages)
+                return response.content
+            except Exception as e:
+                retry_count += 1
+                if retry_count >= max_retries:
+                    logging.error(f"Failed to get LLM response after {max_retries} attempts: {e}")
+                    return f"Error: Unable to generate response. Please try again later."
                 
-        Alternative models that can be used:
-        - "meta-llama/Llama-2-7b-hf": Smaller model, uses less memory
-        - "meta-llama/Llama-3-8b-hf": Newer architecture, better quality/size ratio
-        - "mistralai/Mistral-7B-v0.1": Excellent quality at smaller size
-        - "microsoft/phi-2": Very small (2.7B) but surprisingly capable
+                # Exponential backoff
+                time.sleep(2 ** retry_count)
+    
+    def generate_teaching_recommendation(self, scenario, student_profile):
         """
-        # Unload current model to free GPU memory
-        # This is important to avoid CUDA out-of-memory errors
-        if self.loaded_model is not None:
-            self.loaded_model = None
-            self.loaded_tokenizer = None
-            self.generation_pipeline = None
-            torch.cuda.empty_cache()  # Clear CUDA cache to release GPU memory
+        Generate teaching recommendations based on scenario and student profile.
         
-        # Update model name
+        Args:
+            scenario: Teaching scenario details
+            student_profile: Student characteristics and needs
+            
+        Returns:
+            dict: Teaching recommendations including strategies and approaches
+        """
+        prompt = f"""
+        You are an expert education consultant providing teaching recommendations.
+        
+        SCENARIO:
+        {json.dumps(scenario, indent=2)}
+        
+        STUDENT PROFILE:
+        {json.dumps(student_profile, indent=2)}
+        
+        Please provide teaching recommendations appropriate for this scenario and student.
+        Include specific strategies, approaches, and potential adaptations.
+        Return your response as JSON with the following structure:
+        {{
+            "recommended_strategies": [list of strategies],
+            "adaptations": [list of adaptations for student needs],
+            "communication_approach": "description of effective communication",
+            "assessment_methods": [list of appropriate assessment approaches]
+        }}
+        """
+        
+        response = self.get_llm_response([{"role": "user", "content": prompt}], output_format="json")
+        
+        try:
+            return json.loads(response)
+        except:
+            # If JSON parsing fails, return a structured dictionary with the raw response
+            return {
+                "recommended_strategies": ["Error parsing recommendations"],
+                "adaptations": [],
+                "communication_approach": response,
+                "assessment_methods": []
+            }
+
+
+class EnhancedLLMInterface(LLMInterface):
+    """
+    Enhanced interface for advanced LLM interactions.
+    
+    This class extends the base LLMInterface with additional capabilities:
+    - Streaming responses for real-time feedback
+    - Advanced context management for educational scenarios
+    - Specialized educational prompting techniques
+    - Error recovery and retry mechanisms
+    
+    Attributes:
+        model_name (str): Name of the LLM model to use
+        chat_model: LangChain chat model instance
+        system_prompts (dict): Collection of specialized system prompts
+            for different educational scenarios
+    """
+    
+    def __init__(self, model_name="gpt-4"):
+        """
+        Initialize the enhanced LLM interface.
+        
+        Args:
+            model_name (str): Name of the LLM model to use
+        """
         self.model_name = model_name
         
-        # Print new model information
-        print(f"Model changed to {model_name}.")
-        self.print_model_info(detailed=False)
-        print("It will be loaded on the next generation request.")
-
-    def check_server(self):
-        """
-        Legacy compatibility method. Always returns True since we're not using a server anymore.
+        # Configure the appropriate chat model based on the model name
+        if "gpt" in model_name.lower():
+            self.chat_model = ChatOpenAI(
+                model_name=model_name,
+                temperature=0.7,
+                streaming=True
+            )
+        elif "claude" in model_name.lower():
+            self.chat_model = ChatAnthropic(
+                model=model_name,
+                temperature=0.7,
+                streaming=True
+            )
+        elif "llama-3" in model_name.lower():
+            # Use Ollama for Llama 3 models if available
+            try:
+                # Convert model name format for Ollama (llama-3-8b → llama3:8b)
+                ollama_model_name = "llama3:8b"
+                if "70b" in model_name.lower():
+                    ollama_model_name = "llama3:70b"
+                    
+                logging.info(f"Using Ollama model: {ollama_model_name}")
+                self.chat_model = ChatOllama(
+                    model=ollama_model_name,
+                    temperature=0.7
+                )
+                logging.info(f"Successfully initialized Ollama with model {ollama_model_name}")
+            except Exception as e:
+                logging.warning(f"Error initializing Ollama: {e}")
+                # Fall back to LlamaCpp if Ollama isn't available
+                logging.info("Falling back to LlamaCpp for Llama 3")
+                
+                try:
+                    # Set up callback manager for streaming with error handling
+                    callbacks = [StreamingStdOutCallbackHandler()]
+                    callback_manager = CallbackManager(callbacks)
+                    
+                    # Get the path to the model
+                    model_path = os.environ.get("LLAMA_MODEL_PATH", "./models/llama-3-8b.gguf")
+                    
+                    # Check if model exists
+                    if not os.path.exists(model_path):
+                        logging.error(f"Model file not found at {model_path}")
+                        logging.info("Please download Llama 3 and set LLAMA_MODEL_PATH environment variable")
+                        raise FileNotFoundError(f"Model file not found at {model_path}")
+                    
+                    # Determine model size (8B or 70B) to adjust parameters accordingly
+                    is_large_model = "70b" in model_path.lower()
+                    
+                    logging.info(f"Initializing LlamaCpp with {model_path}")
+                    logging.info("Using optimized settings for dual RTX A4000 GPUs")
+                    
+                    # Start with minimal settings to avoid errors
+                    self.chat_model = LlamaCpp(
+                        model_path=model_path,
+                        temperature=0.7,
+                        max_tokens=2000,
+                        # Reduce context size for better performance
+                        n_ctx=2048 if not is_large_model else 1024,
+                        # Use both GPUs
+                        n_gpu_layers=-1,  # Auto-detect layers for GPU
+                        # Specify primary GPU
+                        main_gpu=0,
+                        # Split the model evenly across both GPUs (50/50)
+                        tensor_split=[0.5, 0.5],
+                        # Increase batch size for better throughput
+                        n_batch=512 if not is_large_model else 256,
+                        # For streaming output
+                        callback_manager=callback_manager,
+                        # Logging for performance tuning
+                        verbose=True,
+                        # Use half precision
+                        f16_kv=True
+                    )
+                    logging.info(f"Successfully initialized LlamaCpp with model at {model_path}")
+                
+                except Exception as detailed_error:
+                    logging.error(f"Critical error initializing LlamaCpp: {detailed_error}")
+                    logging.error("Falling back to default model")
+                    # Fall back to a simpler initialization or a different model
+                    self.chat_model = ChatOpenAI(
+                        model_name="gpt-3.5-turbo",
+                        temperature=0.7,
+                        streaming=True
+                    )
+        else:
+            # Default to GPT-4
+            self.chat_model = ChatOpenAI(
+                model_name="gpt-4",
+                temperature=0.7,
+                streaming=True
+            )
         
-        This method exists to maintain compatibility with code that expects the old
-        Ollama-based interface.
+        # Collection of specialized system prompts for different educational scenarios
+        self.system_prompts = {
+            "student_simulation": """You are simulating a student in a classroom setting. 
+            Your responses should reflect the student's knowledge level, learning style, challenges, and strengths.
+            Respond as the student would to the teacher's input.""",
+            
+            "teaching_analysis": """You are an expert educational consultant analyzing teaching approaches.
+            Evaluate the teaching response considering pedagogical best practices, student needs, and learning objectives.
+            Provide specific, actionable feedback with clear strengths and areas for improvement.""",
+            
+            "strategy_recommendation": """You are an educational specialist recommending teaching strategies.
+            Based on the student profile and teaching context, suggest evidence-based approaches 
+            that would be most effective for this specific learning situation."""
+        }
+    
+    def get_llm_response_with_context(self, messages, context_data, prompt_type="student_simulation"):
         """
-        return True
+        Get an LLM response with additional context and specialized prompting.
+        
+        Args:
+            messages: List of message dictionaries with role and content
+            context_data: Dictionary with relevant contextual information
+            prompt_type: Type of specialized system prompt to use
+            
+        Returns:
+            str: The model's response incorporating the context
+        """
+        # Create a context-aware system prompt
+        system_prompt = self.system_prompts.get(prompt_type, "You are a helpful assistant.")
+        
+        # Add context to the system prompt
+        context_str = json.dumps(context_data, indent=2)
+        enhanced_prompt = f"{system_prompt}\n\nCONTEXT INFORMATION:\n{context_str}"
+        
+        # Ensure the first message is a system message with our enhanced prompt
+        if messages and messages[0].get("role") == "system":
+            messages[0]["content"] = enhanced_prompt
+        else:
+            messages.insert(0, {"role": "system", "content": enhanced_prompt})
+        
+        # Get response from the base method
+        return self.get_llm_response(messages)
+    
+    def generate_student_response(self, teacher_input, student_profile, scenario_context):
+        """
+        Generate a realistic student response to a teacher's input.
+        
+        Args:
+            teacher_input: The teacher's statement or question
+            student_profile: Student characteristics and attributes
+            scenario_context: Additional context about the teaching scenario
+            
+        Returns:
+            str: A realistic student response based on the profile and context
+        """
+        context_data = {
+            "student_profile": student_profile,
+            "scenario": scenario_context,
+            "teacher_input": teacher_input
+        }
+        
+        prompt = f"""
+        The teacher has said: "{teacher_input}"
+        
+        Respond as the student would, considering:
+        - The student is in grade {student_profile.get('grade_level', 'elementary')}
+        - Learning style: {', '.join(student_profile.get('learning_style', ['visual']))}
+        - Challenges: {', '.join(student_profile.get('challenges', ['focusing']))}
+        - Strengths: {', '.join(student_profile.get('strengths', ['creativity']))}
+        
+        The subject is {scenario_context.get('subject', 'general')} at {scenario_context.get('difficulty', 'intermediate')} level.
+        
+        Give a realistic, age-appropriate response from the student's perspective.
+        """
+        
+        messages = [
+            {"role": "system", "content": self.system_prompts["student_simulation"]},
+            {"role": "user", "content": prompt}
+        ]
+        
+        return self.get_llm_response_with_context(messages, context_data, "student_simulation")
+    
+    def analyze_teaching_strategies(self, teacher_input, student_profile, scenario_context):
+        """
+        Analyze teaching strategies used in the teacher's input.
+        
+        Args:
+            teacher_input: The teacher's statement or approach
+            student_profile: Student characteristics and attributes
+            scenario_context: Additional context about the teaching scenario
+            
+        Returns:
+            dict: Analysis of teaching strategies with effectiveness scores
+        """
+        prompt = f"""
+        Analyze the following teaching approach:
+        
+        "{teacher_input}"
+        
+        Identify the teaching strategies used and their potential effectiveness
+        for a student with these characteristics: {json.dumps(student_profile)}
+        
+        The teaching context is: {json.dumps(scenario_context)}
+        
+        Return your analysis as a JSON object with the following structure:
+        {{
+            "identified_strategies": [
+                {{
+                    "strategy": "name of strategy",
+                    "description": "brief description",
+                    "effectiveness": score from 1-10,
+                    "rationale": "why this score was given"
+                }}
+            ],
+            "overall_effectiveness": score from 1-10,
+            "suggested_improvements": ["improvement 1", "improvement 2"]
+        }}
+        """
+        
+        response = self.get_llm_response([{"role": "user", "content": prompt}], output_format="json")
+        
+        try:
+            return json.loads(response)
+        except:
+            # Fallback if JSON parsing fails
+            return {
+                "identified_strategies": [
+                    {"strategy": "General approach", "description": response, "effectiveness": 5, "rationale": "Unable to parse detailed analysis"}
+                ],
+                "overall_effectiveness": 5,
+                "suggested_improvements": ["Consider more structured analysis"]
+            }
+
 
 class PedagogicalLanguageProcessor:
     """
-    Processes natural language in educational contexts using LLMs.
+    Processes and analyzes language in educational contexts.
     
-    This class serves as the main interface for all language-related
-    operations in the teaching simulation. It maintains educational
-    context while processing language, ensuring responses are
-    pedagogically appropriate and age-suitable.
+    This class specializes in analyzing and generating language related to
+    teaching and learning, including creating scenarios, analyzing responses,
+    and generating student reactions.
     
-    Key Features:
-        - Teaching response analysis
-        - Student reaction generation
-        - Scenario creation
-        - Real-time feedback
-        - Context maintenance
-        - Model switching for different tasks
-    
-    Components:
-        - Enhanced LLM Interface: Handles communication with distributed models
-        - Prompt Templates: Manages educational prompt patterns
-        - Context Management: Maintains teaching situation state
-        - Response Processing: Analyzes and generates responses
+    Attributes:
+        llm_interface: LLM interface for generating responses
     """
     
-    def __init__(self, model_name=None, quantization="8-bit", token=None):
+    def __init__(self, model="gpt-3.5-turbo"):
         """
-        Initialize the processor with enhanced LLM interface and prompt templates.
-        
-        This constructor:
-        1. Creates an EnhancedLLMInterface for model interaction
-        2. Attempts to load prompt templates
-        3. Falls back to default prompts if templates aren't available
+        Initialize the pedagogical language processor.
         
         Args:
-            model_name (str, optional): The HuggingFace model identifier. If None, a default
-                                      open-access model will be selected based on available resources.
-            quantization (str): Quantization level to use - "FP16", "8-bit", or "4-bit"
-            token (str, optional): Hugging Face access token for accessing gated models
+            model (str): LLM model to use for processing
         """
-        # Use the enhanced LLM interface for multi-GPU optimization
-        print("\n" + "="*80)
-        print("INITIALIZING PEDAGOGICAL LANGUAGE PROCESSOR".center(80))
-        print("="*80)
-        print("\nCreating enhanced LLM interface with multi-GPU support...")
-        
-        self.llm = EnhancedLLMInterface(model_name=model_name, quantization=quantization, token=token)
-        
-        # Try to load prompt templates, fall back gracefully if not available
-        try:
-            from prompt_templates import PromptTemplates
-            self.templates = PromptTemplates()
-            print("✅ Successfully loaded prompt templates.")
-        except ImportError:
-            print("⚠️  Warning: PromptTemplates not found. Using default prompts.")
-            self.templates = None
-            
-        print(f"✅ PedagogicalLanguageProcessor initialized and ready.\n")
-        print("="*80)
-        
-    def analyze_teaching_response(
-        self, 
-        teacher_input: str, 
-        context: TeachingContext
-    ) -> Dict[str, Any]:
-        """
-        Analyze the effectiveness of a teacher's response.
-        
-        This method performs a detailed analysis of teaching effectiveness by:
-        1. Switching to the Llama-3-8B model for complex analysis
-        2. Using either template-based or default prompts
-        3. Evaluating multiple dimensions of teaching quality
-        
-        Args:
-            teacher_input: The teacher's response or action
-            context: Current teaching context including student info
-            
-        Returns:
-            Dictionary containing analysis results:
-            - effectiveness_score: Float between 0 and 1
-            - identified_strengths: List of effective elements
-            - improvement_areas: List of areas for improvement
-            - suggested_strategies: Alternative approaches
-        """
-        # For complex analysis tasks, use the Llama 3 model
-        # Teaching analysis requires deeper reasoning capabilities
-        self.llm.set_model("meta-llama/Llama-3-8b-hf")
-        
-        # Use template if available, otherwise use default prompt
-        prompt = self._get_template("analysis") if self.templates else f"""
-        Analyze the following teaching response for effectiveness. Consider:
-        1. Alignment with educational goals
-        2. Age-appropriateness
-        3. Clarity and structure
-        4. Engagement level
-        5. Potential for student growth
-        
-        Teaching response: {teacher_input}
-        """
-        
-        # Generate analysis using the LLM
-        return self.llm.generate(
-            prompt=prompt,
-            context=self._context_to_dict(context)
-        )
-        
-    def generate_student_reaction(
-        self, 
-        context: TeachingContext, 
-        effectiveness: float
-    ) -> str:
-        """
-        Generate an age-appropriate student reaction.
-        
-        This method:
-        1. Uses an efficient model for simple response generation
-        2. Creates a prompt based on effectiveness score and student age
-        3. Generates a realistic student reaction
-        
-        Args:
-            context: Current teaching context
-            effectiveness: Float between 0 and 1 indicating teaching effectiveness
-            
-        Returns:
-            A string containing the simulated student's reaction
-        """
-        # For student reactions, we can use a smaller efficient model
-        # Student responses are simpler and don't require as much reasoning depth
-        # Try to use Phi-2 as it's efficient for this task
-        self.llm.set_model("microsoft/phi-2")
-        
-        # Use template if available, otherwise use default prompt
-        prompt = self._get_template("student_reaction") if self.templates else f"""
-        Generate a realistic student reaction to a teaching approach with effectiveness
-        score of {effectiveness} (0-1, where 1 is most effective).
-        
-        The reaction should be age-appropriate for a {context.grade_level} student.
-        """
-        
-        # Generate the student reaction
-        response = self.llm.generate(
-            prompt=prompt,
-            context=self._context_to_dict(context)
-        )
-        
-        # Extract and return just the text
-        return response.get("text", "I'm confused about that.")
-        
-    def create_scenario(
-        self, 
-        parameters: Dict[str, Any]
-    ) -> Dict[str, Any]:
-        """
-        Create a teaching scenario based on given parameters.
-        
-        This method:
-        1. Uses the Llama-3-8B model for complex scenario creation
-        2. Generates a detailed teaching scenario with context and objectives
-        
-        Args:
-            parameters: Dictionary containing scenario parameters:
-                - subject: Subject area
-                - difficulty: Difficulty level
-                - student_profile: Student characteristics
-                
-        Returns:
-            Dictionary containing the complete scenario
-        """
-        # For complex scenario creation, use the Llama 3 model
-        # Scenario creation requires detailed reasoning and planning
-        self.llm.set_model("meta-llama/Llama-3-8b-hf")
-        
-        # Use template if available, otherwise use default prompt
-        prompt = self._get_template("scenario_creation") if self.templates else """
-        Create a detailed teaching scenario based on the given parameters.
-        Include student background, learning objectives, and potential challenges.
-        """
-        
-        # Generate the scenario
-        return self.llm.generate(
-            prompt=prompt,
-            context=parameters
-        )
-
-    def _get_template(self, template_name: str) -> str:
-        """
-        Helper to get a template or return None if templates not available
-        
-        Args:
-            template_name: Name of the template to retrieve
-            
-        Returns:
-            Template string if available, None otherwise
-        """
-        if self.templates:
-            return self.templates.get(template_name)
-        return None
-        
-    def _context_to_dict(self, context: TeachingContext) -> Dict[str, Any]:
-        """
-        Convert TeachingContext to dictionary for prompt context
-        
-        This method transforms the structured TeachingContext dataclass into
-        a dictionary format suitable for inclusion in prompts.
-        
-        Args:
-            context: The TeachingContext to convert
-            
-        Returns:
-            Dictionary representation of the context
-        """
-        return {
-            "subject": context.subject,
-            "grade_level": context.grade_level,
-            "learning_objectives": ", ".join(context.learning_objectives),
-            "student_characteristics": json.dumps(context.student_characteristics),
-            "previous_interactions": json.dumps(context.previous_interactions) if context.previous_interactions else "None"
-        }
+        self.llm_interface = LLMInterface(model_name=model)
     
-    def check_server(self):
+    def create_scenario(self, context):
         """
-        Legacy compatibility method.
+        Create a teaching scenario based on context parameters.
         
+        Args:
+            context: Dictionary containing scenario parameters
+            
         Returns:
-            bool: Always True since we're using direct model loading now
+            dict: A comprehensive teaching scenario
         """
-        return True
+        subject = context.get("subject", "general")
+        difficulty = context.get("difficulty", "intermediate")
+        student_profile = context.get("student_profile", {})
         
-    def ensure_server_running(self):
+        prompt = f"""
+        Create a detailed teaching scenario for the following context:
+        - Subject: {subject}
+        - Difficulty level: {difficulty}
+        - Student profile: {json.dumps(student_profile)}
+        
+        The scenario should include:
+        - A detailed description of the teaching situation
+        - Specific learning objectives
+        - Relevant student background information
+        - Potential challenges to anticipate
+        
+        Return the scenario as a JSON object with the following structure:
+        {{
+            "description": "detailed scenario description",
+            "learning_objectives": ["objective 1", "objective 2"],
+            "student_background": "relevant information about the student",
+            "challenges": ["potential challenge 1", "potential challenge 2"]
+        }}
         """
-        Legacy compatibility method. No server needed with direct model loading.
         
-        This method prints detailed LLM information for testing purposes.
+        response = self.llm_interface.get_llm_response(
+            [{"role": "user", "content": prompt}],
+            output_format="json"
+        )
         
-        Returns:
-            bool: Always True
-        """
-        print("\n" + "="*80)
-        print("LLM SYSTEM INFORMATION".center(80))
-        print("="*80)
-        
-        # Print PyTorch and CUDA information
-        print(f"\n🔧 PYTORCH VERSION: {torch.__version__}")
-        print(f"🔌 CUDA AVAILABLE:  {'Yes' if torch.cuda.is_available() else 'No'}")
-        print(f"🖥️  CUDA VERSION:    {torch.version.cuda if torch.cuda.is_available() else 'N/A'}")
-        print(f"📊 GPU COUNT:       {torch.cuda.device_count()}")
-        
-        # Print model information from LLM interface
-        print("\n== LLM CONFIGURATION ==")
-        self.llm.print_model_info(detailed=True)
-        
-        # Print library versions
         try:
-            import transformers
-            import bitsandbytes
-            import accelerate
-            
-            print("\n== LIBRARY VERSIONS ==")
-            print(f"🤗 Transformers:    {transformers.__version__}")
-            print(f"🔢 BitsAndBytes:    {bitsandbytes.__version__}")
-            print(f"🚀 Accelerate:      {accelerate.__version__}")
+            scenario = json.loads(response)
+            # Add the context information to the scenario
+            scenario["subject"] = subject
+            scenario["difficulty"] = difficulty
+            return scenario
         except:
-            pass
+            # Fallback if parsing fails
+            return {
+                "subject": subject,
+                "difficulty": difficulty,
+                "description": "A teaching scenario about " + subject,
+                "learning_objectives": ["Understand basic concepts"],
+                "student_background": "Student with typical profile for their age",
+                "challenges": ["Maintaining engagement"]
+            }
+    
+    def analyze_teaching_response(self, teacher_input, context):
+        """
+        Analyze a teacher's response in an educational context.
+        
+        Args:
+            teacher_input: The teacher's statement or approach
+            context: Relevant contextual information about the scenario
             
-        print("="*80 + "\n")
-        return True
-        
-    def switch_to_larger_model(self):
+        Returns:
+            dict: Analysis of the teaching approach
         """
-        Switch to a larger model for more complex tasks
+        prompt = f"""
+        Analyze the following teaching response:
         
-        This is a convenience method for tasks that require deeper reasoning
-        capabilities, such as complex scenario generation or detailed analysis.
+        "{teacher_input}"
+        
+        Context:
+        {json.dumps(context, indent=2)}
+        
+        Provide an analysis of the teaching approach, including:
+        - Effectiveness in addressing learning objectives
+        - Appropriateness for the student profile
+        - Strengths of the approach
+        - Areas for improvement
+        - Alignment with pedagogical best practices
+        
+        Return your analysis as a detailed assessment.
         """
-        self.llm.set_model("meta-llama/Llama-3-8b-hf")
         
-    def switch_to_efficient_model(self):
+        response = self.llm_interface.get_llm_response([{"role": "user", "content": prompt}])
+        
+        # Process the response into a structured format
+        analysis_result = {
+            "effectiveness_score": random.uniform(0.6, 0.9),  # Placeholder for demonstration
+            "identified_strengths": [],
+            "improvement_areas": [],
+            "overall_assessment": response
+        }
+        
+        # Extract structured information (this would ideally use a more sophisticated approach)
+        if "strength" in response.lower():
+            strength_section = response.lower().split("strength")[1].split("\n")[0]
+            analysis_result["identified_strengths"].append(strength_section.strip())
+        
+        if "improve" in response.lower():
+            improvement_section = response.lower().split("improve")[1].split("\n")[0]
+            analysis_result["improvement_areas"].append(improvement_section.strip())
+        
+        return analysis_result
+    
+    def generate_student_reaction(self, teacher_input, student_profile, scenario_context):
         """
-        Switch to a smaller, more efficient model for routine tasks
+        Generate a realistic student reaction to a teacher's input.
         
-        This is a convenience method for simpler tasks that don't require
-        the full reasoning capabilities of the larger model, such as
-        basic student reactions or simple information retrieval.
-        
-        Uses microsoft/phi-2 which is an efficient and reliable open-access model.
+        Args:
+            teacher_input: The teacher's statement or question
+            student_profile: Information about the student
+            scenario_context: Additional context about the scenario
+            
+        Returns:
+            str: A realistic student reaction
         """
-        # Phi-2 is small, efficient, and open-access (no auth required)
-        self.llm.set_model("microsoft/phi-2")
+        # Use the EnhancedLLMInterface for more sophisticated student reactions
+        enhanced_llm = EnhancedLLMInterface()
+        return enhanced_llm.generate_student_response(teacher_input, student_profile, scenario_context)
 
 # Add backward compatibility for code that imports LLMInterface
 # This ensures that existing code referencing the old interface will continue to work

@@ -1,6 +1,7 @@
 """
 Streamlit web application for the Teacher Training Simulator.
 Provides an interactive interface for teachers to practice and analyze teaching scenarios.
+Uses LangGraph for state management and orchestration.
 """
 
 import streamlit as st
@@ -9,13 +10,26 @@ import pandas as pd
 import plotly.express as px
 from datetime import datetime
 import json
-from ai_agent import TeacherTrainingAgent as AIAgent
+from dotenv import load_dotenv
+from ai_agent import TeacherTrainingGraph, EnhancedTeacherTrainingGraph
+from llm_handler import PedagogicalLanguageProcessor, EnhancedLLMInterface
+import subprocess
+import getpass
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Make sure the API key is set
+if not os.environ.get("OPENAI_API_KEY"):
+    st.error("OpenAI API key not found! Please make sure it's set in the .env file or as an environment variable.")
+    st.stop()
 
 class WebInterface:
     def __init__(self):
         """Initialize the web interface and session state."""
+        # Agent will be initialized after getting the token
         if 'agent' not in st.session_state:
-            st.session_state.agent = AIAgent()
+            st.session_state.agent = None
         if 'scenario' not in st.session_state:
             st.session_state.scenario = None
         if 'history' not in st.session_state:
@@ -24,326 +38,649 @@ class WebInterface:
             st.session_state.analysis = None
         if 'strategies' not in st.session_state:
             st.session_state.strategies = []
+        if 'teacher_feedback' not in st.session_state:
+            st.session_state.teacher_feedback = None
+        if 'conversation_id' not in st.session_state:
+            st.session_state.conversation_id = None
+        if 'student_profile' not in st.session_state:
+            st.session_state.student_profile = None
+        if 'reflection' not in st.session_state:
+            st.session_state.reflection = None
 
     def setup_page(self):
-        """Configure the Streamlit page."""
+        """Configure the Streamlit page layout and styling."""
         st.set_page_config(
             page_title="Teacher Training Simulator",
             page_icon="🎓",
             layout="wide"
         )
-        st.title("🎓 Teacher Training Simulator")
 
-    def display_scenario(self):
-        """Display the current teaching scenario with detailed analysis options."""
-        if not st.session_state.scenario:
-            st.session_state.scenario = st.session_state.agent.generate_scenario()
+        # Load custom CSS
+        try:
+            with open('style.css') as f:
+                st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+        except FileNotFoundError:
+            st.warning("Custom CSS file not found. Using default styling.")
 
-        scenario = st.session_state.scenario
+        # Page header
+        st.title("Teacher Training Simulator")
+        st.markdown("### Improve your teaching skills through realistic simulations")
+
+    def initialize_agent(self, model_name="gpt-4"):
+        """Initialize the LangGraph agent with the specified model."""
+        try:
+            # Using the enhanced implementation that supports LangGraph
+            st.session_state.agent = EnhancedTeacherTrainingGraph(model_name=model_name)
+            return True
+        except Exception as e:
+            st.error(f"Error initializing agent: {str(e)}")
+            return False
+
+    def create_scenario(self):
+        """Create a teaching scenario with specified parameters."""
+        st.markdown("## Create a Teaching Scenario")
         
-        # Scenario Overview
-        with st.expander("📚 Current Scenario", expanded=True):
+        with st.form(key="scenario_form"):
             col1, col2 = st.columns(2)
             
             with col1:
-                st.subheader("Context")
-                st.write(f"**Subject:** {scenario['subject'].title()}")
-                st.write(f"**Time of Day:** {scenario['time_of_day'].replace('_', ' ').title()}")
-                st.write(f"**Learning Objectives:**")
-                for obj in scenario['learning_objectives']:
-                    st.write(f"- {obj}")
-
+                subject = st.selectbox(
+                    "Subject", 
+                    ["Mathematics", "Science", "Language Arts", "Social Studies", "Art", "Music", "Physical Education"]
+                )
+                
+                grade_level = st.selectbox(
+                    "Grade Level",
+                    ["Kindergarten", "1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th", "10th", "11th", "12th"]
+                )
+                
+                learning_objectives = st.text_area(
+                    "Learning Objectives (one per line)",
+                    "Understand fractions as parts of a whole\nCompare fractions with common denominators\nVisualize fractions using diagrams"
+                )
+            
             with col2:
-                st.subheader("Student Profile")
-                st.write(f"**Learning Style:** {scenario['student_context']['learning_style']}")
-                st.write(f"**Current Challenges:**")
-                for challenge in scenario['student_context']['current_challenges']:
-                    st.write(f"- {challenge}")
-                st.write(f"**Behavioral Context:** {scenario['behavioral_context']['manifestation']}")
-
-        # Situation Analysis
-        with st.expander("🔍 Analyze Situation", expanded=True):
-            st.subheader("Situation Analysis")
-            
-            # Teacher's Analysis
-            analysis = st.text_area(
-                "What do you observe in this situation? Describe the student's behavior and possible underlying causes.",
-                height=100,
-                key="situation_analysis"
-            )
-            
-            if analysis:
-                # Store analysis
-                st.session_state.analysis = analysis
+                learning_styles = st.multiselect(
+                    "Student Learning Styles",
+                    ["Visual", "Auditory", "Reading/Writing", "Kinesthetic"],
+                    ["Visual", "Kinesthetic"]
+                )
                 
-                # Provide feedback on analysis
-                st.write("### Key Elements Identified:")
-                analysis_feedback = self.analyze_teacher_observation(analysis, scenario)
+                challenges = st.multiselect(
+                    "Student Challenges",
+                    ["Attention span", "Abstract concepts", "Reading comprehension", "Math anxiety", 
+                     "Organization", "Memory", "Processing speed", "English language learner"],
+                    ["Abstract concepts"]
+                )
                 
-                for category, elements in analysis_feedback.items():
-                    st.write(f"**{category}:**")
-                    for element in elements:
-                        st.write(f"- {element}")
-
-        # Strategy Selection
-        with st.expander("📋 Select Teaching Strategies", expanded=True):
-            st.subheader("Teaching Strategies")
-            
-            # Get relevant strategies based on scenario
-            available_strategies = self.get_relevant_strategies(scenario)
-            
-            # Group strategies by category
-            for category, strategies in available_strategies.items():
-                st.write(f"**{category}:**")
-                for strategy in strategies:
-                    if st.checkbox(strategy['name'], key=f"strategy_{strategy['name']}"):
-                        if strategy not in st.session_state.strategies:
-                            st.session_state.strategies.append(strategy)
-
-            # Display selected strategies
-            if st.session_state.strategies:
-                st.write("### Selected Strategies:")
-                for strategy in st.session_state.strategies:
-                    st.write(f"- {strategy['name']}")
-                    st.write(f"  *{strategy['description']}*")
-
-        # Response Formulation
-        with st.expander("💭 Formulate Response", expanded=True):
-            st.subheader("Teacher Response")
-            
-            # Show strategy recommendations
-            if st.session_state.strategies:
-                st.write("**Incorporating selected strategies:**")
-                for strategy in st.session_state.strategies:
-                    st.write(f"- Consider {strategy['example']}")
-
-            # Teacher's response
-            response = st.text_area(
-                "What would you say or do in this situation?",
-                height=100,
-                key="teacher_response"
-            )
-
-            if st.button("Submit Response"):
-                if response:
-                    # Evaluate response
-                    evaluation = st.session_state.agent.evaluate_response(response, scenario)
-                    
-                    # Display evaluation
-                    self.display_evaluation(evaluation)
-                    
-                    # Store interaction
-                    st.session_state.history.append({
-                        'timestamp': datetime.now(),
-                        'scenario': scenario,
-                        'analysis': st.session_state.analysis,
-                        'strategies': st.session_state.strategies.copy(),
-                        'response': response,
-                        'evaluation': evaluation
-                    })
-                    
-                    # Clear strategies for next interaction
-                    st.session_state.strategies = []
-                    
-                    # Option for new scenario
-                    if st.button("Generate New Scenario"):
-                        st.session_state.scenario = st.session_state.agent.generate_scenario()
-                        st.experimental_rerun()
-                else:
-                    st.warning("Please enter a response before submitting.")
-
-    def analyze_teacher_observation(self, analysis, scenario):
-        """Analyze the teacher's observation of the situation."""
-        # Initialize feedback categories
-        feedback = {
-            "Behavioral Observations": [],
-            "Learning Style Considerations": [],
-            "Context Recognition": [],
-            "Potential Interventions": []
-        }
-        
-        # Analyze behavioral observations
-        behavior_keywords = ["fidgeting", "distracted", "frustrated", "confused", "engaged"]
-        for keyword in behavior_keywords:
-            if keyword in analysis.lower():
-                feedback["Behavioral Observations"].append(
-                    f"Identified {keyword} behavior"
+                strengths = st.multiselect(
+                    "Student Strengths",
+                    ["Creativity", "Verbal skills", "Visual-spatial thinking", "Memory", 
+                     "Logical reasoning", "Collaboration", "Self-motivation", "Persistence"],
+                    ["Creativity", "Visual-spatial thinking"]
                 )
+            
+            submit_button = st.form_submit_button("Create Scenario")
         
-        # Analyze learning style considerations
-        learning_style = scenario['student_context']['learning_style']
-        if learning_style.lower() in analysis.lower():
-            feedback["Learning Style Considerations"].append(
-                f"Recognized {learning_style} learning style"
-            )
-        
-        # Analyze context recognition
-        context_elements = {
-            "time": scenario['time_of_day'],
-            "subject": scenario['subject'],
-            "trigger": scenario['behavioral_context']['trigger']
-        }
-        for element, value in context_elements.items():
-            if value.lower() in analysis.lower():
-                feedback["Context Recognition"].append(
-                    f"Noted {element}: {value}"
+        if submit_button:
+            if not st.session_state.agent:
+                if not self.initialize_agent():
+                    st.error("Failed to initialize agent. Please check your API key.")
+                    return
+            
+            try:
+                # Format learning objectives as a list
+                objectives_list = [obj.strip() for obj in learning_objectives.split('\n') if obj.strip()]
+                
+                # Create student profile
+                student_profile = {
+                    "grade_level": grade_level,
+                    "learning_style": [style.lower() for style in learning_styles],
+                    "challenges": [challenge.lower() for challenge in challenges],
+                    "strengths": [strength.lower() for strength in strengths]
+                }
+                
+                # Store the student profile in session state
+                st.session_state.student_profile = student_profile
+                
+                # Create custom scenario using LangGraph agent
+                scenario = st.session_state.agent.create_custom_scenario(
+                    subject=subject,
+                    grade_level=grade_level,
+                    learning_objectives=objectives_list,
+                    student_characteristics=student_profile
                 )
+                
+                # Store the scenario
+                st.session_state.scenario = scenario
+                
+                # Clear previous history if any
+                st.session_state.history = []
+                st.session_state.analysis = None
+                st.session_state.strategies = []
+                st.session_state.teacher_feedback = None
+                st.session_state.reflection = None
+                
+                # Display success message
+                st.success("Teaching scenario created successfully!")
+                
+                # Display the scenario details
+                self.display_scenario(scenario)
+                
+                # Scroll to the simulation section
+                js = f"""
+                <script>
+                    function scroll() {{
+                        document.querySelector('h2:contains("Practice Teaching Interaction")').scrollIntoView();
+                    }}
+                    setTimeout(scroll, 500);
+                </script>
+                """
+                st.markdown(js, unsafe_allow_html=True)
+                
+            except Exception as e:
+                st.error(f"Error creating scenario: {str(e)}")
+    
+    def display_scenario(self, scenario):
+        """Display the details of the current teaching scenario."""
+        st.markdown("## Scenario Details")
         
-        # Analyze potential interventions
-        intervention_keywords = ["strategy", "approach", "help", "support", "guide"]
-        for keyword in intervention_keywords:
-            if keyword in analysis.lower():
-                feedback["Potential Interventions"].append(
-                    f"Considering {keyword}-based intervention"
-                )
+        # Create columns for layout
+        col1, col2 = st.columns(2)
         
-        return feedback
+        with col1:
+            st.markdown("### Scenario")
+            st.markdown(f"**Subject:** {scenario.get('subject', 'Not specified')}")
+            st.markdown(f"**Description:** {scenario.get('description', 'No description available')}")
+            
+            # Learning objectives
+            st.markdown("### Learning Objectives")
+            objectives = scenario.get('learning_objectives', [])
+            if objectives:
+                for i, obj in enumerate(objectives, 1):
+                    st.markdown(f"{i}. {obj}")
+            else:
+                st.markdown("No learning objectives specified")
+        
+        with col2:
+            st.markdown("### Student Profile")
+            
+            student_profile = st.session_state.student_profile
+            if student_profile:
+                st.markdown(f"**Grade Level:** {student_profile.get('grade_level', 'Not specified')}")
+                
+                # Learning styles
+                learning_styles = student_profile.get('learning_style', [])
+                if learning_styles:
+                    st.markdown(f"**Learning Styles:** {', '.join(style.capitalize() for style in learning_styles)}")
+                
+                # Challenges
+                challenges = student_profile.get('challenges', [])
+                if challenges:
+                    st.markdown("**Challenges:**")
+                    for challenge in challenges:
+                        st.markdown(f"- {challenge.capitalize()}")
+                
+                # Strengths
+                strengths = student_profile.get('strengths', [])
+                if strengths:
+                    st.markdown("**Strengths:**")
+                    for strength in strengths:
+                        st.markdown(f"- {strength.capitalize()}")
+            else:
+                st.markdown("No student profile available")
+            
+            # Additional scenario information
+            st.markdown("### Potential Challenges")
+            challenges = scenario.get('challenges', [])
+            if challenges:
+                for challenge in challenges:
+                    st.markdown(f"- {challenge}")
+            else:
+                st.markdown("No challenges specified")
 
-    def get_relevant_strategies(self, scenario):
-        """Get teaching strategies relevant to the current scenario."""
-        # Group strategies by category
-        strategies = {
-            "Time-Based Strategies": [
-                {
-                    "name": f"{scenario['time_of_day'].title()} Energy Management",
-                    "description": "Strategies suited for student energy levels at this time",
-                    "example": "using structured activities to maintain focus"
-                }
-            ],
-            "Learning Style Strategies": [
-                {
-                    "name": f"{scenario['student_context']['learning_style'].title()} Learning Approach",
-                    "description": f"Techniques optimized for {scenario['student_context']['learning_style']} learners",
-                    "example": "using visual aids and demonstrations"
-                }
-            ],
-            "Behavioral Management": [
-                {
-                    "name": f"Address {scenario['behavioral_context']['type'].title()}",
-                    "description": "Techniques to manage current behavioral state",
-                    "example": "providing clear, step-by-step instructions"
-                }
-            ],
-            "Subject-Specific": [
-                {
-                    "name": f"{scenario['subject'].title()} Support",
-                    "description": "Subject-specific teaching strategies",
-                    "example": "breaking down complex problems into smaller steps"
-                }
-            ]
-        }
+    def display_simulation_interface(self):
+        """Display the interface for practicing teaching interactions."""
+        st.markdown("## Practice Teaching Interaction")
         
-        return strategies
-
-    def display_evaluation(self, evaluation):
-        """Display the evaluation results with detailed feedback."""
-        st.write("### Response Evaluation")
-        
-        # Display score with color coding
-        score = evaluation['score']
-        if score >= 0.8:
-            st.success(f"Score: {score*100:.0f}%")
-        elif score >= 0.6:
-            st.warning(f"Score: {score*100:.0f}%")
-        else:
-            st.error(f"Score: {score*100:.0f}%")
-        
-        # Display strengths
-        if evaluation['feedback']:
-            st.write("**Strengths:**")
-            for strength in evaluation['feedback']:
-                st.write(f"✓ {strength}")
-        
-        # Display suggestions
-        if evaluation['suggestions']:
-            st.write("**Suggestions for Improvement:**")
-            for suggestion in evaluation['suggestions']:
-                st.write(f"→ {suggestion}")
-        
-        # Display student reaction
-        st.write("**Student Reaction:**")
-        st.info(evaluation['student_reaction'])
-        
-        # Display state changes
-        if 'state_changes' in evaluation:
-            st.write("**Impact on Student State:**")
-            cols = st.columns(len(evaluation['state_changes']))
-            for col, (state, change) in zip(cols, evaluation['state_changes'].items()):
-                with col:
-                    st.metric(
-                        label=state.title(),
-                        value=f"{change*100:.0f}%",
-                        delta=f"{change*100:+.0f}%"
-                    )
-
-    def display_history(self):
-        """Display the session history with analysis."""
-        if not st.session_state.history:
-            st.info("No interactions recorded yet.")
+        if not st.session_state.scenario:
+            st.info("Please create a scenario first to begin the simulation.")
             return
         
-        st.write("## Session History")
+        # Display conversation history
+        self.display_conversation()
         
-        # Summary metrics
-        total_interactions = len(st.session_state.history)
-        avg_score = sum(h['evaluation']['score'] for h in st.session_state.history) / total_interactions
+        # Input for teacher's response
+        teacher_input = st.text_area("Your teaching response:", height=100, 
+                                    placeholder="Enter your teaching approach or response...")
         
-        col1, col2, col3 = st.columns(3)
+        # Create a key for the submit button to avoid redundant clicks
+        if 'submit_key' not in st.session_state:
+            st.session_state.submit_key = 0
+        
+        # Add a spinner for visual feedback during processing
+        submit_button = st.button("Submit Response", key=f"submit_{st.session_state.submit_key}")
+        
+        if submit_button:
+            if not teacher_input.strip():
+                st.warning("Please enter a teaching response before submitting.")
+                return
+            
+            # Increment the key to prevent double submission
+            st.session_state.submit_key += 1
+            
+            # Show processing indicator
+            with st.spinner("Processing your response..."):
+                if not st.session_state.agent:
+                    if not self.initialize_agent():
+                        st.error("Failed to initialize agent. Please check your API key.")
+                        return
+                
+                try:
+                    # Record teacher's message in history
+                    st.session_state.history.append({
+                        "role": "teacher",
+                        "content": teacher_input,
+                        "timestamp": datetime.now().strftime("%H:%M:%S")
+                    })
+                    
+                    # Process with LangGraph agent
+                    if st.session_state.conversation_id:
+                        # Continue existing conversation
+                        result = st.session_state.agent.run(teacher_input)
+                    else:
+                        # Start new conversation with custom scenario
+                        result = st.session_state.agent.run_with_custom_scenario(
+                            user_input=teacher_input, 
+                            scenario=st.session_state.scenario
+                        )
+                    
+                    # Extract information from the response
+                    response = result.get("response", "")
+                    state = result.get("state", {})
+                    st.session_state.conversation_id = result.get("conversation_id")
+                    
+                    # Update session state with relevant information
+                    if "analysis" in state and state["analysis"]:
+                        st.session_state.analysis = state["analysis"]
+                    
+                    # Process feedback and student responses
+                    if response:
+                        # Handle combined response with both student message and feedback
+                        parts = response.split("\n\nFeedback:")
+                        
+                        # First part is student response if not starting with Feedback
+                        if not response.startswith("Feedback:") and len(parts) > 0 and "Student:" in parts[0]:
+                            # Store student response
+                            st.session_state.history.append({
+                                "role": "student",
+                                "content": parts[0],
+                                "timestamp": datetime.now().strftime("%H:%M:%S")
+                            })
+                            print(f"Added student response to history: {parts[0]}")
+                        
+                        # Second part or first part if starts with Feedback is feedback
+                        feedback_part = parts[1] if len(parts) > 1 else (parts[0] if response.startswith("Feedback:") else None)
+                        
+                        if feedback_part or "agent_feedback" in state:
+                            feedback_content = f"Feedback: {feedback_part}" if feedback_part else f"Feedback: {state.get('agent_feedback', '')}"
+                            st.session_state.teacher_feedback = feedback_part if feedback_part else state.get('agent_feedback', '')
+                            
+                            # Add feedback to history
+                            st.session_state.history.append({
+                                "role": "system",
+                                "content": feedback_content,
+                                "timestamp": datetime.now().strftime("%H:%M:%S")
+                            })
+                    
+                    # Fallback for student response if not in the message but in state
+                    if "student_responses" in state and state["student_responses"] and not any("Student:" in entry["content"] for entry in st.session_state.history[-2:]):
+                        # Get the latest student response
+                        latest_response = state["student_responses"][-1]
+                        
+                        # Add student response to history explicitly
+                        st.session_state.history.append({
+                            "role": "student",
+                            "content": f"Student: {latest_response}",
+                            "timestamp": datetime.now().strftime("%H:%M:%S")
+                        })
+                        
+                        # Log that a student response was added
+                        print(f"Added student response to history: {latest_response}")
+                    
+                    # Extract reflection if available
+                    if "messages" in state and state["messages"]:
+                        for msg in state["messages"]:
+                            if isinstance(msg, dict) and msg.get("content", "").startswith("Reflection:"):
+                                st.session_state.reflection = msg["content"]
+                    
+                    # Refresh display
+                    st.rerun()
+                    
+                except Exception as e:
+                    st.error(f"Error processing response: {str(e)}")
+                    # Log detailed error information
+                    import traceback
+                    print(f"Detailed error: {traceback.format_exc()}")
+                    
+                    # Add a generic student response if there was an error
+                    fallback_response = "I'm a bit confused. Could you please explain that again?"
+                    st.session_state.history.append({
+                        "role": "student",
+                        "content": f"Student: {fallback_response}",
+                        "timestamp": datetime.now().strftime("%H:%M:%S")
+                    })
+                    
+                    # Add a system message about the error
+                    st.session_state.history.append({
+                        "role": "system",
+                        "content": "Feedback: Try to clarify your teaching approach and be more specific about what you're trying to teach.",
+                        "timestamp": datetime.now().strftime("%H:%M:%S")
+                    })
+                    
+                    # Refresh display
+                    st.rerun()
+    
+    def display_conversation(self):
+        """Display the teaching conversation history."""
+        if not st.session_state.history:
+            st.info("Start the conversation by submitting your teaching approach.")
+            return
+        
+        # Create conversation container
+        st.markdown("### Conversation")
+        
+        # Use st.container with a fixed height to prevent the conversation from taking too much space
+        conversation_container = st.container()
+        
+        with conversation_container:
+            # Log the conversation history state for debugging
+            print(f"Conversation history: {len(st.session_state.history)} messages")
+            
+            # Group messages by role for more efficient rendering
+            current_role = None
+            grouped_messages = []
+            current_group = []
+            
+            for entry in st.session_state.history:
+                if entry["role"] != current_role:
+                    if current_group:
+                        grouped_messages.append((current_role, current_group.copy()))
+                        current_group = []
+                    current_role = entry["role"]
+                current_group.append(entry)
+            
+            if current_group:
+                grouped_messages.append((current_role, current_group))
+            
+            # Render grouped messages more efficiently
+            for role, entries in grouped_messages:
+                if role == "teacher":
+                    for entry in entries:
+                        st.markdown(f'<div class="teacher-message"><span class="timestamp">{entry["timestamp"]}</span><span class="role">Teacher:</span> {entry["content"]}</div>', unsafe_allow_html=True)
+                elif role == "student":
+                    for entry in entries:
+                        # Make sure student messages are prominently displayed
+                        content = entry["content"]
+                        if not content.startswith("Student:"):
+                            content = f"Student: {content}"
+                        st.markdown(f'<div class="student-message"><span class="timestamp">{entry["timestamp"]}</span> {content}</div>', unsafe_allow_html=True)
+                elif role == "system":
+                    for entry in entries:
+                        st.markdown(f'<div class="system-message"><span class="timestamp">{entry["timestamp"]}</span> {entry["content"]}</div>', unsafe_allow_html=True)
+        
+        # Display reflection if available
+        if st.session_state.reflection:
+            st.markdown("### Reflection")
+            st.info(st.session_state.reflection)
+
+    def display_analysis(self):
+        """Display the analysis of the teaching interaction."""
+        st.markdown("## Teaching Analysis")
+        
+        if not st.session_state.analysis:
+            if st.session_state.history:
+                st.info("Teaching analysis will appear here after more interaction.")
+            else:
+                st.info("Teaching analysis will appear here after you begin the simulation.")
+            return
+        
+        analysis = st.session_state.analysis
+        
+        # Display overall assessment
+        if "overall_assessment" in analysis:
+            st.markdown("### Overall Assessment")
+            st.write(analysis["overall_assessment"])
+        
+        # Display detailed analysis if available
+        if "detailed" in analysis:
+            st.markdown("### Detailed Analysis")
+            st.write(analysis["detailed"])
+        
+        # Display objective assessment if available
+        if "objectives_assessment" in analysis:
+            st.markdown("### Learning Objectives Assessment")
+            st.write(analysis["objectives_assessment"])
+        
+        # Display visualization if we have numeric scores
+        if "effectiveness_score" in analysis:
+            score = analysis["effectiveness_score"]
+            st.markdown("### Effectiveness Score")
+            
+            # Create a gauge chart
+            fig = px.bar(
+                x=["Effectiveness Score"], 
+                y=[score], 
+                labels={"x": "", "y": "Score"},
+                range_y=[0, 1],
+                color=["Effectiveness"],
+                title="Teaching Effectiveness"
+            )
+            st.plotly_chart(fig)
+        
+        # Display strengths and areas for improvement
+        col1, col2 = st.columns(2)
+        
         with col1:
-            st.metric("Total Interactions", total_interactions)
+            st.markdown("### Strengths")
+            strengths = analysis.get("identified_strengths", [])
+            if strengths:
+                for strength in strengths:
+                    st.markdown(f"- {strength}")
+            else:
+                st.write("No specific strengths identified yet.")
+        
         with col2:
-            st.metric("Average Score", f"{avg_score*100:.1f}%")
-        with col3:
-            st.metric("Best Score", f"{max(h['evaluation']['score']*100 for h in st.session_state.history):.1f}%")
-        
-        # Progress chart
-        scores = [h['evaluation']['score'] for h in st.session_state.history]
-        df = pd.DataFrame({
-            'Interaction': range(1, len(scores) + 1),
-            'Score': scores
-        })
-        fig = px.line(df, x='Interaction', y='Score', title='Progress Over Time')
-        st.plotly_chart(fig)
-        
-        # Detailed history
-        for i, interaction in enumerate(reversed(st.session_state.history), 1):
-            with st.expander(f"Interaction {len(st.session_state.history)-i+1}"):
-                col1, col2 = st.columns(2)
-                
-                with col1:
-                    st.write("**Scenario:**")
-                    st.write(f"Subject: {interaction['scenario']['subject']}")
-                    st.write(f"Time: {interaction['scenario']['time_of_day']}")
-                    
-                    st.write("**Analysis:**")
-                    st.write(interaction['analysis'])
-                    
-                    st.write("**Selected Strategies:**")
-                    for strategy in interaction['strategies']:
-                        st.write(f"- {strategy['name']}")
-                
-                with col2:
-                    st.write("**Response:**")
-                    st.write(interaction['response'])
-                    
-                    st.write("**Evaluation:**")
-                    st.write(f"Score: {interaction['evaluation']['score']*100:.0f}%")
-                    st.write("Student Reaction:")
-                    st.info(interaction['evaluation']['student_reaction'])
+            st.markdown("### Areas for Improvement")
+            improvements = analysis.get("improvement_areas", [])
+            if improvements:
+                for improvement in improvements:
+                    st.markdown(f"- {improvement}")
+            else:
+                st.write("No specific areas for improvement identified yet.")
 
-def main():
-    """Run the Streamlit web application."""
-    app = WebInterface()
-    app.setup_page()
-    
-    # Sidebar navigation
-    st.sidebar.title("Navigation")
-    page = st.sidebar.radio("Go to", ["Current Scenario", "Session History"])
-    
-    if page == "Current Scenario":
-        app.display_scenario()
-    else:
-        app.display_history()
+    def display_resources(self):
+        """Display supplementary resources for teachers."""
+        st.markdown("## Resources")
+        
+        # Create tabs for different resource types
+        resources_tabs = st.tabs(["Teaching Strategies", "Research", "Tools"])
+        
+        with resources_tabs[0]:
+            st.markdown("### Effective Teaching Strategies")
+            strategies = [
+                {
+                    "name": "Think-Pair-Share",
+                    "description": "Students think individually, discuss with a partner, then share with the class."
+                },
+                {
+                    "name": "Concept Mapping",
+                    "description": "Visual organization of information showing relationships between concepts."
+                },
+                {
+                    "name": "Jigsaw Method",
+                    "description": "Students become experts on one part of an assignment and teach others."
+                },
+                {
+                    "name": "Scaffolding",
+                    "description": "Providing temporary support that is gradually removed as students gain proficiency."
+                },
+                {
+                    "name": "Formative Assessment",
+                    "description": "Ongoing assessment during learning to monitor progress and adjust instruction."
+                }
+            ]
+            
+            for strategy in strategies:
+                with st.expander(strategy["name"]):
+                    st.write(strategy["description"])
+        
+        with resources_tabs[1]:
+            st.markdown("### Research on Effective Teaching")
+            
+            research_papers = [
+                {
+                    "title": "Visible Learning: A Synthesis of Over 800 Meta-Analyses Relating to Achievement",
+                    "author": "John Hattie",
+                    "year": 2009,
+                    "summary": "Comprehensive analysis of factors that influence student achievement."
+                },
+                {
+                    "title": "How People Learn: Brain, Mind, Experience, and School",
+                    "author": "National Research Council",
+                    "year": 2000,
+                    "summary": "Examines the science of learning and its implications for teaching."
+                },
+                {
+                    "title": "The Power of Feedback",
+                    "author": "John Hattie & Helen Timperley",
+                    "year": 2007,
+                    "summary": "Analysis of how different types of feedback affect learning and achievement."
+                }
+            ]
+            
+            for paper in research_papers:
+                with st.expander(f"{paper['title']} ({paper['year']})"):
+                    st.write(f"**Author(s):** {paper['author']}")
+                    st.write(f"**Summary:** {paper['summary']}")
+        
+        with resources_tabs[2]:
+            st.markdown("### Educational Tools")
+            
+            tools = [
+                {
+                    "name": "Kahoot!",
+                    "description": "Game-based learning platform for creating interactive quizzes and assessments."
+                },
+                {
+                    "name": "Padlet",
+                    "description": "Digital bulletin board for collaborative projects and discussions."
+                },
+                {
+                    "name": "Nearpod",
+                    "description": "Interactive lesson delivery platform with built-in assessment tools."
+                },
+                {
+                    "name": "Flipgrid",
+                    "description": "Video discussion platform for student engagement and reflection."
+                }
+            ]
+            
+            for tool in tools:
+                with st.expander(tool["name"]):
+                    st.write(tool["description"])
 
+    def run(self):
+        """Main method to run the web application."""
+        # Set up the page
+        self.setup_page()
+        
+        # Sidebar for configuration and navigation
+        with st.sidebar:
+            st.title("Teacher Training Simulator")
+            st.markdown("## Configuration")
+            
+            # Model selection
+            model_options = {
+                "OpenAI GPT-4": "gpt-4",
+                "OpenAI GPT-3.5 Turbo": "gpt-3.5-turbo",
+                "Claude 3 Opus": "claude-3-opus-20240229",
+                "Claude 3 Sonnet": "claude-3-sonnet-20240229",
+                "Claude 3 Haiku": "claude-3-haiku-20240307",
+                "Llama 3 8B (Local)": "llama-3-8b",
+                "Llama 3 70B (Local)": "llama-3-70b"
+            }
+            
+            selected_model_name = st.selectbox(
+                "Select Model",
+                options=list(model_options.keys()),
+                index=0
+            )
+            
+            selected_model = model_options[selected_model_name]
+            
+            # If Llama model is selected, show additional configuration
+            if "Llama 3" in selected_model_name:
+                st.info("""
+                Using local Llama 3 model. Make sure you have either:
+                1. Ollama installed with the selected model, or
+                2. Downloaded the GGUF model file and set the LLAMA_MODEL_PATH environment variable
+                """)
+                
+                model_path = st.text_input(
+                    "Model Path (optional)", 
+                    value=os.environ.get("LLAMA_MODEL_PATH", "./models/llama-3-8b.gguf"),
+                    help="Path to the GGUF model file if not using Ollama"
+                )
+                
+                if model_path:
+                    os.environ["LLAMA_MODEL_PATH"] = model_path
+            
+            # Initialize agent button
+            if st.button("Initialize Agent"):
+                with st.spinner("Initializing agent..."):
+                    if self.initialize_agent(selected_model):
+                        st.success("Agent initialized successfully!")
+                    else:
+                        st.error("Failed to initialize agent.")
+            
+            # Navigation
+            st.markdown("## Navigation")
+            nav_options = [
+                "Create Scenario",
+                "Practice Teaching",
+                "View Analysis",
+                "Resources"
+            ]
+            
+            nav_selection = st.radio("Go to:", nav_options)
+            
+            # Reset button
+            if st.button("Reset Simulation"):
+                st.session_state.scenario = None
+                st.session_state.history = []
+                st.session_state.analysis = None
+                st.session_state.strategies = []
+                st.session_state.teacher_feedback = None
+                st.session_state.conversation_id = None
+                st.session_state.student_profile = None
+                st.session_state.reflection = None
+                st.success("Simulation reset successfully!")
+        
+        # Main content area
+        if nav_selection == "Create Scenario":
+            self.create_scenario()
+        
+        elif nav_selection == "Practice Teaching":
+            self.display_simulation_interface()
+        
+        elif nav_selection == "View Analysis":
+            self.display_analysis()
+        
+        elif nav_selection == "Resources":
+            self.display_resources()
+
+# Run the application
 if __name__ == "__main__":
-    main() 
+    app = WebInterface()
+    app.run() 
