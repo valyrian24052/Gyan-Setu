@@ -91,53 +91,100 @@ class LLMInterface:
 
 
 class EnhancedLLMInterface(LLMInterface):
-    """
-    Legacy EnhancedLLMInterface that adapts to the new DSPy implementation.
-    
-    This class maintains the same interface as the original EnhancedLLMInterface
-    while delegating the actual work to our DSPy implementation.
-    """
+    """Extension of the LLMInterface with enhanced capabilities."""
     
     def __init__(self, model_name="gpt-3.5-turbo", temperature=0.7):
-        """Initialize the enhanced interface with the DSPy implementation."""
+        """Initialize the interface with additional components."""
         super().__init__(model_name, temperature)
-        
-        # Also initialize the pedagogical processor for educational scenarios
-        self.pedagogical_processor = PedagogicalLanguageProcessor(model=model_name)
+        self.pedagogical_processor = None
+        logging.info("Enhanced LLM Interface initialized")
+    
+    def set_pedagogical_processor(self, processor):
+        """Set the pedagogical processor for educational responses."""
+        self.pedagogical_processor = processor
+        logging.info("Pedagogical processor set successfully")
     
     def get_streaming_response(self, messages):
         """
-        Get a streaming response from the model.
-        
-        Note: True streaming is not supported in this implementation,
-        but we maintain the method for compatibility.
+        Get a streaming response from the chat model.
         
         Args:
             messages: List of message dictionaries
             
         Returns:
-            str: The complete response (non-streaming)
+            Generator yielding partial responses
         """
-        logging.warning("Streaming not supported in DSPy adapter; returning complete response")
-        return self.get_chat_response(messages, stream=False)
+        # Use standard non-streaming response as a fallback
+        response = self.dspy_interface.get_llm_response(messages)
+        yield response
     
     def analyze_teaching_approach(self, teaching_input, context):
         """
-        Analyze a teaching approach.
+        Analyze a teaching approach for effectiveness.
         
         Args:
-            teaching_input: The teacher's statement or approach
-            context: Contextual information about the scenario
+            teaching_input: The teacher's statement or explanation
+            context: Additional context and student information
             
         Returns:
             dict: Analysis of the teaching approach
         """
-        # Delegate to the pedagogical processor
-        return self.pedagogical_processor.analyze_teaching_response(teaching_input, context)
+        if self.pedagogical_processor:
+            return self.pedagogical_processor.analyze_teaching_approach(teaching_input, context)
+        else:
+            logging.warning("Pedagogical processor not available; using direct LLM call")
+            prompt = f"""
+            Analyze this teaching approach:
+            
+            Teaching input: {teaching_input}
+            
+            Context: {json.dumps(context)}
+            
+            Provide a detailed analysis of the effectiveness of this approach.
+            """
+            response = self.get_chat_response([{"role": "user", "content": prompt}])
+            return {"analysis": response}
+    
+    def analyze_teaching_strategies(self, teacher_input, student_profile, scenario_context):
+        """
+        Analyze teaching strategies for a specific student.
+        
+        Args:
+            teacher_input: The teacher's statement or question
+            student_profile: Student characteristics and needs
+            scenario_context: Additional context about the scenario
+            
+        Returns:
+            dict: Analysis of the teaching strategies
+        """
+        # Use DSPy implementation directly
+        try:
+            # Ensure student profile and scenario context are properly formatted
+            if isinstance(student_profile, str):
+                try:
+                    student_profile = json.loads(student_profile)
+                except:
+                    student_profile = {"description": student_profile}
+                    
+            if isinstance(scenario_context, str):
+                try:
+                    scenario_context = json.loads(scenario_context)
+                except:
+                    scenario_context = {"description": scenario_context}
+            
+            # Call the DSPy interface
+            return self.dspy_interface.analyze_teaching_strategies(
+                teacher_input=teacher_input,
+                student_profile=student_profile,
+                scenario_context=scenario_context
+            )
+        except Exception as e:
+            logging.error(f"Error analyzing teaching strategies: {e}")
+            return {"error": str(e)}
     
     def generate_teaching_recommendation(self, scenario, student_profile):
         """
-        Generate teaching recommendations.
+        Generate teaching recommendations based on scenario and student profile.
         
         Args:
             scenario: Teaching scenario details
@@ -146,23 +193,132 @@ class EnhancedLLMInterface(LLMInterface):
         Returns:
             dict: Teaching recommendations
         """
-        return self.dspy_interface.generate_teaching_recommendation(scenario, student_profile)
+        # Use DSPy implementation directly
+        try:
+            return self.dspy_interface.generate_teaching_recommendation(
+                scenario=scenario,
+                student_profile=student_profile
+            )
+        except Exception as e:
+            logging.error(f"Error generating teaching recommendation: {e}")
+            return {"error": str(e)}
     
     def simulate_student_response(self, teacher_input, student_profile, scenario_context):
         """
-        Simulate a student's response to a teacher's input.
+        Simulate a student's response to a teacher's input, taking into account
+        the student profile and scenario context.
         
         Args:
-            teacher_input: The teacher's statement or question
-            student_profile: Student characteristics
-            scenario_context: Additional context about the scenario
+            teacher_input (str): The teacher's input
+            student_profile (dict or str): The student profile, containing information about
+                the student's learning style, strengths, challenges, etc.
+            scenario_context (dict or str): The scenario context, containing information about
+                the subject, difficulty, grade level, etc.
             
         Returns:
-            str: A simulated student response
+            str: The simulated student response
         """
-        return self.pedagogical_processor.generate_student_reaction(
-            teacher_input, student_profile, scenario_context
-        )
+        logging.info("Simulating student response")
+        
+        try:
+            # Special handling for the student response
+            # Include conversation history and personalized elements
+            
+            # Add conversation history if available
+            conversation_history = ""
+            if isinstance(scenario_context, dict) and "conversation_history" in scenario_context:
+                conversation_history = f"\n\nCONVERSATION HISTORY:\n{scenario_context['conversation_history']}"
+            
+            # Add additional instructions to avoid repetition
+            special_instructions = """
+            Respond as a student would in this scenario. Your response should be:
+            1. Brief and natural (1-3 sentences)
+            2. Age-appropriate for your grade level
+            3. Reflect your learning style, challenges, and strengths
+            4. Directly responsive to what the teacher just said
+            5. NOT a self-description (don't say "As a student with...")
+            """
+            
+            # Add previous response if available to prevent repetition
+            previous_response = ""
+            if isinstance(scenario_context, dict) and "previous_response" in scenario_context:
+                previous_response = f"\n\nYour previous response was: '{scenario_context['previous_response']}'\nMake sure your new response is DIFFERENT and moves the conversation forward."
+            
+            # Personalize the instructions if the student profile includes a name
+            student_name = student_profile.get("name", "") if isinstance(student_profile, dict) else ""
+            if student_name:
+                special_instructions = f"You are {student_name}. {special_instructions}"
+            
+            # Enhance the teacher input with the special instructions
+            enhanced_input = f"{teacher_input}\n\n---\nINSTRUCTIONS: {special_instructions}{conversation_history}{previous_response}"
+            
+            # Try to use the pedagogical processor if available
+            if hasattr(self, 'pedagogical_processor') and self.pedagogical_processor:
+                logging.info("Using pedagogical processor for student response")
+                student_response = self.pedagogical_processor.generate_student_reaction(
+                    enhanced_input,
+                    json.dumps(student_profile) if isinstance(student_profile, dict) else student_profile,
+                    json.dumps(scenario_context) if isinstance(scenario_context, dict) else scenario_context
+                )
+            else:
+                # Fallback to direct LLM call instead of using the non-existent _get_student_response method
+                logging.info("Using direct LLM call for student response")
+                if hasattr(self, 'dspy_interface'):
+                    student_response = self.dspy_interface.generate_student_response(
+                        enhanced_input,
+                        student_profile,
+                        scenario_context
+                    )
+                else:
+                    # Final fallback using the generate_student_response method
+                    student_response = self.generate_student_response(
+                        enhanced_input,
+                        student_profile,
+                        scenario_context
+                    )
+            
+            # Save this response in the session to avoid repetition in future responses
+            if isinstance(scenario_context, dict) and "session_state" in scenario_context:
+                scenario_context["session_state"]["last_student_response"] = student_response
+            
+            return student_response
+            
+        except Exception as e:
+            logging.error(f"Error simulating student response: {e}", exc_info=True)
+            return f"I'm not sure how to respond to that. [Error: {str(e)}]"
+            
+    def _get_student_response(self, teacher_input, student_profile, scenario_context):
+        """
+        Internal method to get a student response when pedagogical processor is not available.
+        This is a fallback method to avoid AttributeError.
+        
+        Args:
+            teacher_input (str): The teacher's input
+            student_profile (dict or str): The student profile
+            scenario_context (dict or str): The scenario context
+            
+        Returns:
+            str: The simulated student response
+        """
+        # Generate a student response using standard methods
+        try:
+            # If we have DSPy interface available, use it
+            if hasattr(self, 'dspy_interface'):
+                return self.dspy_interface.generate_student_response(
+                    teacher_input,
+                    student_profile,
+                    scenario_context
+                )
+            
+            # Otherwise use the base generate_student_response method
+            return self.generate_student_response(
+                teacher_input, 
+                student_profile, 
+                scenario_context
+            )
+        except Exception as e:
+            logging.error(f"Error in _get_student_response: {e}", exc_info=True)
+            return "I'm not sure how to answer that question."
 
 
 # Factory function for creating the appropriate interface
