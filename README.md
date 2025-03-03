@@ -12,6 +12,7 @@ This enhanced teacher training system is designed to provide realistic classroom
 - **Performance Tracking**: The system tracks which knowledge is most effective in different situations.
 - **Evidence-Based Feedback**: Teacher responses are evaluated using educational best practices.
 - **Knowledge Analysis**: Tools to analyze and visualize the content of the knowledge base.
+- **DSPy Integration**: Advanced LLM interaction using Stanford's DSPy framework for self-improving prompts and declarative programming.
 
 ## Why Educational Books?
 
@@ -172,6 +173,9 @@ To customize the application for specific needs, modify these parameters to emph
   - PyPDF2
   - EbookLib
   - SQLite3
+  - dspy-ai>=2.3.9
+  - torch>=2.1.0
+  - backoff>=2.2.1
 
 ### Basic Setup
 
@@ -179,6 +183,7 @@ To customize the application for specific needs, modify these parameters to emph
 2. Install dependencies:
    ```
    pip install -r requirements.txt
+   pip install -r requirements_dspy.txt
    ```
 3. Create a `knowledge_base/books` directory
 4. Add educational books (PDF, EPUB, TXT) to the books directory
@@ -186,7 +191,20 @@ To customize the application for specific needs, modify these parameters to emph
    ```
    python process_educational_books.py --clean
    ```
-6. Run the enhanced system:
+6. Configure DSPy:
+   - Create a `.env` file in the project root
+   - Add your OpenAI API key:
+     ```
+     OPENAI_API_KEY=your_api_key_here
+     ```
+   - (Optional) For local models, install and configure Ollama:
+     ```
+     # Install Ollama
+     curl https://ollama.ai/install.sh | sh
+     # Pull the Llama 3 model
+     ollama pull llama3:8b
+     ```
+7. Run the enhanced system:
    ```
    python run_enhanced.py
    ```
@@ -201,6 +219,9 @@ python test_book_extraction.py --book knowledge_base/books/your_book.pdf
 
 # Test the generated scenarios
 python demonstrate_book_knowledge.py --scenarios 5 --subject reading
+
+# Test DSPy student simulation
+python test_student_simulation.py
 
 # Analyze the knowledge base
 python knowledge_analyzer.py --db-path ./knowledge_base/vector_db.sqlite
@@ -237,6 +258,9 @@ The system provides an interactive terminal interface where you can:
 ├── test_book_extraction.py         # Tool to test knowledge extraction
 ├── demonstrate_book_knowledge.py   # Demo script for book-based scenarios
 ├── knowledge_analyzer.py           # Knowledge base analysis tools
+├── dspy_llm_handler.py            # DSPy implementation for LLM interaction
+├── dspy_adapter.py                # Adapter for DSPy compatibility
+├── test_student_simulation.py     # Test script for DSPy student simulation
 ├── knowledge_base/                 # Knowledge storage
 │   ├── books/                      # Directory for educational books
 │   ├── default_strategies/         # Default strategy files (CSV, TXT)
@@ -247,6 +271,7 @@ The system provides an interactive terminal interface where you can:
 │   ├── vector_db.sqlite            # Main vector database (not in Git)
 │   └── student_profiles.json       # Realistic student profiles
 ├── requirements.txt                # Required dependencies
+├── requirements_dspy.txt          # DSPy-specific dependencies
 └── run_enhanced.py                 # Script to run enhanced agent
 ```
 
@@ -273,6 +298,47 @@ The system integrates the knowledge base with large language models to create re
 2. **Context Augmentation**: The LLM receives the retrieved knowledge as context
 3. **Knowledge-Grounded Generation**: Scenarios and evaluations are grounded in educational research
 4. **Source Attribution**: All generated content includes references to the source material
+
+## DSPy Integration
+
+The system leverages Stanford University's DSPy framework to enhance LLM interactions through declarative programming and self-improving pipelines:
+
+### 1. Declarative Signatures
+Instead of traditional prompt engineering, the system uses DSPy signatures to define structured outputs for:
+- Teaching responses and recommendations
+- Student behavior simulations
+- Teaching strategy analysis
+- Scenario generation
+
+### 2. Specialized DSPy Modules
+The system implements custom DSPy modules for educational tasks:
+- **TeacherResponder**: Generates evidence-based teaching responses
+- **StudentReactionGenerator**: Creates realistic student interactions
+- **TeachingAnalyzer**: Provides structured analysis of teaching strategies
+- **PedagogicalLanguageProcessor**: Handles educational context and scenarios
+
+### 3. Self-Improving Capabilities
+DSPy's self-improvement features enhance the system through:
+- Automatic prompt optimization
+- Context-aware response generation
+- Performance tracking and adaptation
+- Fallback mechanisms for reliability
+
+### 4. Key Benefits
+The DSPy integration provides several advantages:
+- More consistent and reliable responses
+- Structured output formats
+- Improved error handling
+- Better context management
+- Enhanced performance through self-optimization
+
+### 5. Technical Implementation
+The DSPy integration is implemented through:
+- Thread-safe configuration management
+- Modular architecture for extensibility
+- Comprehensive error handling
+- Performance monitoring and analytics
+- Backward compatibility with existing code
 
 ## How Knowledge Improves Performance
 
