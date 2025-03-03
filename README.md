@@ -167,28 +167,22 @@ To customize the application for specific needs, modify these parameters to emph
 
 ### Prerequisites
 
-- Python 3.8 or higher
-- Required packages (install with `pip install -r requirements.txt`):
-  - sentence-transformers
-  - PyPDF2
-  - EbookLib
-  - SQLite3
-  - dspy-ai>=2.3.9
-  - torch>=2.1.0
-  - backoff>=2.2.1
+- Python 3.10 or higher
+- Conda package manager
+- CUDA-compatible GPU (recommended for optimal performance)
 
 ### Basic Setup
 
 1. Clone the repository
-2. Install dependencies:
-   ```
-   pip install -r requirements.txt
-   pip install -r requirements_dspy.txt
+2. Create and activate the conda environment:
+   ```bash
+   conda env create -f environment.yml
+   conda activate utta
    ```
 3. Create a `knowledge_base/books` directory
 4. Add educational books (PDF, EPUB, TXT) to the books directory
 5. Build the knowledge base:
-   ```
+   ```bash
    python process_educational_books.py --clean
    ```
 6. Configure DSPy:
@@ -198,14 +192,14 @@ To customize the application for specific needs, modify these parameters to emph
      OPENAI_API_KEY=your_api_key_here
      ```
    - (Optional) For local models, install and configure Ollama:
-     ```
+     ```bash
      # Install Ollama
      curl https://ollama.ai/install.sh | sh
      # Pull the Llama 3 model
      ollama pull llama3:8b
      ```
 7. Run the enhanced system:
-   ```
+   ```bash
    python run_enhanced.py
    ```
 
@@ -270,9 +264,8 @@ The system provides an interactive terminal interface where you can:
 │   │   └── teaching_strategies.txt # General teaching strategies
 │   ├── vector_db.sqlite            # Main vector database (not in Git)
 │   └── student_profiles.json       # Realistic student profiles
-├── requirements.txt                # Required dependencies
-├── requirements_dspy.txt          # DSPy-specific dependencies
-└── run_enhanced.py                 # Script to run enhanced agent
+├── environment.yml                # Conda environment specification
+└── run_enhanced.py                # Script to run enhanced agent
 ```
 
 ## Knowledge Analysis
