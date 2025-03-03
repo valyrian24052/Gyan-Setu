@@ -311,27 +311,89 @@ The system implements custom DSPy modules for educational tasks:
 - **PedagogicalLanguageProcessor**: Handles educational context and scenarios
 
 ### 3. Self-Improving Capabilities
-DSPy's self-improvement features enhance the system through:
-- Automatic prompt optimization
-- Context-aware response generation
-- Performance tracking and adaptation
-- Fallback mechanisms for reliability
+DSPy's self-improvement features enhance the system through several mechanisms:
 
-### 4. Key Benefits
+#### Automatic Prompt Optimization
+- Uses `BootstrapFewShot` to automatically refine prompts based on successful interactions
+- Learns from high-quality teacher-student exchanges to improve future responses
+- Adapts prompt strategies based on effectiveness scores and user feedback
+
+#### Knowledge-Grounded Learning
+- Integrates retrieved knowledge chunks with DSPy's signature-based generation
+- Automatically identifies which knowledge combinations produce better responses
+- Updates retrieval patterns based on successful teaching interactions
+
+#### Performance Tracking and Adaptation
+- Monitors effectiveness scores for different teaching strategies
+- Adjusts module parameters based on successful interaction patterns
+- Maintains a history of successful prompt-response pairs for future optimization
+
+#### Context Management
+- Dynamically adjusts context window based on interaction complexity
+- Learns optimal knowledge chunk selection for different scenario types
+- Improves context relevance through usage statistics
+
+### 4. Optimization Mechanisms
+
+#### 1. Prompt Evolution
+The system employs DSPy's evolutionary optimization to improve prompts:
+```python
+# Example of how prompts evolve
+class TeacherResponder(dspy.Module):
+    def __init__(self):
+        super().__init__()
+        self.generate_response = Predict(TeachingResponse)
+        # Bootstrap learning from successful interactions
+        self.optimizer = BootstrapFewShot(metric="teaching_effectiveness")
+```
+
+#### 2. Knowledge Integration
+Automatically improves knowledge retrieval and integration:
+```python
+# Example of knowledge-aware response generation
+def generate_teaching_response(self, context, knowledge_chunks):
+    # DSPy combines knowledge with learned patterns
+    response = self.teacher_responder(
+        context=context,
+        knowledge=knowledge_chunks,
+        track_performance=True
+    )
+    # Response quality feeds back into optimization
+    self.update_effectiveness_scores(response)
+```
+
+#### 3. Feedback Loop
+Maintains a continuous improvement cycle:
+- Tracks successful teaching strategies
+- Updates module parameters based on performance
+- Refines knowledge chunk selection criteria
+- Adapts to different teaching scenarios
+
+### 5. Key Benefits
 The DSPy integration provides several advantages:
-- More consistent and reliable responses
-- Structured output formats
-- Improved error handling
-- Better context management
-- Enhanced performance through self-optimization
+- More consistent and reliable responses through learned optimization
+- Structured output formats with automatic validation
+- Improved error handling with fallback strategies
+- Better context management through learned patterns
+- Enhanced performance through continuous self-optimization
 
-### 5. Technical Implementation
+### 6. Technical Implementation
 The DSPy integration is implemented through:
-- Thread-safe configuration management
-- Modular architecture for extensibility
-- Comprehensive error handling
-- Performance monitoring and analytics
-- Backward compatibility with existing code
+- Thread-safe configuration management for concurrent optimization
+- Modular architecture allowing independent module improvement
+- Comprehensive error handling with recovery strategies
+- Performance monitoring with automated optimization
+- Backward compatibility while maintaining optimization history
+
+### 7. Optimization Metrics
+The system tracks several metrics for optimization:
+- Response relevance scores
+- Teaching strategy effectiveness
+- Student engagement levels
+- Knowledge integration success rates
+- Error recovery effectiveness
+
+These metrics feed back into DSPy's optimization pipeline to continuously improve the system's performance across different teaching scenarios and student interactions.
 
 ## How Knowledge Improves Performance
 
