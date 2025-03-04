@@ -68,6 +68,8 @@ class WebInterface:
             st.session_state.app_mode = "Chat Interface"
         if 'model_name' not in st.session_state:
             st.session_state.model_name = "gpt-3.5-turbo"
+        if 'classroom_management_strategies' not in st.session_state:
+            st.session_state.classroom_management_strategies = []
         
         # Auto-initialize the LLM on startup with default model
         if not st.session_state.llm_interface:
@@ -75,6 +77,38 @@ class WebInterface:
                 self.initialize_llm(st.session_state.model_name)
             except Exception as e:
                 logging.error(f"Error initializing LLM: {e}", exc_info=True)
+
+    # Dictionary of classroom management strategies from educational books
+    classroom_management_books = {
+        "Teach Like a Champion (Doug Lemov)": [
+            {"name": "No Opt Out", "description": "Turn a student's 'I don't know' into a success by ensuring they answer the question correctly with support."},
+            {"name": "Right Is Right", "description": "Set and defend high standards for correct answers, ensuring precision and accuracy."},
+            {"name": "Cold Call", "description": "Call on students regardless of whether they have raised their hands, strategically engaging all students."},
+            {"name": "Wait Time", "description": "Allow students time to think after asking a question before calling on someone to answer."},
+            {"name": "Stretch It", "description": "Extend student responses by asking follow-up questions that require deeper thinking."}
+        ],
+        "Classroom Management That Works (Robert Marzano)": [
+            {"name": "Establishing Rules and Procedures", "description": "Create clear expectations for behavior and routines in the classroom."},
+            {"name": "Disciplinary Interventions", "description": "Use a graduated system of responses to disruptive behavior."},
+            {"name": "Teacher-Student Relationships", "description": "Build positive connections with students based on appropriate levels of dominance and cooperation."},
+            {"name": "Mental Set", "description": "Maintain an objective, business-like attitude about behavior while remaining emotionally aware."},
+            {"name": "Student Responsibility", "description": "Provide opportunities for students to take on meaningful responsibility for classroom management."}
+        ],
+        "The First Days of School (Harry Wong)": [
+            {"name": "Classroom Procedures", "description": "Teach specific procedures for every classroom activity and transition."},
+            {"name": "Classroom Routines", "description": "Establish consistent, repeated patterns of behavior for daily activities."},
+            {"name": "Positive Expectations", "description": "Communicate belief in students' ability to succeed academically and behaviorally."},
+            {"name": "Classroom Organization", "description": "Structure the physical environment and materials to optimize learning and minimize disruption."},
+            {"name": "Professional Behavior", "description": "Model and require respectful, appropriate behavior at all times."}
+        ],
+        "Conscious Classroom Management (Rick Smith)": [
+            {"name": "Prevention Through Connection", "description": "Create personal connections to prevent behavior problems before they begin."},
+            {"name": "Using Body Language", "description": "Leverage non-verbal communication to manage the classroom effectively."},
+            {"name": "Collaborative Problem-Solving", "description": "Work with students to find solutions rather than imposing them."},
+            {"name": "Managing Moments of Escalation", "description": "Use specific strategies to de-escalate tension and conflict."},
+            {"name": "Creating Community", "description": "Build a sense of belonging and mutual respect within the classroom."}
+        ]
+    }
 
     def setup_page(self):
         """Set up the page with title, favicon, and basic layout."""
@@ -533,10 +567,12 @@ class WebInterface:
                 
                 # Clear previous history if any
                 st.session_state.history = []
+                st.session_state.messages = []
                 st.session_state.analysis = None
                 st.session_state.strategies = []
                 st.session_state.teacher_feedback = None
                 st.session_state.reflection = None
+                st.session_state.classroom_management_strategies = []
                 
                 # Display success message
                 st.success("Teaching scenario created successfully!")
@@ -693,7 +729,7 @@ class WebInterface:
         conversation_container = st.container()
         
         with conversation_container:
-            for message in st.session_state.history:
+            for message in st.session_state.messages:
                 role = message["role"]
                 content = message["content"]
                 timestamp = message.get("timestamp", "")
@@ -727,7 +763,7 @@ class WebInterface:
                     )
                 # Add a small spacing between messages
                 st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
-
+    
     def display_analysis(self):
         """Display analysis of the teaching interaction."""
         st.markdown("## Teaching Analysis")
@@ -746,11 +782,73 @@ class WebInterface:
                         break
                 
                 if last_teacher_message:
+                    # Add classroom management strategies to the analysis context
+                    analysis_context = {
+                        "student_profile": st.session_state.student_profile,
+                        "scenario_context": st.session_state.scenario,
+                        "classroom_management_strategies": st.session_state.classroom_management_strategies if hasattr(st.session_state, 'classroom_management_strategies') else []
+                    }
+                    
                     analysis = st.session_state.llm_interface.analyze_teaching_strategies(
                         teacher_input=last_teacher_message,
                         student_profile=st.session_state.student_profile,
                         scenario_context=st.session_state.scenario
                     )
+                    
+                    # If classroom management strategies are being used, request specific feedback on them
+                    if st.session_state.classroom_management_strategies:
+                        strategies_str = "\n".join([f"- {s['name']} ({s['book']}): {s['description']}" for s in st.session_state.classroom_management_strategies])
+                        
+                        strategy_prompt = f"""
+                        Analyze how effectively the teacher has implemented the following classroom management strategies in their teaching:
+                        
+                        {strategies_str}
+                        
+                        Teacher's last response: "{last_teacher_message}"
+                        
+                        For each strategy, provide:
+                        1. A rating out of 10
+                        2. Specific evidence from the teacher's response
+                        3. Constructive feedback on how to better implement the strategy
+                        
+                        Format your response as JSON with the following structure:
+                        {{
+                            "strategy_analysis": [
+                                {{
+                                    "strategy_name": "Strategy name",
+                                    "rating": 0-10,
+                                    "evidence": "What the teacher did related to this strategy",
+                                    "feedback": "Constructive suggestions for improvement"
+                                }}
+                            ],
+                            "overall_strategy_implementation": "Overall assessment of strategy implementation",
+                            "next_steps": "What the teacher should focus on next"
+                        }}
+                        """
+                        
+                        try:
+                            strategy_analysis_response = st.session_state.llm_interface.get_chat_response([
+                                {"role": "system", "content": "You are an expert in classroom management strategies and teacher evaluation."},
+                                {"role": "user", "content": strategy_prompt}
+                            ])
+                            
+                            # Try to parse the JSON response
+                            import json
+                            try:
+                                # Find JSON in the response - look for content between curly braces
+                                import re
+                                json_match = re.search(r'\{.*\}', strategy_analysis_response, re.DOTALL)
+                                if json_match:
+                                    json_str = json_match.group(0)
+                                    strategy_analysis = json.loads(json_str)
+                                    analysis["strategy_analysis"] = strategy_analysis
+                                else:
+                                    logging.error("Could not extract JSON from strategy analysis response")
+                            except Exception as e:
+                                logging.error(f"Error parsing strategy analysis JSON: {e}", exc_info=True)
+                        except Exception as e:
+                            logging.error(f"Error getting strategy analysis: {e}", exc_info=True)
+                    
                     st.session_state.analysis = analysis
         
         # Display the analysis
@@ -783,6 +881,29 @@ class WebInterface:
                 if "rationale" in analysis:
                     st.markdown("### Analysis Rationale")
                     st.markdown(analysis["rationale"])
+                
+                # Strategy Analysis (if available)
+                if "strategy_analysis" in analysis and isinstance(analysis["strategy_analysis"], dict):
+                    st.markdown("### Classroom Management Strategy Implementation")
+                    
+                    strategy_analysis = analysis["strategy_analysis"]
+                    
+                    # Display individual strategy assessments
+                    if "strategy_analysis" in strategy_analysis and isinstance(strategy_analysis["strategy_analysis"], list):
+                        for strategy in strategy_analysis["strategy_analysis"]:
+                            with st.expander(f"{strategy.get('strategy_name', 'Strategy')} - Rating: {strategy.get('rating', 'N/A')}/10"):
+                                st.markdown(f"**Evidence:** {strategy.get('evidence', 'No evidence provided')}")
+                                st.markdown(f"**Feedback:** {strategy.get('feedback', 'No feedback provided')}")
+                    
+                    # Display overall assessment
+                    if "overall_strategy_implementation" in strategy_analysis:
+                        st.markdown("#### Overall Assessment")
+                        st.markdown(strategy_analysis["overall_strategy_implementation"])
+                    
+                    # Display next steps
+                    if "next_steps" in strategy_analysis:
+                        st.markdown("#### Recommended Next Steps")
+                        st.markdown(strategy_analysis["next_steps"])
             
             with col2:
                 # Effectiveness score
@@ -910,13 +1031,15 @@ class WebInterface:
         col1, col2 = st.columns([7, 3])
         
         with col1:
-            # Simplified header with just the necessary information
+            # Enhanced header with more scenario information
             st.markdown(f"""
             <div class="scenario-header">
                 <div class="scenario-title">
                     <span class="scenario-title-icon">📚</span> {scenario.get('subject', 'Subject')} - {scenario.get('topic', 'Topic')}
                 </div>
                 <p><strong>Grade Level:</strong> {scenario.get('grade_level', 'Not specified')}</p>
+                <p><strong>Scenario Description:</strong> {scenario.get('scenario_description', 'No description available')}</p>
+                <p><strong>Current Activity:</strong> {scenario.get('current_activity', 'No activity specified')}</p>
             </div>
             """, unsafe_allow_html=True)
             
@@ -930,12 +1053,23 @@ class WebInterface:
                     try:
                         # Generate a more natural introduction from the student
                         initial_prompt = f"""
-                        You are a student named {student_profile.get('name', 'Jamie')} in a classroom. 
+                        You are a student named {student_profile.get('name', 'Jamie')} in a {scenario.get('grade_level', '7th grade')} classroom. 
+                        
+                        SCENARIO CONTEXT:
+                        - Subject: {scenario.get('subject', 'Mathematics')}
+                        - Topic: {scenario.get('topic', 'Introduction to Algebra')}
+                        - Current activity: {scenario.get('current_activity', 'Working on problems')}
+                        - Your learning style: {', '.join(student_profile.get('learning_style', ['visual']))}
+                        - Your challenges: {', '.join(student_profile.get('challenges', ['math anxiety']))}
+                        
                         The teacher has just entered the room and you are making eye contact.
-                        Give a brief, realistic greeting to the teacher. 
+                        Give a brief, realistic greeting to the teacher that subtly shows your personality and 
+                        relates to the current subject/activity.
+                        
                         Don't introduce yourself with a long description - just a natural, brief greeting
-                        that a {student_profile.get('grade_level', '7th grade')} student would say, like "Hi" or "Good morning".
-                        Keep it to 1-2 sentences maximum.
+                        that a {student_profile.get('grade_level', '7th grade')} student would say, like "Hi" or "Good morning",
+                        possibly with a question or comment about the subject.
+                        Keep it to 1-2 sentences maximum and make it relevant to the scenario.
                         """
                         
                         # Fallback introduction for any errors
@@ -985,6 +1119,51 @@ class WebInterface:
             </div>
             """, unsafe_allow_html=True)
             
+            # Display active classroom management strategies if any are selected
+            if st.session_state.classroom_management_strategies:
+                with st.expander("Active Classroom Management Strategies"):
+                    st.markdown("<div style='background-color: #F0FFF4; padding: 15px; border-radius: 5px; border: 1px solid #C6F6D5;'>", unsafe_allow_html=True)
+                    st.markdown("**Your Selected Teaching Strategies:**")
+                    
+                    # Group strategies by book
+                    strategies_by_book = {}
+                    for strategy in st.session_state.classroom_management_strategies:
+                        book = strategy.get("book", "Unknown")
+                        if book not in strategies_by_book:
+                            strategies_by_book[book] = []
+                        strategies_by_book[book].append(strategy)
+                    
+                    # Display strategies grouped by book
+                    for book, strategies in strategies_by_book.items():
+                        st.markdown(f"##### From: {book}")
+                        for i, strategy in enumerate(strategies, 1):
+                            st.markdown(f"**{strategy['name']}**: {strategy['description']}")
+                            
+                    st.markdown("</div>", unsafe_allow_html=True)
+                    
+                    # Add a tip on how to use the strategies
+                    st.markdown("<div style='margin-top: 10px; background-color: #FFFFD0; padding: 15px; border-radius: 5px; border: 1px solid #E2E8F0;'>", unsafe_allow_html=True)
+                    st.markdown("""**How to use these strategies:**
+                    - Actively implement these techniques in your responses
+                    - The student will respond according to how effectively you apply the strategies
+                    - Mix different strategies for a comprehensive approach
+                    """)
+                    st.markdown("</div>", unsafe_allow_html=True)
+            
+            # Add example problems if they exist
+            if scenario.get('example_problems'):
+                with st.expander("Example Problems"):
+                    st.markdown("<div style='background-color: #F0F7FF; padding: 15px; border-radius: 5px; border: 1px solid #D0E3FF;'>", unsafe_allow_html=True)
+                    st.markdown("**Current Worksheet Problems:**")
+                    for i, problem in enumerate(scenario.get('example_problems', []), 1):
+                        st.markdown(f"{i}. {problem}")
+                    st.markdown("</div>", unsafe_allow_html=True)
+                    
+                    if scenario.get('teaching_challenge'):
+                        st.markdown("<div style='margin-top: 10px; background-color: #FFF0F0; padding: 15px; border-radius: 5px; border: 1px solid #FFD0D0;'>", unsafe_allow_html=True)
+                        st.markdown(f"**Teaching Challenge:** {scenario.get('teaching_challenge')}")
+                        st.markdown("</div>", unsafe_allow_html=True)
+            
             # Use a container with fixed height and scrolling for the conversation
             with st.container():
                 # Create a scrollable container for messages
@@ -1030,6 +1209,14 @@ class WebInterface:
                             last_student_response = msg["content"]
                             break
                     
+                    # Add classroom management strategies to the context if any are selected
+                    strategy_instructions = ""
+                    if st.session_state.classroom_management_strategies:
+                        strategy_instructions = "\n\nThe teacher is using the following classroom management strategies:\n"
+                        for strategy in st.session_state.classroom_management_strategies:
+                            strategy_instructions += f"- {strategy['name']}: {strategy['description']}\n"
+                        strategy_instructions += "\nThe student should respond appropriately to these teaching strategies. If the teacher effectively uses the strategy, the student should show a slightly more positive, engaged, or improved response. If the strategy is not effectively applied, the student can show confusion or maintain their previous state."
+                    
                     # Create an enhanced teacher input with explicit instructions to be conversational
                     enhanced_teacher_input = f"""
                     The teacher just said: "{teacher_input}"
@@ -1046,9 +1233,12 @@ class WebInterface:
                     6. Show your personality through your response
                     7. If the teacher just said "hello" or greeted you, respond naturally and maybe mention something about the class or ask a question
                     8. NEVER list your traits, challenges or learning style directly - these should only be implied by your response
+                    9. IMPORTANT: NEVER repeat any of your previous responses verbatim
+                    10. Each of your responses should be unique and move the conversation forward
+                    {strategy_instructions}
                     
                     Your previous response was: "{last_student_response}"
-                    DO NOT repeat this response - say something new and different.
+                    DO NOT repeat this response - say something completely new and different that makes sense in the context of this conversation.
                     """
                     
                     # Create context with conversation history and last response
@@ -1058,6 +1248,10 @@ class WebInterface:
                     context_with_history['session_state'] = {'last_student_response': last_student_response}
                     context_with_history['instruction'] = "Be brief and conversational, like a real student in class"
                     
+                    # Add classroom management strategies to the context
+                    if st.session_state.classroom_management_strategies:
+                        context_with_history['classroom_management_strategies'] = st.session_state.classroom_management_strategies
+                    
                     # Try to get the student's response with fallbacks
                     try:
                         response = st.session_state.llm_interface.simulate_student_response(
@@ -1065,6 +1259,31 @@ class WebInterface:
                             student_profile=student_profile,
                             scenario_context=context_with_history
                         )
+                        
+                        # Check if response is identical to any previous student response
+                        previous_responses = [msg["content"] for msg in st.session_state.messages if msg["role"] == "student"]
+                        if response in previous_responses:
+                            logging.warning("Generated response is identical to a previous one. Using fallback.")
+                            
+                            # Random conversational responses that can work in various contexts
+                            fallback_options = [
+                                "I'm not sure I understand. Could you explain that differently?",
+                                "That's interesting. Can we talk more about how this works?",
+                                "I've been thinking about what you said. Can you give another example?",
+                                "OK, I think I'm starting to get it.",
+                                "Let me try to understand this from another angle.",
+                                "I'm still confused about part of this.",
+                                "So what does that mean for our assignment?",
+                                "I hadn't thought about it that way before."
+                            ]
+                            
+                            # Choose a random fallback that's not in previous responses
+                            filtered_fallbacks = [opt for opt in fallback_options if opt not in previous_responses]
+                            if filtered_fallbacks:
+                                response = random.choice(filtered_fallbacks)
+                            else:
+                                # Create a unique response by adding a small random modifier
+                                response = f"I see. {random.choice(['Actually, ', 'Well, ', 'Hmm, ', 'So, '])}I'm still working through this."
                     except Exception as e:
                         logging.error(f"Error generating student response: {e}", exc_info=True)
                         # Set up a fallback response
@@ -1097,26 +1316,76 @@ class WebInterface:
                                 f"Hi! Are we starting algebra today?",
                                 f"Hey! Do we need our textbooks for today's lesson?",
                                 f"Hello! I was just trying to figure out this math problem.",
-                                f"Hi there! Is this going to be on the test?"
+                                f"Hi there! Is this going to be on the test?",
+                                f"Hey teacher, I was wondering what we're covering today.",
+                                f"Hi! I've been stuck on problem number 5, can you help me?"
                             ]
-                            response = random.choice(fallback_options)
+                            # Avoid repeating the last student response
+                            last_response = ""
+                            for msg in reversed(st.session_state.messages):
+                                if msg["role"] == "student":
+                                    last_response = msg["content"]
+                                    break
+                            
+                            # Filter out any options that match the previous response
+                            filtered_options = [opt for opt in fallback_options if opt != last_response]
+                            
+                            # If we have options left, choose from them, otherwise use a more generic response
+                            if filtered_options:
+                                response = random.choice(filtered_options)
+                            else:
+                                response = "Sorry, I didn't catch what you said. Can you explain what we're doing today?"
                         elif "?" in teacher_input:
                             fallback_options = [
                                 "Um, I'm not really sure.",
                                 "I don't know, can you explain it again?",
                                 "Maybe? I get confused with all these x's and y's.",
-                                "I think so... but I'm not 100% sure."
+                                "I think so... but I'm not 100% sure.",
+                                "Could you break that down for me?",
+                                "I'm still trying to understand that concept.",
+                                "Not completely. Could you show an example?"
                             ]
-                            response = random.choice(fallback_options)
+                            # Avoid repeating the last student response
+                            last_response = ""
+                            for msg in reversed(st.session_state.messages):
+                                if msg["role"] == "student":
+                                    last_response = msg["content"]
+                                    break
+                            
+                            # Filter out any options that match the previous response
+                            filtered_options = [opt for opt in fallback_options if opt != last_response]
+                            
+                            # If we have options left, choose from them, otherwise use a more generic response
+                            if filtered_options:
+                                response = random.choice(filtered_options)
+                            else:
+                                response = "I'm confused about that question. Can we try a different approach?"
                         else:
                             fallback_options = [
                                 "Okay, I'll try that.",
                                 "That makes sense, I think.",
                                 "So we're supposed to solve for x?",
                                 "Can you show me an example first?",
-                                "Math is so confusing sometimes."
+                                "Math is so confusing sometimes.",
+                                "I'll give it my best shot.",
+                                "Let me see if I understand the process correctly.",
+                                "That's clearer now, thanks!"
                             ]
-                            response = random.choice(fallback_options)
+                            # Avoid repeating the last student response
+                            last_response = ""
+                            for msg in reversed(st.session_state.messages):
+                                if msg["role"] == "student":
+                                    last_response = msg["content"]
+                                    break
+                            
+                            # Filter out any options that match the previous response
+                            filtered_options = [opt for opt in fallback_options if opt != last_response]
+                            
+                            # If we have options left, choose from them, otherwise use a more generic response
+                            if filtered_options:
+                                response = random.choice(filtered_options)
+                            else:
+                                response = "I'll work on that. Is there something specific I should focus on?"
                     
                     # Add the response to messages
                     timestamp = self._get_timestamp()
@@ -1149,6 +1418,19 @@ class WebInterface:
             
             st.markdown(f"**Name:** {student_profile.get('name', 'Not specified')}")
             st.markdown(f"**Grade:** {student_profile.get('grade_level', 'Not specified')}")
+            st.markdown(f"**Age:** {student_profile.get('age', 'Not specified')}")
+            
+            # Add personality and interests
+            if student_profile.get('personality'):
+                st.markdown(f"**Personality:** {student_profile.get('personality', '')}")
+            
+            if student_profile.get('interests'):
+                st.markdown("**Interests:**")
+                interests = student_profile.get('interests', [])
+                if isinstance(interests, list):
+                    st.markdown(', '.join(interests))
+                else:
+                    st.markdown(interests)
             
             # Simplified Learning Style display
             if student_profile.get('learning_style'):
@@ -1174,6 +1456,30 @@ class WebInterface:
                     st.markdown(f"<li>{strength}</li>", unsafe_allow_html=True)
                 st.markdown('</ul>', unsafe_allow_html=True)
             
+            st.markdown("</div>", unsafe_allow_html=True)
+            
+            # Add a Current Scenario card
+            st.markdown("""
+            <div class="scenario-card">
+                <div class="scenario-title">
+                    <span class="scenario-title-icon">📝</span> Current Scenario
+                </div>
+            """, unsafe_allow_html=True)
+            
+            st.markdown(f"**Subject:** {scenario.get('subject', 'Not specified')}")
+            st.markdown(f"**Topic:** {scenario.get('topic', 'Not specified')}")
+            
+            if scenario.get('classroom_setting'):
+                st.markdown(f"**Setting:** {scenario.get('classroom_setting', '')}")
+                
+            if scenario.get('difficulty'):
+                st.markdown(f"**Difficulty:** {scenario.get('difficulty', '').capitalize()}")
+                
+            # Add scenario description if available
+            if scenario.get('scenario_description'):
+                with st.expander("Scenario Description"):
+                    st.markdown(scenario.get('scenario_description', ''))
+                    
             st.markdown("</div>", unsafe_allow_html=True)
             
             # Learning Objectives - If available
@@ -1232,7 +1538,7 @@ class WebInterface:
     def create_default_scenario(self):
         """Create a default scenario if none exists."""
         if not st.session_state.scenario:
-            # Create a simple default scenario
+            # Create a more detailed default student profile
             default_student_profile = {
                 "name": "Jamie",
                 "grade_level": "7th grade",
@@ -1244,6 +1550,7 @@ class WebInterface:
                 "personality": "curious but easily frustrated when concepts seem too abstract"
             }
             
+            # Create a more detailed default scenario
             default_scenario = {
                 "subject": "Mathematics",
                 "topic": "Introduction to Algebra",
@@ -1256,14 +1563,19 @@ class WebInterface:
                     "Solve simple linear equations"
                 ],
                 "scenario_description": "Students are working on translating word problems into algebraic expressions. Jamie has been struggling with the concept of variables and is showing signs of frustration. The teacher needs to help Jamie understand the concept while maintaining engagement and confidence.",
-                "current_activity": "Students are working on a worksheet with word problems that need to be translated into algebraic expressions.",
-                "student_profile": default_student_profile
+                "current_activity": "Students are working on a worksheet with word problems that need to be translated into algebraic expressions. Jamie is stuck on a problem about finding the unknown number.",
+                "student_profile": default_student_profile,
+                "teaching_challenge": "Help the student overcome math anxiety while building understanding of abstract algebraic concepts",
+                "example_problems": [
+                    "If a number plus 5 equals 12, what is the number?",
+                    "Sarah is 3 years older than twice Miguel's age. If Sarah is 15, how old is Miguel?"
+                ]
             }
             
             st.session_state.scenario = default_scenario
             st.session_state.student_profile = default_student_profile
             
-            logging.info("Created default scenario")
+            logging.info("Created detailed default scenario")
             return True
         return False
 
@@ -1328,6 +1640,60 @@ class WebInterface:
             
             st.markdown('</div>', unsafe_allow_html=True)
             
+            # Classroom Management Strategies section
+            st.markdown('<div class="sidebar-section">', unsafe_allow_html=True)
+            st.markdown('<div class="sidebar-title">🧠 Classroom Management Strategies</div>', unsafe_allow_html=True)
+            
+            # Book selection
+            selected_book = st.selectbox(
+                "Select a book",
+                list(self.classroom_management_books.keys()),
+                index=0,
+                key="strategy_book"
+            )
+            
+            # Strategy selection from the chosen book
+            if selected_book:
+                strategies = self.classroom_management_books[selected_book]
+                strategy_names = [strategy["name"] for strategy in strategies]
+                
+                selected_strategies = st.multiselect(
+                    "Select strategies to apply",
+                    strategy_names,
+                    key="selected_strategies"
+                )
+                
+                # Display descriptions of selected strategies
+                if selected_strategies:
+                    st.markdown("### Selected Strategies")
+                    for strategy_name in selected_strategies:
+                        # Find the strategy object with this name
+                        for strategy in strategies:
+                            if strategy["name"] == strategy_name:
+                                with st.expander(strategy_name):
+                                    st.markdown(f"**{strategy_name}**")
+                                    st.markdown(strategy["description"])
+                                break
+                    
+                    # Update session state with selected strategies
+                    if st.button("Apply Strategies"):
+                        # Collect full strategy objects (with descriptions) for the selected strategy names
+                        full_selected_strategies = []
+                        for strategy_name in selected_strategies:
+                            for strategy in strategies:
+                                if strategy["name"] == strategy_name:
+                                    full_selected_strategies.append({
+                                        "name": strategy["name"],
+                                        "description": strategy["description"],
+                                        "book": selected_book
+                                    })
+                                    break
+                        
+                        st.session_state.classroom_management_strategies = full_selected_strategies
+                        st.success(f"Applied {len(full_selected_strategies)} classroom management strategies!")
+            
+            st.markdown('</div>', unsafe_allow_html=True)
+            
             # Navigation section - simplified
             st.markdown('<div class="sidebar-section">', unsafe_allow_html=True)
             st.markdown('<div class="sidebar-title">Navigation</div>', unsafe_allow_html=True)
@@ -1366,6 +1732,8 @@ class WebInterface:
                 for key in list(st.session_state.keys()):
                     if key != "model_name":
                         del st.session_state[key]
+                # Explicitly reset classroom management strategies
+                st.session_state.classroom_management_strategies = []
                 st.rerun()
             
             st.markdown('</div>', unsafe_allow_html=True)
