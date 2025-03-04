@@ -10,13 +10,14 @@ retrieval capabilities to enhance the agent's responses with educational content
 import os
 import sys
 import logging
+from typing import Dict, List, Any, Optional
 from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
 
 # Import agent components
-from ai_agent import TeacherAgent
+from ai_agent import TeacherTrainingGraph
 from llama_index_integration import LlamaIndexKnowledgeManager
 
 # Configure logging
@@ -26,16 +27,16 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-class LlamaIndexEnhancedAgent(TeacherAgent):
+class LlamaIndexEnhancedGraph(TeacherTrainingGraph):
     """
-    An extension of the TeacherAgent that integrates LlamaIndex
+    An extension of the TeacherTrainingGraph that integrates LlamaIndex
     for advanced knowledge retrieval.
     """
     
-    def __init__(self, *args, **kwargs):
-        """Initialize the agent with LlamaIndex integration."""
-        # Initialize the base agent
-        super().__init__(*args, **kwargs)
+    def __init__(self, model_name="gpt-4", **kwargs):
+        """Initialize the graph with LlamaIndex integration."""
+        # Initialize the base graph
+        super().__init__(model_name=model_name)
         
         # Initialize LlamaIndex knowledge manager
         self.llama_index_manager = LlamaIndexKnowledgeManager(
@@ -51,69 +52,78 @@ class LlamaIndexEnhancedAgent(TeacherAgent):
         self.llama_index_manager.load_or_create_index()
         logger.info("LlamaIndex knowledge base initialized and ready")
         
-    def _enhanced_response_generation(self, query, student_context=None, max_tokens=1000):
+        # Add debug flag
+        self.debug = kwargs.get("debug", False)
+        
+    def _generate_student_response(self, state: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Generate responses using both the base agent and LlamaIndex knowledge.
+        Override to enhance student response generation with educational content from LlamaIndex.
         
         Args:
-            query: The student's query or prompt
-            student_context: Optional context about the student
-            max_tokens: Maximum response length
+            state: Current agent state
             
         Returns:
-            An enhanced response with educational content
+            Updated state with enhanced student response
         """
-        # First, get knowledge from LlamaIndex
-        knowledge_result = self.llama_index_manager.query_knowledge(query)
-        retrieved_knowledge = knowledge_result["response"]
-        knowledge_sources = knowledge_result["sources"]
+        # First, get the basic student response using the parent method
+        state = super()._generate_student_response(state)
         
-        # Create an enhanced context with the retrieved knowledge
-        enhanced_context = f"""
-I have the following educational knowledge that may be relevant:
-{retrieved_knowledge}
-
-Based on this knowledge, I will answer the student's question.
-"""
+        # Get the scenario and teaching approach
+        scenario = state.get("scenario", {})
+        subject = scenario.get("subject", "general education")
+        query = f"As a student learning about {subject}, what would I want to know about this topic?"
         
-        # Generate a response using the base agent's method with enhanced context
-        response = self._generate_response(
-            query,
-            system_context=enhanced_context,
-            student_context=student_context,
-            max_tokens=max_tokens
-        )
+        # Use LlamaIndex to get relevant educational content
+        try:
+            knowledge_result = self.llama_index_manager.query_knowledge(query)
+            retrieved_knowledge = knowledge_result["response"]
+            
+            # Enhance the student response with educational content
+            current_response = state.get("student_responses", [])[-1] if state.get("student_responses") else ""
+            
+            enhanced_response = (
+                f"{current_response}\n\n"
+                f"I'm also curious about some of the things I've learned: {retrieved_knowledge[:200]}..."
+            )
+            
+            # Update the student response in the state
+            if state.get("student_responses"):
+                state["student_responses"][-1] = enhanced_response
+            
+            # Log sources if debug is enabled
+            if self.debug:
+                logger.info("Knowledge sources used:")
+                for i, source in enumerate(knowledge_result.get("sources", [])[:3], 1):
+                    logger.info(f"Source {i}: {source[:100]}...")
         
-        return {
-            "response": response,
-            "knowledge_used": retrieved_knowledge,
-            "sources": knowledge_sources[:3]  # Include top 3 sources
-        }
-    
-    def respond_to_student(self, query, student_context=None):
+        except Exception as e:
+            logger.error(f"Error enhancing student response with LlamaIndex: {e}")
+        
+        return state
+        
+    def run_with_llama_index(self, user_input: str, context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
-        Override the base respond_to_student method to use enhanced generation.
+        Run the graph with LlamaIndex enhancements.
         
         Args:
-            query: The student's query
-            student_context: Optional context about the student
+            user_input: The teacher's input
+            context: Optional context parameters
             
         Returns:
-            The agent's response
+            The final state after running the graph
         """
-        result = self._enhanced_response_generation(query, student_context)
+        # Use the parent's run method
+        result = self.run(user_input, context)
         
-        # Optionally log the sources used
+        # Add information about LlamaIndex usage
         if hasattr(self, 'debug') and self.debug:
-            logger.info("Knowledge sources used:")
-            for i, source in enumerate(result["sources"], 1):
-                logger.info(f"Source {i}: {source[:100]}...")
+            logger.info("LlamaIndex enhanced response generated")
         
-        return result["response"]
+        return result
 
 def main():
     """Demonstrate the LlamaIndex-enhanced agent."""
-    print("Initializing LlamaIndex-enhanced Teacher Agent...")
+    print("Initializing LlamaIndex-enhanced Teacher Training Graph...")
     
     # Use local model if available, otherwise fall back to OpenAI
     local_model_path = os.path.join("models", "llama3-8b-instruct.Q5_K_M.gguf")
@@ -126,37 +136,51 @@ def main():
         llm_provider = "local"
     
     # Create the enhanced agent
-    agent = LlamaIndexEnhancedAgent(
-        model="gpt-3.5-turbo",  # Base agent model (can be different from LlamaIndex LLM)
+    agent = LlamaIndexEnhancedGraph(
+        model_name="gpt-3.5-turbo",  # Base agent model
         documents_dir="knowledge_base/books",
         llm_provider=llm_provider,
         local_model_path=local_model_path,
         debug=True
     )
     
-    # Example student queries
-    example_queries = [
-        "I'm having trouble understanding fractions. Can you explain them to me?",
-        "Why do I need to learn algebra if I want to be an artist?",
-        "I get anxious during math tests. What can I do?",
-        "How can I remember the difference between mitosis and meiosis?"
+    # Example teacher inputs
+    example_inputs = [
+        "I would introduce fractions using visual aids like pizza slices",
+        "To explain the importance of algebra, I would connect it to artistic concepts like proportion and perspective",
+        "For test anxiety, I would teach relaxation techniques and provide practice tests",
+        "I would explain cell division using a side-by-side comparison and mnemonic devices"
     ]
     
-    # Test the agent with each query
-    for i, query in enumerate(example_queries, 1):
+    # Test the agent with each input
+    for i, user_input in enumerate(example_inputs, 1):
         print(f"\n\n--- Example {i} ---")
-        print(f"Student: {query}")
+        print(f"Teacher: {user_input}")
         
-        # Create a sample student context
-        student_context = {
-            "grade": "second grade" if i <= 2 else "high school",
-            "learning_style": "visual learner",
-            "interests": ["art", "music"] if i % 2 == 0 else ["science", "computers"]
+        # Create context for the scenario
+        context = {
+            "subject": "mathematics" if i <= 2 else "biology",
+            "difficulty": "beginner" if i % 2 == 0 else "intermediate",
+            "student_profile": {
+                "grade_level": "elementary" if i <= 2 else "high school",
+                "learning_style": ["visual", "hands-on"],
+                "challenges": ["abstract concepts"] if i % 2 == 0 else ["test anxiety"],
+                "strengths": ["creativity"] if i % 2 == 0 else ["memorization"]
+            }
         }
         
-        # Get the agent's response
-        response = agent.respond_to_student(query, student_context)
-        print(f"\nTeacher Agent: {response}")
+        # Run the enhanced agent
+        result = agent.run_with_llama_index(user_input, context)
+        
+        # Display the student response
+        student_responses = result.get("student_responses", [])
+        if student_responses:
+            print(f"\nStudent: {student_responses[-1]}")
+        
+        # Display the agent's feedback
+        agent_feedback = result.get("agent_feedback", "")
+        if agent_feedback:
+            print(f"\nFeedback: {agent_feedback}")
     
 if __name__ == "__main__":
     main() 

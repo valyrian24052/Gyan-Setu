@@ -13,6 +13,19 @@ This enhanced teacher training system is designed to provide realistic classroom
 - **Evidence-Based Feedback**: Teacher responses are evaluated using educational best practices.
 - **Knowledge Analysis**: Tools to analyze and visualize the content of the knowledge base.
 - **DSPy Integration**: Advanced LLM interaction using Stanford's DSPy framework for self-improving prompts and declarative programming.
+- **LlamaIndex Integration**: Modern knowledge retrieval system supporting multiple LLM providers, configurable parameters, and web integration.
+
+## LlamaIndex Knowledge Integration
+
+The system now includes an advanced knowledge retrieval system using LlamaIndex, providing enhanced capabilities:
+
+- **Multi-Provider Support**: Works with OpenAI, Anthropic, and local LLM models
+- **Centralized Configuration**: Easy parameter tuning via environment variables
+- **Web Application Integration**: Ready-to-use utilities for Flask and FastAPI
+- **Production Testing Tools**: Comprehensive testing and benchmarking tools
+- **Efficient Caching**: Built-in query caching with configurable TTL
+
+For detailed information about the LlamaIndex integration, see [LlamaIndex Integration Documentation](LLAMA_INDEX_README.md).
 
 ## Why Educational Books?
 
@@ -112,6 +125,34 @@ The Scenario Generator creates realistic classroom scenarios based on educationa
 - **Scenario Construction**: Builds contextually appropriate classroom situations.
 - **Strategy Integration**: Incorporates evidence-based teaching strategies from the knowledge base.
 - **Educational Grounding**: Ensures scenarios are rooted in sound educational principles.
+
+### 4. LlamaIndex Knowledge System
+
+The LlamaIndex Knowledge System provides an advanced alternative for knowledge retrieval and LLM integration:
+
+#### a. Knowledge Manager (`llama_index_integration.py`)
+- **Document Indexing**: Indexes educational documents using LlamaIndex's capabilities
+- **Query Processing**: Retrieves relevant information for educational queries
+- **LLM Integration**: Connects with various LLM providers (OpenAI, Anthropic, local)
+- **Response Formatting**: Formats responses with source citations and confidence scores
+
+#### b. Configuration System (`llama_index_config.py`)
+- **Centralized Settings**: Manages all configuration parameters in one place
+- **Environment Variables**: Loads settings from `.env` file for easy deployment
+- **Parameter Validation**: Validates settings to prevent runtime errors
+- **Grouped Settings**: Organizes settings by functionality (LLM, embedding, document processing)
+
+#### c. Web Integration (`web_app_llama_integration.py`)
+- **Framework Integration**: Ready-to-use utilities for Flask and FastAPI
+- **Singleton Pattern**: Ensures efficient use of the knowledge manager
+- **Response Formatting**: Standardizes response format for web display
+- **Error Handling**: Provides comprehensive error handling for production use
+
+#### d. Testing Tools (`test_production_llama_index.py`)
+- **Provider Benchmarking**: Compares performance across different LLM providers
+- **Interactive Testing**: Allows for interactive query testing
+- **Configuration Validation**: Verifies configuration settings
+- **Performance Monitoring**: Tracks query execution time and response quality
 
 ## How Knowledge Flows Through the System
 
@@ -252,9 +293,15 @@ The system provides an interactive terminal interface where you can:
 ├── test_book_extraction.py         # Tool to test knowledge extraction
 ├── demonstrate_book_knowledge.py   # Demo script for book-based scenarios
 ├── knowledge_analyzer.py           # Knowledge base analysis tools
-├── dspy_llm_handler.py            # DSPy implementation for LLM interaction
-├── dspy_adapter.py                # Adapter for DSPy compatibility
-├── test_student_simulation.py     # Test script for DSPy student simulation
+├── dspy_llm_handler.py             # DSPy implementation for LLM interaction
+├── dspy_adapter.py                 # Adapter for DSPy compatibility
+├── test_student_simulation.py      # Test script for DSPy student simulation
+├── llama_index_integration.py      # LlamaIndex knowledge manager
+├── llama_index_config.py           # LlamaIndex configuration
+├── web_app_llama_integration.py    # Web integration for LlamaIndex
+├── test_production_llama_index.py  # Production testing for LlamaIndex
+├── LLAMA_INDEX_README.md           # LlamaIndex integration documentation
+├── .env.example                    # Example environment configuration
 ├── knowledge_base/                 # Knowledge storage
 │   ├── books/                      # Directory for educational books
 │   ├── default_strategies/         # Default strategy files (CSV, TXT)

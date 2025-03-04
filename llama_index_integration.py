@@ -1,279 +1,394 @@
 #!/usr/bin/env python3
 """
-LlamaIndex Integration for Educational Knowledge Management
+LlamaIndex Integration for UTTA
 
-This module demonstrates how to integrate LlamaIndex with the existing UTTA codebase,
-replacing or enhancing the current document processing and vector database functionality
-with LlamaIndex's more advanced capabilities.
-
-Key features:
-- Document loading with LlamaIndex's document loaders
-- Text splitting with semantically-aware chunking
-- Vector store integration with existing or new embeddings
-- Query engine setup for advanced retrieval
-- Integration with existing knowledge management infrastructure
+This module provides integration with LlamaIndex for document retrieval and querying.
 """
 
 import os
+import json
+import hashlib
 import logging
-from typing import List, Dict, Any, Optional, Union
+import traceback
+from typing import Dict, List, Any, Optional, Union
+from datetime import datetime, timedelta
+from pathlib import Path
 
 # LlamaIndex imports
 from llama_index import (
     VectorStoreIndex,
     SimpleDirectoryReader,
-    ServiceContext,
+    download_loader,
+    Document,
     StorageContext,
-    load_index_from_storage
+    load_index_from_storage,
+    Settings,
 )
-from llama_index.node_parser import SimpleNodeParser
+from llama_index.llms import OpenAI, Anthropic, MockLLM
 from llama_index.embeddings import HuggingFaceEmbedding
-from llama_index.llms import HuggingFaceLLM, OpenAI, Anthropic
-from llama_index.vector_stores import FaissVectorStore
+from llama_index.core.response.schema import Response
 
-# Local imports for integration
-from document_processor import DocumentProcessor
-from vector_database import VectorDatabase
-from knowledge_manager import PedagogicalKnowledgeManager
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    filename="llama_index.log"
+# Import our configuration
+from llama_index_config import (
+    get_llm_settings, 
+    get_embed_model_settings,
+    get_document_settings, 
+    get_cache_settings,
+    get_retrieval_settings
 )
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class LlamaIndexKnowledgeManager:
     """
-    Knowledge manager using LlamaIndex for document processing, 
-    embedding, and retrieval.
+    Manages knowledge retrieval using LlamaIndex.
     
-    This class provides an alternative to the existing knowledge management
-    infrastructure, offering more advanced features through LlamaIndex.
+    This class provides an interface to load documents, create and query indices,
+    and manage the lifecycle of LlamaIndex operations.
     """
     
     def __init__(
         self,
-        documents_dir: str = "knowledge_base/books",
-        index_dir: str = "knowledge_base/llama_index",
-        embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2",
-        llm_provider: str = "local",  # "local", "openai", or "anthropic"
-        local_model_path: Optional[str] = None,
-        chunk_size: int = 500,
-        chunk_overlap: int = 50,
+        documents_dir: Optional[str] = None,
+        index_dir: Optional[str] = None,
+        llm_provider: str = "openai",
+        enable_caching: bool = True,
+        cache_dir: Optional[str] = None,
+        cache_ttl: int = 3600,  # 1 hour default
     ):
         """
-        Initialize the LlamaIndex knowledge manager.
+        Initialize the LlamaIndexKnowledgeManager.
         
         Args:
-            documents_dir: Directory containing educational documents
-            index_dir: Directory to store the LlamaIndex index
-            embedding_model: HuggingFace model ID for embeddings
-            llm_provider: Which LLM provider to use
-            local_model_path: Path to local model (if llm_provider is "local")
-            chunk_size: Size of text chunks for indexing
-            chunk_overlap: Overlap between chunks
+            documents_dir: Directory containing documents to be indexed.
+            index_dir: Directory to store the index.
+            llm_provider: LLM provider to use (openai, anthropic, or local).
+            enable_caching: Whether to enable query caching.
+            cache_dir: Directory to store the query cache.
+            cache_ttl: Time-to-live for cache entries in seconds.
         """
-        self.documents_dir = documents_dir
-        self.index_dir = index_dir
-        self.embedding_model = embedding_model
+        # Load settings
+        doc_settings = get_document_settings()
+        cache_settings = get_cache_settings()
+        
+        # Initialize directories
+        self.documents_dir = documents_dir or doc_settings["documents_dir"]
+        self.index_dir = index_dir or doc_settings["index_dir"]
+        
+        # Initialize caching settings
+        self.enable_caching = enable_caching if enable_caching is not None else cache_settings["enable_caching"]
+        self.cache_dir = cache_dir or cache_settings["cache_dir"]
+        self.cache_ttl = cache_ttl or cache_settings["cache_ttl"]
+        
+        if self.enable_caching:
+            os.makedirs(self.cache_dir, exist_ok=True)
+        
+        # Initialize LLM settings
         self.llm_provider = llm_provider
-        self.local_model_path = local_model_path
-        self.chunk_size = chunk_size
-        self.chunk_overlap = chunk_overlap
+        self._init_llm()
         
-        # Create index directory if it doesn't exist
-        os.makedirs(self.index_dir, exist_ok=True)
-        
-        # Setup the LLM
-        self._setup_llm()
-        
-        # Setup the embedding model
-        self.embed_model = HuggingFaceEmbedding(model_name=self.embedding_model)
-        
-        # Setup the service context
-        self.service_context = ServiceContext.from_defaults(
-            llm=self.llm,
-            embed_model=self.embed_model,
-            node_parser=SimpleNodeParser.from_defaults(
-                chunk_size=self.chunk_size,
-                chunk_overlap=self.chunk_overlap
-            )
-        )
-        
-        # Initialize the index as None until loaded or created
+        # Initialize the index and query engine
         self.index = None
         self.query_engine = None
         
-    def _setup_llm(self):
-        """Set up the LLM based on the provider."""
-        if self.llm_provider == "local" and self.local_model_path:
-            self.llm = HuggingFaceLLM(
-                model_name=self.local_model_path,
-                tokenizer_name=self.local_model_path,
-                context_window=2048,
-                max_new_tokens=256,
-                generate_kwargs={"temperature": 0.7}
-            )
-        elif self.llm_provider == "openai":
-            self.llm = OpenAI(model="gpt-3.5-turbo")
-        elif self.llm_provider == "anthropic":
-            self.llm = Anthropic(model="claude-2")
-        else:
-            # Fallback to default
-            logger.warning(f"LLM provider {self.llm_provider} not recognized, using OpenAI")
-            self.llm = OpenAI(model="gpt-3.5-turbo")
-            
-    def load_or_create_index(self, force_reload: bool = False):
-        """
-        Load the index from disk if it exists, otherwise create a new one.
+        logger.info(f"LlamaIndexKnowledgeManager initialized with documents_dir={self.documents_dir}, " 
+                   f"index_dir={self.index_dir}, llm_provider={llm_provider}")
+    
+    def _init_llm(self):
+        """Initialize the LLM based on the provider."""
+        # Get LLM settings
+        llm_settings = get_llm_settings(self.llm_provider)
+        embed_settings = get_embed_model_settings()
         
-        Args:
-            force_reload: If True, create a new index even if one exists
-        """
-        # Check if index exists and we're not forcing a reload
-        if os.path.exists(os.path.join(self.index_dir, "docstore.json")) and not force_reload:
-            logger.info(f"Loading existing index from {self.index_dir}")
-            storage_context = StorageContext.from_defaults(persist_dir=self.index_dir)
-            self.index = load_index_from_storage(storage_context)
-        else:
-            logger.info(f"Creating new index from documents in {self.documents_dir}")
-            self._create_new_index()
-        
-        # Create the query engine
-        self.query_engine = self.index.as_query_engine(
-            service_context=self.service_context
+        # Set up embedding model
+        embed_model = HuggingFaceEmbedding(
+            model_name=embed_settings["model_name"],
+            cache_folder=embed_settings.get("cache_folder")
         )
         
-    def _create_new_index(self):
-        """Create a new index from the documents."""
+        # Initialize the appropriate LLM based on provider
+        if self.llm_provider == "openai":
+            llm = OpenAI(
+                model=llm_settings["model"],
+                temperature=llm_settings["temperature"],
+                api_key=llm_settings["api_key"]
+            )
+        elif self.llm_provider == "anthropic":
+            llm = Anthropic(
+                model=llm_settings["model"],
+                temperature=llm_settings["temperature"],
+                api_key=llm_settings["api_key"]
+            )
+        else:
+            # Default to MockLLM for testing
+            llm = MockLLM()
+        
+        # Configure global settings
+        Settings.llm = llm
+        Settings.embed_model = embed_model
+        Settings.chunk_size = get_document_settings()["chunk_size"]
+        Settings.chunk_overlap = get_document_settings()["chunk_overlap"]
+        
+        logger.info(f"LLM initialized: {self.llm_provider}")
+    
+    def load_or_create_index(self) -> VectorStoreIndex:
+        """
+        Load an existing index or create a new one if it doesn't exist.
+        
+        Returns:
+            The loaded or created index.
+        """
         try:
-            # Load documents using LlamaIndex's document loader
-            logger.info(f"Loading documents from {self.documents_dir}")
-            documents = SimpleDirectoryReader(self.documents_dir).load_data()
+            if os.path.exists(self.index_dir):
+                logger.info(f"Loading index from {self.index_dir}")
+                storage_context = StorageContext.from_defaults(persist_dir=self.index_dir)
+                self.index = load_index_from_storage(storage_context)
+                logger.info("Index loaded successfully")
+            else:
+                logger.info(f"Index not found at {self.index_dir}, creating new index")
+                self.index = self._create_new_index()
+                logger.info("New index created successfully")
             
+            return self.index
+        except Exception as e:
+            logger.error(f"Error loading or creating index: {str(e)}")
+            logger.error(traceback.format_exc())
+            raise
+    
+    def _create_new_index(self) -> VectorStoreIndex:
+        """
+        Create a new index from documents.
+        
+        Returns:
+            The newly created index.
+        """
+        logger.info(f"Creating new index from documents in {self.documents_dir}")
+        
+        if not os.path.exists(self.documents_dir):
+            logger.error(f"Documents directory does not exist: {self.documents_dir}")
+            raise FileNotFoundError(f"Documents directory not found: {self.documents_dir}")
+        
+        try:
+            # Load documents
+            documents = SimpleDirectoryReader(self.documents_dir).load_data()
             logger.info(f"Loaded {len(documents)} documents")
             
-            # Create a vector store
-            vector_store = FaissVectorStore()
-            storage_context = StorageContext.from_defaults(vector_store=vector_store)
-            
             # Create the index
-            self.index = VectorStoreIndex.from_documents(
-                documents,
-                storage_context=storage_context,
-                service_context=self.service_context
-            )
+            index = VectorStoreIndex.from_documents(documents)
             
-            # Persist the index to disk
-            self.index.storage_context.persist(persist_dir=self.index_dir)
-            logger.info(f"Index created and saved to {self.index_dir}")
+            # Persist to disk
+            index.storage_context.persist(persist_dir=self.index_dir)
+            logger.info(f"Index persisted to {self.index_dir}")
+            
+            # Create query engine
+            self.index = index
+            
+            return index
         except Exception as e:
-            logger.error(f"Error creating index: {e}")
+            logger.error(f"Error creating index: {str(e)}")
+            logger.error(traceback.format_exc())
             raise
-            
-    def query_knowledge(self, query: str, top_k: int = 5) -> Dict[str, Any]:
+    
+    def _get_cache_key(self, query: str, top_k: int) -> str:
         """
-        Query the knowledge base using LlamaIndex.
+        Generate a cache key for a query.
         
         Args:
-            query: The query string
-            top_k: Number of top results to return
+            query: The query to generate a key for.
+            top_k: Number of results to retrieve.
             
         Returns:
-            Dict containing response and source nodes
+            The cache key as a string.
         """
-        if not self.query_engine:
-            raise ValueError("Index not loaded. Call load_or_create_index() first.")
+        # Create a deterministic key from the query and top_k
+        key_data = f"{query}_{top_k}_{self.llm_provider}".encode('utf-8')
+        return hashlib.md5(key_data).hexdigest()
+    
+    def _get_cache_path(self, cache_key: str) -> str:
+        """
+        Get the file path for a cache key.
+        
+        Args:
+            cache_key: The cache key.
             
-        response = self.query_engine.query(query)
+        Returns:
+            The path to the cache file.
+        """
+        return os.path.join(self.cache_dir, f"{cache_key}.json")
+    
+    def _save_to_cache(self, cache_key: str, response_dict: Dict[str, Any]):
+        """
+        Save a response to the cache.
         
-        # Extract source documents for reference
-        source_nodes = response.source_nodes
-        source_texts = [node.node.text for node in source_nodes[:top_k]]
+        Args:
+            cache_key: The cache key.
+            response_dict: The response dictionary to cache.
+        """
+        if not self.enable_caching:
+            return
         
-        return {
-            "response": str(response),
-            "sources": source_texts
+        cache_path = self._get_cache_path(cache_key)
+        
+        # Add timestamp for TTL checks
+        cache_data = {
+            "timestamp": datetime.now().isoformat(),
+            "response": response_dict
         }
         
-    def integrate_with_existing_knowledge(self, 
-                                         existing_manager: Optional[PedagogicalKnowledgeManager] = None,
-                                         mode: str = "replace") -> None:
+        with open(cache_path, 'w') as f:
+            json.dump(cache_data, f)
+        
+        logger.info(f"Saved response to cache: {cache_path}")
+    
+    def _get_from_cache(self, cache_key: str) -> Optional[Dict[str, Any]]:
         """
-        Integrate LlamaIndex with an existing knowledge manager.
+        Get a response from the cache if it exists and is not expired.
         
         Args:
-            existing_manager: An existing PedagogicalKnowledgeManager instance
-            mode: Integration mode - "replace" or "enhance"
-        """
-        if not existing_manager:
-            logger.warning("No existing knowledge manager provided for integration")
-            return
+            cache_key: The cache key.
             
-        if mode == "replace":
-            # Use LlamaIndex completely instead of existing components
-            logger.info("Replacing existing knowledge management with LlamaIndex")
-            # This would involve calling the appropriate hooks in the system
-            # to use our LlamaIndex components instead
-        elif mode == "enhance":
-            # Use LlamaIndex alongside existing components
-            logger.info("Enhancing existing knowledge management with LlamaIndex")
-            # This might involve importing existing knowledge into LlamaIndex
-            # or setting up bridges between the systems
-        else:
-            logger.warning(f"Unknown integration mode: {mode}")
-        
-    def migrate_from_vector_database(self, vector_db: Optional[VectorDatabase] = None) -> None:
+        Returns:
+            The cached response dictionary or None if not found or expired.
         """
-        Migrate data from an existing VectorDatabase instance to LlamaIndex.
+        if not self.enable_caching:
+            return None
         
-        Args:
-            vector_db: An existing VectorDatabase instance
-        """
-        if not vector_db:
-            logger.warning("No VectorDatabase provided for migration")
-            return
-            
+        cache_path = self._get_cache_path(cache_key)
+        
+        if not os.path.exists(cache_path):
+            return None
+        
         try:
-            # Get all chunks from the existing vector database
-            all_chunks = vector_db.get_chunks_by_category("general", limit=10000)
-            logger.info(f"Retrieved {len(all_chunks)} chunks from existing vector database")
+            with open(cache_path, 'r') as f:
+                cache_data = json.load(f)
             
-            # Convert to LlamaIndex documents and create a new index
-            # This would be implemented based on the specific data structure
-            # of the chunks and how they should map to LlamaIndex
+            # Check if cache is expired
+            timestamp = datetime.fromisoformat(cache_data["timestamp"])
+            if datetime.now() - timestamp > timedelta(seconds=self.cache_ttl):
+                logger.info(f"Cache expired: {cache_path}")
+                return None
             
-            logger.info("Migration from VectorDatabase completed")
+            logger.info(f"Retrieved response from cache: {cache_path}")
+            return cache_data["response"]
         except Exception as e:
-            logger.error(f"Error migrating from VectorDatabase: {e}")
+            logger.error(f"Error reading cache: {str(e)}")
+            return None
+    
+    def clear_cache(self):
+        """Clear all cached responses."""
+        if not self.enable_caching or not os.path.exists(self.cache_dir):
+            return
         
-def demonstrate_llama_index():
-    """Simple demonstration of LlamaIndex capabilities."""
-    # Create a LlamaIndex knowledge manager
-    manager = LlamaIndexKnowledgeManager(
-        documents_dir="knowledge_base/books",
-        llm_provider="openai"  # Use OpenAI for demonstration
-    )
+        for filename in os.listdir(self.cache_dir):
+            if filename.endswith('.json'):
+                os.remove(os.path.join(self.cache_dir, filename))
+        
+        logger.info("Cache cleared")
     
-    # Load or create the index
-    manager.load_or_create_index()
-    
-    # Example queries to demonstrate capabilities
-    queries = [
-        "What are effective strategies for teaching fractions?",
-        "How do I manage a classroom with diverse learning needs?",
-        "What are signs of dyscalculia in second-grade students?"
-    ]
-    
-    for query in queries:
-        print(f"\nQuery: {query}")
-        result = manager.query_knowledge(query)
-        print(f"Response: {result['response']}")
-        print("Sources:")
-        for i, source in enumerate(result['sources'], 1):
-            print(f"{i}. {source[:100]}...")
+    def query_knowledge(self, query: str, top_k: int = 5) -> Dict[str, Any]:
+        """
+        Query the knowledge base with a natural language query.
+        
+        Args:
+            query: The natural language query string.
+            top_k: Number of results to retrieve.
             
+        Returns:
+            Dictionary containing the response and source documents.
+        """
+        logger.info(f"Querying knowledge base with: '{query}', top_k={top_k}")
+        
+        # Check cache first
+        cache_key = self._get_cache_key(query, top_k)
+        cached_response = self._get_from_cache(cache_key)
+        if cached_response:
+            logger.info("Using cached response")
+            return cached_response
+        
+        # Make sure index is loaded
+        if not self.index:
+            logger.info("Index not loaded, loading now")
+            self.load_or_create_index()
+        
+        # Create query engine if not already created
+        if not self.query_engine:
+            retrieval_settings = get_retrieval_settings()
+            self.query_engine = self.index.as_query_engine(
+                similarity_top_k=top_k or retrieval_settings["top_k"],
+                node_postprocessors=[]
+            )
+        
+        try:
+            # Execute query
+            response = self.query_engine.query(query)
+            
+            # Format response
+            result = {
+                "response": str(response),
+                "sources": [
+                    {
+                        "text": node.node.get_text(),
+                        "source": node.node.metadata.get("file_path", "Unknown"),
+                        "score": node.score
+                    }
+                    for node in response.source_nodes
+                ]
+            }
+            
+            # Cache the response
+            self._save_to_cache(cache_key, result)
+            
+            return result
+        except Exception as e:
+            logger.error(f"Error querying knowledge base: {str(e)}")
+            logger.error(traceback.format_exc())
+            return {
+                "response": f"Error querying knowledge base: {str(e)}",
+                "sources": [],
+                "error": str(e)
+            }
+
+def demonstrate_llama_index():
+    """Demonstrate the LlamaIndex integration."""
+    print("\n===== Demonstrating LlamaIndex Integration =====\n")
+    
+    try:
+        # Initialize the knowledge manager
+        knowledge_manager = LlamaIndexKnowledgeManager(
+            llm_provider="local"  # Use MockLLM for testing
+        )
+        
+        # Load or create the index
+        knowledge_manager.load_or_create_index()
+        
+        # Example queries
+        queries = [
+            "What are effective strategies for teaching fractions?",
+            "How do I manage a classroom with diverse learning needs?",
+            "What are signs of dyscalculia in second-grade students?"
+        ]
+        
+        # Execute and display results for each query
+        for query in queries:
+            print(f"\nQuery: {query}")
+            result = knowledge_manager.query_knowledge(query)
+            
+            print("\nResponse:")
+            print(result["response"])
+            
+            print("\nSources:")
+            for source in result["sources"]:
+                print(f"- {source['source']}")
+                print(f"  {source['text'][:200]}...")  # Show first 200 chars
+                print(f"  Score: {source['score']}")
+            
+            print("\n" + "-" * 50)
+        
+    except Exception as e:
+        print(f"Error demonstrating LlamaIndex: {str(e)}")
+        print(traceback.format_exc())
+
 if __name__ == "__main__":
     demonstrate_llama_index() 
