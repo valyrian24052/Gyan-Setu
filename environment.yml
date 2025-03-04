@@ -39,6 +39,7 @@ dependencies:
     - langchain-anthropic>=0.1.0
     - langchain-community>=0.0.16
     - langgraph>=0.0.20
+    - llama-index>=0.9.9
     
     # Transformers and embeddings
     - sentence-transformers>=2.2.2
