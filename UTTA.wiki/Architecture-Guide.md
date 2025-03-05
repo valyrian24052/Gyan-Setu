@@ -1,154 +1,81 @@
 # UTTA System Architecture
 
-## 🏗️ System Overview
+## Overview
 
-UTTA is built as a Streamlit application that integrates LLMs with educational content to provide an interactive teacher training experience.
+UTTA (Universal Teacher Training Assistant) is a Streamlit-based educational application that leverages Large Language Models to provide interactive teacher training experiences.
 
-### Interaction Flow
+### Core Flow
 
 ```mermaid
 sequenceDiagram
-    autonumber
     participant T as Teacher
-    participant ST as Streamlit UI
+    participant UI as Streamlit UI
     participant LLM as LLM Engine
     participant DB as ChromaDB
-    participant Cache as Streamlit Cache
     
-    rect rgb(240, 248, 255)
-        Note over T,Cache: Teaching Scenario Generation
-        
-        T->>ST: Request Teaching Scenario
-        activate ST
-        
-        ST->>DB: Fetch Educational Content
-        activate DB
-        DB-->>ST: Return Context Documents
-        deactivate DB
-        
-        ST->>LLM: Generate Scenario
-        activate LLM
-        LLM-->>ST: Return Scenario
-        deactivate LLM
-        
-        ST->>Cache: Store Scenario State
-        activate Cache
-        Cache-->>ST: Confirm Storage
-        deactivate Cache
-        
-        ST-->>T: Display Scenario
-        deactivate ST
-    end
-    
-    rect rgb(230, 255, 240)
-        Note over T,Cache: Response Evaluation
-        
-        T->>ST: Submit Teaching Response
-        activate ST
-        
-        ST->>Cache: Retrieve Scenario Context
-        activate Cache
-        Cache-->>ST: Return Context
-        deactivate Cache
-        
-        ST->>DB: Get Teaching Strategies
-        activate DB
-        DB-->>ST: Return Relevant Strategies
-        deactivate DB
-        
-        ST->>LLM: Evaluate Response
-        activate LLM
-        LLM-->>ST: Return Feedback
-        deactivate LLM
-        
-        ST-->>T: Display Feedback
-        deactivate ST
-    end
-    
-    rect rgb(255, 240, 245)
-        Note over T,Cache: Progress Review
-        
-        T->>ST: View Progress
-        activate ST
-        
-        ST->>Cache: Fetch Session History
-        activate Cache
-        Cache-->>ST: Return History
-        deactivate Cache
-        
-        ST->>LLM: Generate Progress Analysis
-        activate LLM
-        LLM-->>ST: Return Analysis
-        deactivate LLM
-        
-        ST-->>T: Show Progress Report
-        deactivate ST
-    end
+    T->>UI: Start Training Session
+    UI->>DB: Load Teaching Materials
+    DB-->>UI: Return Content
+    UI->>LLM: Generate Scenario
+    LLM-->>UI: Return Response
+    UI-->>T: Present Scenario
+
+    T->>UI: Submit Response
+    UI->>LLM: Evaluate Response
+    LLM-->>UI: Provide Feedback
+    UI-->>T: Display Feedback
 ```
 
-### Core Components
+## Components
 
-1. **Streamlit Interface**
-   - Interactive web interface
-   - Real-time response display
-   - Session state management
-   - File upload handling
+### 1. User Interface (Streamlit)
+- Interactive training scenarios
+- Real-time feedback display
+- Progress tracking
+- Session management
 
-2. **LLM Integration**
-   - OpenAI API integration
-   - Context management
-   - Prompt optimization
-   - Response generation
+### 2. LLM Integration
+- OpenAI API for scenario generation
+- DSPy for response optimization
+- Context-aware interactions
 
-3. **Knowledge Management**
-   - Vector embeddings storage
-   - Semantic search functionality
-   - Educational content processing
-   - Context retrieval
+### 3. Knowledge Base
+- ChromaDB for vector storage
+- Educational content management
+- Teaching strategy retrieval
 
-## 🔌 Integration Points
+## Data Flow
 
-### Component Communication
-- Streamlit session state for data persistence
-- Callback functions for user interactions
-- State management through Streamlit primitives
-- File handling through Streamlit's file uploader
+1. **Training Session**
+   - Teacher initiates session
+   - System loads relevant materials
+   - LLM generates teaching scenario
+   - Teacher receives interactive content
 
-### Data Storage
-- ChromaDB for vector embeddings
-- Local file system for document storage
-- Streamlit cache for performance optimization
+2. **Response Handling**
+   - Teacher submits response
+   - System evaluates using LLM
+   - Feedback generated and displayed
+   - Progress tracked and stored
 
-### External Services
-- OpenAI API for LLM capabilities
-- Sentence transformers for embeddings
-- HuggingFace for model access
+## Technical Stack
 
-## 🔐 Security Considerations
+- **Frontend**: Streamlit
+- **LLM**: OpenAI + DSPy
+- **Database**: ChromaDB
+- **Storage**: Local filesystem
+- **Caching**: Streamlit cache
 
-1. **API Security**
-   - Secure API key management
-   - Environment variable configuration
-   - Rate limiting implementation
+## Security
 
-2. **Data Protection**
-   - Local data storage security
-   - User input validation
-   - Session data management
+- Environment-based API key management
+- Secure session handling
+- Input validation
+- Rate limiting
 
-## 📈 Performance
+## Performance
 
-1. **Optimization**
-   - Streamlit caching mechanisms
-   - Batch processing for embeddings
-   - Efficient context window usage
-
-2. **Resource Management**
-   - Memory-efficient operations
-   - Optimized API calls
-   - Cache management
-
-3. **Monitoring**
-   - Error logging
-   - Performance tracking
-   - Usage analytics 
+- Streamlit caching
+- Optimized API calls
+- Efficient resource management
+- Error logging and monitoring 
