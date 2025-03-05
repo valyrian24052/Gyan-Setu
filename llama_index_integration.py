@@ -15,27 +15,77 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 # LlamaIndex imports
-from llama_index import (
-    VectorStoreIndex,
-    SimpleDirectoryReader,
-    download_loader,
-    Document,
+from llama_index.core import (
+    SimpleDirectoryReader, 
+    Settings,
     StorageContext,
     load_index_from_storage,
-    Settings,
+    set_global_service_context
 )
-from llama_index.llms import OpenAI, Anthropic, MockLLM
-from llama_index.embeddings import HuggingFaceEmbedding
+from llama_index.core.node_parser import SentenceSplitter
+from llama_index.core.indices.vector_store import VectorStoreIndex
+from llama_index.core.schema import Document
 from llama_index.core.response.schema import Response
+from llama_index.llms.openai import OpenAI
+
+# Try to import Anthropic, but provide fallback
+try:
+    from llama_index.llms.anthropic import Anthropic
+except ImportError:
+    try:
+        # Alternative import path for newer versions
+        from llama_index.core.llms.anthropic import Anthropic
+    except ImportError:
+        # Fallback in case Anthropic is not available
+        print("Warning: Anthropic integration not available. Installing required package.")
+        import subprocess
+        import sys
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "llama-index-llms-anthropic"])
+        try:
+            from llama_index.llms.anthropic import Anthropic
+        except ImportError:
+            print("Warning: Failed to import Anthropic. Will use mock LLM for this provider.")
+            Anthropic = None
+
+# Import MockLLM for testing
+from llama_index.core.llms.mock import MockLLM
 
 # Import our configuration
 from llama_index_config import (
     get_llm_settings, 
-    get_embed_model_settings,
+    get_embedding_settings,
     get_document_settings, 
     get_cache_settings,
     get_retrieval_settings
 )
+
+# Try to import OpenAIEmbedding, but provide fallback
+try:
+    from llama_index.embeddings.openai import OpenAIEmbedding
+except ImportError:
+    try:
+        # Alternative import path for newer versions
+        from llama_index.core.embeddings.openai import OpenAIEmbedding 
+    except ImportError:
+        # Fallback to HuggingFace embeddings
+        print("Warning: OpenAI embedding not available. Using HuggingFace embeddings.")
+        try:
+            from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+            OpenAIEmbedding = HuggingFaceEmbedding  # Use as replacement
+        except ImportError:
+            try:
+                from llama_index.core.embeddings.huggingface import HuggingFaceEmbedding
+                OpenAIEmbedding = HuggingFaceEmbedding  # Use as replacement
+            except ImportError:
+                import subprocess
+                import sys
+                print("Installing huggingface embeddings...")
+                subprocess.check_call([sys.executable, "-m", "pip", "install", "llama-index-embeddings-huggingface"])
+                try:
+                    from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+                    OpenAIEmbedding = HuggingFaceEmbedding  # Use as replacement
+                except ImportError:
+                    print("Error: Failed to import embedding models. The application may not work correctly.")
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -98,38 +148,77 @@ class LlamaIndexKnowledgeManager:
     
     def _init_llm(self):
         """Initialize the LLM based on the provider."""
-        # Get LLM settings
-        llm_settings = get_llm_settings(self.llm_provider)
-        embed_settings = get_embed_model_settings()
+        provider = self.llm_provider.lower()
         
-        # Set up embedding model
-        embed_model = HuggingFaceEmbedding(
+        if provider == "openai":
+            try:
+                # Get OpenAI settings
+                openai_settings = get_llm_settings("openai")
+                
+                # Check if API key is set
+                if not openai_settings.get("api_key"):
+                    logging.warning("OpenAI API key not set. Using mock LLM.")
+                    self.llm = MockLLM()
+                    return
+                
+                # Initialize OpenAI LLM
+                self.llm = OpenAI(
+                    model=openai_settings.get("model", "gpt-3.5-turbo"),
+                    temperature=openai_settings.get("temperature", 0.1),
+                    api_key=openai_settings.get("api_key"),
+                )
+            except Exception as e:
+                logging.error(f"Error initializing OpenAI LLM: {str(e)}")
+                logging.warning("Using mock LLM as fallback.")
+                self.llm = MockLLM()
+        
+        elif provider == "anthropic":
+            try:
+                # Check if Anthropic is available
+                if Anthropic is None:
+                    logging.warning("Anthropic not available. Using mock LLM.")
+                    self.llm = MockLLM()
+                    return
+                
+                # Get Anthropic settings
+                anthropic_settings = get_llm_settings("anthropic")
+                
+                # Check if API key is set
+                if not anthropic_settings.get("api_key"):
+                    logging.warning("Anthropic API key not set. Using mock LLM.")
+                    self.llm = MockLLM()
+                    return
+                
+                # Initialize Anthropic LLM
+                self.llm = Anthropic(
+                    model=anthropic_settings.get("model", "claude-3-sonnet-20240229"),
+                    temperature=anthropic_settings.get("temperature", 0.1),
+                    api_key=anthropic_settings.get("api_key"),
+                )
+            except Exception as e:
+                logging.error(f"Error initializing Anthropic LLM: {str(e)}")
+                logging.warning("Using mock LLM as fallback.")
+                self.llm = MockLLM()
+        
+        else:
+            # Default to mock LLM for testing or unknown providers
+            logging.info(f"Using mock LLM for provider: {provider}")
+            self.llm = MockLLM()
+        
+        # Configure global settings
+        Settings.llm = self.llm
+        
+        # Setup embedding model
+        embed_settings = get_embedding_settings()
+        Settings.embed_model = OpenAIEmbedding(
             model_name=embed_settings["model_name"],
             cache_folder=embed_settings.get("cache_folder")
         )
         
-        # Initialize the appropriate LLM based on provider
-        if self.llm_provider == "openai":
-            llm = OpenAI(
-                model=llm_settings["model"],
-                temperature=llm_settings["temperature"],
-                api_key=llm_settings["api_key"]
-            )
-        elif self.llm_provider == "anthropic":
-            llm = Anthropic(
-                model=llm_settings["model"],
-                temperature=llm_settings["temperature"],
-                api_key=llm_settings["api_key"]
-            )
-        else:
-            # Default to MockLLM for testing
-            llm = MockLLM()
-        
-        # Configure global settings
-        Settings.llm = llm
-        Settings.embed_model = embed_model
-        Settings.chunk_size = get_document_settings()["chunk_size"]
-        Settings.chunk_overlap = get_document_settings()["chunk_overlap"]
+        # Set other settings
+        doc_settings = get_document_settings()
+        Settings.chunk_size = doc_settings["chunk_size"]
+        Settings.chunk_overlap = doc_settings["chunk_overlap"]
         
         logger.info(f"LLM initialized: {self.llm_provider}")
     
