@@ -7,81 +7,52 @@
 
 Welcome to our comprehensive textbook on Generative AI with Large Language Models (LLMs)! This course provides a structured learning path from foundational concepts to advanced applications, using the Utah Teacher Training Assistant (UTTA) project as a practical case study throughout.
 
-## 🎯 Course Overview
+## 📚 Course Structure
 
-This textbook is designed for developers, data scientists, and AI enthusiasts who want to understand the complete GenAI stack. Starting with essential infrastructure and gradually progressing to sophisticated applications, you'll develop a deep understanding of how modern language models work and how to build practical systems with them.
+### 🎯 Getting Started
+- [Introduction to GenAI for Education](Introduction-to-GenAI-for-Education)
+- [Architecture Guide](Architecture-Guide)
+- [Implementation Guide](Implementation-Guide)
+- [Deployment Guide](Deployment-Guide)
 
-| Module | Focus | Skills |
-|--------|-------|--------|
-| 🛠️ Foundations | Infrastructure and NLP basics | Environment setup, text processing, transformers |
-| 🧠 Core Technologies | LLMs and knowledge retrieval | Embeddings, RAG, context management |
-| 🤖 Interactive Systems | Chatbots and agents | Conversation design, autonomous systems |
-| 📊 Deployment | Production applications | Optimization, evaluation, ethical systems |
+### 🛠️ Core Technologies
+1. **Natural Language Processing**
+   - [NLP Fundamentals](NLP-Fundamentals)
+   - [Transformer Architecture](Transformer-Architecture)
 
-## 📚 Course Chapters
+2. **Large Language Models**
+   - [LLM Guide](LLM-Guide)
+   - [LLM Orchestration Frameworks](LLM-Orchestration-Frameworks)
 
-### Foundation Modules
-[![Status](https://img.shields.io/badge/status-complete-green.svg)]() [Chapter 1: Development Infrastructure and Environment Setup](Infrastructure)
-- Setting up development environments for GenAI
-- AI server configuration and access
-- Security best practices and troubleshooting
-- UTTA Case Study: Infrastructure requirements for teacher training systems
+3. **Knowledge Management**
+   - [Knowledge Base Overview](Knowledge-Base-Overview)
+   - [Knowledge Processing Pipeline](Knowledge-Processing-Pipeline)
+   - [Knowledge LLM Integration](Knowledge-LLM-Integration)
+   - [Knowledge Applications](Knowledge-Applications)
 
-[![Status](https://img.shields.io/badge/status-planned-yellow.svg)]() [Chapter 2: Natural Language Processing Fundamentals](NLP-Fundamentals)
-- Text processing and tokenization
-- Word embeddings and vector spaces
-- Statistical language models
-- UTTA Case Study: Processing educational content
+### 🤖 Applications
+1. **Educational Systems**
+   - [Chatbot Development](Chatbot-Development)
+   - [Educational Content](Educational-Content)
 
-[![Status](https://img.shields.io/badge/status-planned-yellow.svg)]() [Chapter 3: Transformer Architecture](Transformer-Architecture)
-- Attention mechanisms
-- Self-attention and multi-head attention
-- Encoder-decoder architecture
-- UTTA Case Study: Analyzing transformer performance on educational text
+## 📊 Learning Path
 
-[![Status](https://img.shields.io/badge/status-adapting-orange.svg)]() [Chapter 4: Embeddings and Vector Representations](Knowledge-Base-Structure)
-- Types of embeddings and semantic meaning
-- Creating and storing vector representations
-- Semantic similarity calculations
-- UTTA Case Study: Embedding educational content
+### Beginner Level
+1. Start with [Introduction to GenAI for Education](Introduction-to-GenAI-for-Education)
+2. Review [Architecture Guide](Architecture-Guide)
+3. Study [NLP Fundamentals](NLP-Fundamentals)
+4. Explore [Knowledge Base Overview](Knowledge-Base-Overview)
 
-### Advanced Modules
-[![Status](https://img.shields.io/badge/status-adapting-orange.svg)]() [Chapter 5: Large Language Models](Knowledge-LLM-Integration)
-- Evolution of language models
-- Pre-training and fine-tuning
-- Prompt engineering techniques
-- UTTA Case Study: Integrating LLMs with educational knowledge
+### Intermediate Level
+1. Deep dive into [Transformer Architecture](Transformer-Architecture)
+2. Learn about [Knowledge Processing Pipeline](Knowledge-Processing-Pipeline)
+3. Study [Knowledge LLM Integration](Knowledge-LLM-Integration)
+4. Understand [LLM Orchestration Frameworks](LLM-Orchestration-Frameworks)
 
-[![Status](https://img.shields.io/badge/status-adapting-orange.svg)]() [Chapter 6: Retrieval-Augmented Generation (RAG)](Vector-Store-Implementation)
-- Knowledge base design and implementation
-- Vector database options and optimization
-- Context integration strategies
-- UTTA Case Study: Building a RAG system for teacher training
-
-[![Status](https://img.shields.io/badge/status-adapting-orange.svg)]() [Chapter 7: Educational Chatbots and Interactive Systems](Chatbot-Development)
-- Conversation design principles
-- Context management and personalization
-- Feedback and assessment mechanisms
-- UTTA Case Study: Educational assistant for classroom management
-
-[![Status](https://img.shields.io/badge/status-planned-yellow.svg)]() [Chapter 8: Autonomous Agents](Autonomous-Agents)
-- Agent architectures and reasoning
-- Tool usage and function calling
-- Multi-agent systems
-- UTTA Case Study: Autonomous coaching agents for teachers
-
-### Implementation Modules
-[![Status](https://img.shields.io/badge/status-adapting-orange.svg)]() [Chapter 9: Advanced Applications](Knowledge-Applications)
-- Content generation systems
-- Question answering applications
-- Domain-specific adaptations
-- UTTA Case Study: Applications for teacher professional development
-
-[![Status](https://img.shields.io/badge/status-planned-yellow.svg)]() [Chapter 10: Deployment and Evaluation](Evaluation-Testing)
-- Production deployment strategies
-- Performance monitoring and optimization
-- Ethical considerations and bias mitigation
-- UTTA Case Study: Evaluating and deploying the teacher training system
+### Advanced Level
+1. Implement [Chatbot Development](Chatbot-Development)
+2. Explore [Knowledge Applications](Knowledge-Applications)
+3. Review [Deployment Guide](Deployment-Guide)
 
 ## 💻 System Requirements
 
