@@ -1,5 +1,7 @@
 # Implementation Guide
 
+This guide provides step-by-step instructions for setting up, configuring, and using the LLM-Based Chatbot Development Framework. The framework allows you to build advanced chatbots with sophisticated knowledge retrieval capabilities.
+
 ## 🚀 Setting Up the Environment
 
 ### Installation Steps
@@ -7,315 +9,421 @@
 #### 1. Clone the Repository
 ```bash
 # Clone the repository
-git clone https://github.com/UVU-AI-Innovate/UTTA.git
-cd UTTA
+git clone https://github.com/UVU-AI-Innovate/LLM-Based-Chatbot-Development-Framework.git
+cd LLM-Based-Chatbot-Development-Framework
 ```
 
-#### 2. Install Dependencies
+#### 2. Create a Virtual Environment
+```bash
+# Create a virtual environment
+python -m venv venv
+
+# Activate the virtual environment
+# On Windows:
+venv\Scripts\activate
+# On macOS/Linux:
+source venv/bin/activate
+```
+
+#### 3. Install Dependencies
 ```bash
 # Install required packages
 pip install -r requirements.txt
 ```
 
+#### 4. Configure API Keys
+Create a `.env` file in the root directory with your API keys:
+```
+OPENAI_API_KEY=your_openai_api_key
+ANTHROPIC_API_KEY=your_anthropic_api_key
+```
+
 ### Project Structure
-The main application files are organized in the root directory:
+The framework is organized into several modules:
 
 ```
-UTTA/
-├── web_app.py           # Streamlit web interface
-├── ai_agent.py          # Core AI agent implementation
-├── llm_handler.py       # Language model processing
-├── llm_interface.py     # LLM communication interface
-├── knowledge_base.py    # Teaching strategies and characteristics
-├── evaluator.py         # Response evaluation module
-├── prompt_templates.py  # LLM prompt templates
-├── tests/              # Test suite
-├── docs/               # Documentation
-├── resources/          # Additional resources
-└── requirements.txt    # Project dependencies
+llm-chatbot-framework/
+├── data/                      # Data storage
+│   └── sample_documents/      # Sample educational documents
+├── examples/                  # Example applications
+│   ├── simple_chatbot.py      # Simple chatbot example
+│   └── teacher_training/      # Teacher training system (UTTA)
+├── src/                       # Core framework code
+│   ├── core/                  # Core components
+│   │   ├── document_processor.py # Document processing utilities
+│   │   └── vector_database.py # Vector database implementation
+│   ├── llm/                   # LLM integration
+│   │   ├── dspy/              # DSPy integration
+│   │   ├── handlers/          # LLM handlers
+│   │   └── prompts/           # Prompt templates
+│   ├── retrieval/             # Retrieval components
+│   │   ├── basic/             # Basic retrieval methods
+│   │   └── llama_index/       # LlamaIndex integration
+│   ├── utils/                 # Utility functions
+│   └── web/                   # Web application components
+├── tests/                     # Unit and integration tests
+├── tools/                     # Utility tools
+├── requirements.txt           # Dependencies
+└── README.md                  # Main README file
 ```
 
-### Running the Application
+## 🔧 Core Components Configuration
 
-To start the web interface:
-```bash
-streamlit run web_app.py
-```
+### Document Processing
 
-The application will be available at:
-- Local URL: http://localhost:8501
-- Network URL: Displayed in terminal
+The document processing pipeline handles the extraction and processing of text from various document formats.
 
-### Key Components
-
-1. **Web Interface (`web_app.py`)**
-   - Streamlit-based user interface
-   - Handles user interactions and display
-
-2. **AI Agent (`ai_agent.py`)**
-   - Core simulation logic
-   - Manages teaching scenarios and evaluations
-
-3. **LLM Handler (`llm_handler.py`)**
-   - Processes natural language
-   - Manages LLM interactions
-
-4. **Knowledge Base (`knowledge_base.py`)**
-   - Teaching strategies
-   - Student characteristics
-   - Behavioral scenarios
-
-5. **Evaluator (`evaluator.py`)**
-   - Response evaluation logic
-   - Feedback generation
-
-6. **LLM Interface (`llm_interface.py`)**
-   - LLM communication layer
-   - Response generation
-
-7. **Prompt Templates (`prompt_templates.py`)**
-   - LLM prompt management
-   - Scenario templates
-
-## 🔄 Application Flow
-
-### 1. Initialization Phase
-System startup involves:
-- Loading configuration settings from config.yaml
-- Initializing the LLM interface and ensuring model availability
-- Loading the knowledge base with teaching strategies and resources
-- Setting up the teacher profile and simulation parameters
-
-### 2. Teacher Profile Setup
-Profile configuration includes:
-- Collecting teacher information (experience level, grade preferences)
-- Setting preferred subjects and teaching style
-- Identifying areas for professional development
-- Storing profile for personalized scenarios
-
-### 3. Training Session Flow
-```mermaid
-graph LR
-    subgraph Scenario[1. Scenario Generation]
-        Subject[Select subject]
-        Difficulty[Set difficulty]
-        Profile[Generate profile]
-    end
-
-    subgraph Interaction[2. Teacher Interaction]
-        Present[Present scenario]
-        Accept[Accept response]
-        Process[Process strategy]
-    end
-
-    subgraph Analysis[3. Response Analysis]
-        Evaluate[Evaluate effectiveness]
-        Generate[Generate feedback]
-        Suggest[Suggest improvements]
-    end
-
-    Scenario --> Interaction
-    Interaction --> Analysis
-
-    style Scenario fill:#e3f2fd,stroke:#1565c0
-    style Interaction fill:#f3e5f5,stroke:#4a148c
-    style Analysis fill:#e8f5e9,stroke:#2e7d32
-```
-
-### 4. Feedback Generation
-Analysis components include:
-- **Effectiveness Score:** Numerical evaluation (0-1) of teaching approach
-- **Strengths:** Identification of effective strategies used
-- **Areas for Improvement:** Specific suggestions for enhancement
-- **Alternative Approaches:** Other teaching strategies to consider
-
-### 5. Progress Tracking
-Session monitoring includes:
-- Track response patterns and improvement
-- Monitor strategy effectiveness
-- Record successful approaches
-- Generate progress reports
-
-## 🔧 Core Component Implementation
-
-### Teacher Training Agent
 ```python
-# src/core/ai_agent.py
-class TeacherTrainingAgent:
-    """
-    Main agent class for managing teacher training simulations.
-    
-    This class orchestrates the interaction between different components:
-    - LLM Interface for AI model interactions
-    - Knowledge Manager for accessing teaching strategies
-    - Language Processor for analyzing responses
-    """
-    
-    def __init__(self):
-        self.llm = LLMInterface()
-        self.knowledge = PedagogicalKnowledgeManager()
-        self.processor = PedagogicalLanguageProcessor()
-        
-    def create_teaching_scenario(
-        self, 
-        subject: str, 
-        difficulty: str, 
-        student_profile: Dict[str, Any]
-    ) -> Dict[str, Any]:
-        """Generate a teaching scenario based on parameters."""
-        context = {
-            "subject": subject,
-            "difficulty": difficulty,
-            "student_profile": student_profile
-        }
-        return self.processor.create_scenario(context)
-        
-    def evaluate_teaching_response(
-        self, 
-        teacher_input: str, 
-        scenario: Dict[str, Any]
-    ) -> Dict[str, Any]:
-        """Evaluate response and generate feedback."""
-        analysis = self.processor.analyze_teaching_response(
-            teacher_input=teacher_input,
-            context=scenario
-        )
-        return self.generate_feedback(analysis)
+from src.core.document_processor import DocumentProcessor
+
+# Initialize the document processor
+processor = DocumentProcessor()
+
+# Process a PDF document
+document_chunks = processor.process_document(
+    file_path="data/sample_documents/education_strategies.pdf",
+    chunk_size=1000,
+    chunk_overlap=200
+)
+
+# Process multiple documents
+document_chunks = processor.process_directory(
+    directory_path="data/sample_documents/",
+    file_types=["pdf", "txt", "epub"],
+    recursive=True
+)
 ```
 
-### Knowledge Manager
+### Vector Database
+
+The vector database stores document chunks as embeddings for efficient semantic search.
+
 ```python
-# src/models/knowledge_manager.py
-class PedagogicalKnowledgeManager:
-    """
-    Manages educational knowledge and teaching strategies.
-    
-    This class provides a comprehensive interface for:
-    - Storing and retrieving teaching strategies
-    - Managing student behavior patterns
-    - Tracking strategy effectiveness
-    - Updating knowledge base with new information
-    """
-    
-    def __init__(self):
-        self.db = Database()
-        self.vector_store = VectorStore()
-        
-    def get_teaching_strategies(self, context):
-        """Retrieve relevant teaching strategies."""
-        query = self.build_query(context)
-        return self.vector_store.similarity_search(query)
-        
-    def update_knowledge(self, new_data):
-        """Add new teaching strategies."""
-        vectors = self.vector_store.encode(new_data)
-        self.vector_store.add(vectors)
+from src.core.vector_database import VectorDatabase
+
+# Initialize the vector database
+vector_db = VectorDatabase(
+    embedding_model="sentence-transformers/all-MiniLM-L6-v2",
+    persist_directory="data/vector_db"
+)
+
+# Add documents to the database
+vector_db.add_documents(document_chunks)
+
+# Perform a semantic search
+results = vector_db.search(
+    query="How to handle classroom disruptions?",
+    limit=5
+)
 ```
 
-### Language Processor
+### LLM Integration
+
+The LLM integration layer provides a unified interface for interacting with various LLM providers.
+
 ```python
-# src/core/llm_handler.py
-class PedagogicalLanguageProcessor:
-    """
-    Processes natural language in educational contexts using LLMs.
-    
-    This class handles all language-related tasks in the teaching simulation:
-    - Analyzing teacher responses for effectiveness
-    - Generating appropriate student reactions
-    - Creating realistic teaching scenarios
-    - Providing pedagogically sound feedback
-    """
-    
+from src.llm.handlers.openai_handler import OpenAIHandler
+from src.llm.handlers.anthropic_handler import AnthropicHandler
+
+# Initialize OpenAI handler
+openai_handler = OpenAIHandler(
+    model="gpt-4",
+    temperature=0.7,
+    max_tokens=1000
+)
+
+# Initialize Anthropic handler
+anthropic_handler = AnthropicHandler(
+    model="claude-3-opus-20240229",
+    temperature=0.7,
+    max_tokens=1000
+)
+
+# Generate responses
+openai_response = openai_handler.generate(
+    prompt="Explain the concept of scaffolding in education.",
+    system_message="You are an educational expert."
+)
+
+anthropic_response = anthropic_handler.generate(
+    prompt="Describe effective classroom management techniques.",
+    system_message="You are an educational expert."
+)
+```
+
+### DSPy Integration
+
+The framework includes integration with Stanford's DSPy for self-improving prompts.
+
+```python
+from src.llm.dspy.handler import DSPyLLMHandler
+
+# Initialize DSPy handler
+dspy_handler = DSPyLLMHandler(
+    model_name="gpt-3.5-turbo",
+    temperature=0.7
+)
+
+# Define a DSPy module
+import dspy
+
+class EducationalResponder(dspy.Module):
     def __init__(self):
-        self.llm = LLMInterface()
-        self.templates = PromptTemplates()
-        
-    def analyze_teaching_response(self, teacher_input, context):
-        """Analyze teaching effectiveness."""
-        prompt = self.templates.get("analysis")
-        return self.llm.generate(
-            prompt=prompt,
-            context=context,
-            input=teacher_input
-        )
-        
-    def generate_student_reaction(self, context, effectiveness):
-        """Generate realistic student responses."""
-        prompt = self.templates.get("student_reaction")
-        return self.llm.generate(
-            prompt=prompt,
-            context=context,
-            effectiveness=effectiveness
-        )
+        super().__init__()
+        self.generate = dspy.ChainOfThought("query -> educational_response")
+
+# Use the DSPy handler with the module
+responder = EducationalResponder()
+result = dspy_handler.predict_with_module(
+    responder,
+    query="How can I differentiate instruction for diverse learners?"
+)
 ```
 
-## ⚙️ Configuration
+### Knowledge Retrieval
 
-### Sample Configuration
-```yaml
-# config.yaml
-llm:
-  model: mistral-7b
-  temperature: 0.7
-  max_tokens: 2048
-  context_window: 8192
+The knowledge retrieval system implements efficient search and retrieval mechanisms.
 
-knowledge_base:
-  vector_store: faiss
-  embedding_model: instructor-xl
-  cache_size: 1000
+```python
+from src.retrieval.llama_index.integration import LlamaIndexRetriever
 
-processor:
-  analysis_threshold: 0.8
-  feedback_detail_level: detailed
-  student_simulation_mode: realistic
+# Initialize the retriever
+retriever = LlamaIndexRetriever(
+    vector_db_path="data/vector_db",
+    similarity_top_k=5
+)
+
+# Retrieve relevant information
+context = retriever.retrieve(
+    query="What are effective strategies for teaching math concepts?"
+)
+
+# Create a complete search-augmented generation system
+from src.llm.handlers.openai_handler import OpenAIHandler
+
+llm = OpenAIHandler(model="gpt-4")
+answer = llm.generate_with_context(
+    query="What are effective strategies for teaching math concepts?",
+    context=context
+)
 ```
 
-## 🔧 Customization Options
+## 🌐 Web Application Integration
 
-### Extension Points
-```mermaid
-graph TD
-    subgraph Customization[Customization Points]
-        Templates[Prompt Templates]
-        Scenarios[Teaching Scenarios]
-        Models[LLM Models]
-        Metrics[Evaluation Metrics]
-        UI[User Interface]
-    end
+The framework provides ready-to-use utilities for integrating with web applications.
 
-    Templates --> Core[Core System]
-    Scenarios --> Core
-    Models --> Core
-    Metrics --> Core
-    UI --> Core
+### Flask Integration
 
-    style Customization fill:#e3f2fd,stroke:#1565c0
-    style Core fill:#f3e5f5,stroke:#4a148c
+```python
+from flask import Flask, request, jsonify
+from src.web.flask_integration import create_chatbot_endpoint
+
+app = Flask(__name__)
+
+# Create chatbot endpoint
+create_chatbot_endpoint(
+    app=app,
+    route="/api/chat",
+    llm_handler="openai",
+    retriever="llama_index",
+    vector_db_path="data/vector_db"
+)
+
+if __name__ == "__main__":
+    app.run(debug=True)
 ```
 
-### Custom Components
-1. **Prompt Templates**
-   - Teaching scenario templates
-   - Feedback generation templates
-   - Student response templates
+### Streamlit Integration
 
-2. **Teaching Scenarios**
-   - Subject-specific scenarios
-   - Grade-level adaptations
-   - Special education scenarios
+```python
+import streamlit as st
+from src.web.streamlit_integration import ChatbotUI
 
-3. **Model Integration**
-   - Alternative LLM models
-   - Custom embeddings
-   - Specialized tokenizers
+# Initialize the chatbot UI
+chatbot_ui = ChatbotUI(
+    title="Educational Assistant",
+    llm_handler="anthropic",
+    retriever="llama_index",
+    vector_db_path="data/vector_db"
+)
 
-4. **Evaluation Metrics**
-   - Custom scoring systems
-   - Domain-specific metrics
-   - Progress tracking methods
+# Run the UI
+chatbot_ui.run()
+```
 
-5. **Interface Customization**
-   - Custom UI themes
-   - Alternative interfaces
-   - API extensions 
+## 📊 Case Study: UTTA Implementation
+
+The Utah Teacher Training Assistant (UTTA) is an implementation of this framework for teacher education. Here's how it utilizes the framework components:
+
+```python
+# Import necessary components
+from src.core.document_processor import DocumentProcessor
+from src.core.vector_database import VectorDatabase
+from src.llm.handlers.openai_handler import OpenAIHandler
+from src.retrieval.llama_index.integration import LlamaIndexRetriever
+from src.web.streamlit_integration import ChatbotUI
+
+# Process educational documents
+processor = DocumentProcessor()
+education_docs = processor.process_directory("data/education_documents/")
+
+# Create and populate vector database
+vector_db = VectorDatabase(embedding_model="all-MiniLM-L6-v2")
+vector_db.add_documents(education_docs)
+
+# Set up LLM handler with education-specific prompts
+llm = OpenAIHandler(
+    model="gpt-4",
+    system_message="You are an expert teacher mentor providing guidance on classroom management and teaching strategies."
+)
+
+# Create knowledge retriever
+retriever = LlamaIndexRetriever(vector_db=vector_db)
+
+# Create scenario generator
+def generate_scenario(grade_level, topic, difficulty):
+    """Generate a realistic classroom scenario."""
+    prompt = f"Create a realistic classroom scenario for a grade {grade_level} class about {topic} with {difficulty} difficulty."
+    return llm.generate(prompt)
+
+# Create response evaluator
+def evaluate_response(scenario, teacher_response):
+    """Evaluate a teacher's response to a scenario."""
+    # Retrieve relevant teaching strategies
+    context = retriever.retrieve(scenario)
+    
+    # Evaluate using LLM with context
+    evaluation_prompt = f"""
+    Scenario: {scenario}
+    Teacher Response: {teacher_response}
+    
+    Based on educational best practices, evaluate this response on:
+    1. Effectiveness
+    2. Student-centeredness
+    3. Clarity
+    4. Appropriateness
+    
+    Provide specific suggestions for improvement.
+    """
+    
+    return llm.generate_with_context(evaluation_prompt, context)
+
+# Create a simple API for the UTTA system
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+@app.route("/api/scenario", methods=["POST"])
+def create_scenario():
+    data = request.json
+    scenario = generate_scenario(
+        data.get("grade_level", 5),
+        data.get("topic", "classroom management"),
+        data.get("difficulty", "medium")
+    )
+    return jsonify({"scenario": scenario})
+
+@app.route("/api/evaluate", methods=["POST"])
+def evaluate_teacher_response():
+    data = request.json
+    evaluation = evaluate_response(
+        data.get("scenario", ""),
+        data.get("response", "")
+    )
+    return jsonify({"evaluation": evaluation})
+
+if __name__ == "__main__":
+    app.run(debug=True)
+```
+
+This implementation showcases how the framework can be used to create a specialized educational application that helps teachers practice classroom scenarios and receive feedback.
+
+## 🔍 Testing and Evaluation
+
+The framework includes utilities for testing and evaluating chatbot performance.
+
+```python
+from tools.performance_testing.evaluator import ChatbotEvaluator
+
+# Initialize the evaluator
+evaluator = ChatbotEvaluator(
+    llm_handler="openai",
+    retriever="llama_index",
+    vector_db_path="data/vector_db"
+)
+
+# Define test cases
+test_cases = [
+    {
+        "query": "What are effective strategies for classroom management?",
+        "expected_topics": ["classroom management", "student behavior", "teaching strategies"]
+    },
+    {
+        "query": "How can I help students with math anxiety?",
+        "expected_topics": ["math anxiety", "student support", "teaching mathematics"]
+    }
+]
+
+# Run evaluation
+results = evaluator.evaluate(test_cases)
+
+# Print results
+for result in results:
+    print(f"Query: {result['query']}")
+    print(f"Response: {result['response']}")
+    print(f"Relevance Score: {result['relevance_score']}")
+    print(f"Topic Coverage: {result['topic_coverage']}")
+    print("---")
+```
+
+## 📝 Troubleshooting and FAQs
+
+### Common Issues
+
+#### API Key Authentication Errors
+If you encounter authentication errors, ensure that your API keys are correctly set in the `.env` file.
+
+#### Vector Database Performance
+For large document collections, consider:
+- Using a more efficient embedding model
+- Increasing chunk size to reduce the number of vectors
+- Enabling HNSW indexing for faster search
+
+#### Memory Usage
+When processing large documents, you may encounter memory issues. Solutions include:
+- Processing documents in smaller batches
+- Reducing chunk overlap
+- Using a streaming approach for document processing
+
+### Frequently Asked Questions
+
+#### Can I use local LLMs?
+Yes, the framework supports local LLMs through the `LocalLLMHandler` class. You'll need to have the model files available locally and sufficient computational resources.
+
+#### How do I add custom document types?
+Extend the `DocumentProcessor` class with a custom method for your document type:
+
+```python
+from src.core.document_processor import DocumentProcessor
+
+class CustomDocumentProcessor(DocumentProcessor):
+    def process_custom_format(self, file_path):
+        # Custom processing logic
+        # ...
+        return chunks
+```
+
+#### Can I use multiple knowledge bases?
+Yes, you can create multiple vector databases and use them with different retrievers:
+
+```python
+education_db = VectorDatabase(persist_directory="data/education_db")
+healthcare_db = VectorDatabase(persist_directory="data/healthcare_db")
+
+education_retriever = LlamaIndexRetriever(vector_db=education_db)
+healthcare_retriever = LlamaIndexRetriever(vector_db=healthcare_db)
+```
+
+## 🤝 Contributing
+
+Contributions to the framework are welcome! Please review our [Contributing Guide](Contributing) for details on the development process, code standards, and submission guidelines. 
