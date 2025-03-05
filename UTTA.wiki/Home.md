@@ -1,6 +1,6 @@
 # Generative AI with LLMs: From Foundations to Applications
 
-[![Python Version](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/downloads/)
+[![Python Version](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/UVU-AI-Innovate/UTTA/blob/main/LICENSE)
 [![Documentation](https://img.shields.io/badge/docs-wiki-orange.svg)](https://github.com/UVU-AI-Innovate/UTTA/wiki)
 [![Last Updated](https://img.shields.io/badge/last%20updated-April%202024-blue.svg)]()
@@ -58,7 +58,7 @@ Welcome to our comprehensive textbook on Generative AI with Large Language Model
 
 | Component | Minimum | Recommended |
 |-----------|---------|-------------|
-| Python | [![Python 3.8](https://img.shields.io/badge/python-3.8-blue.svg)](https://www.python.org/downloads/) | [![Python 3.10](https://img.shields.io/badge/python-3.10-blue.svg)](https://www.python.org/downloads/) |
+| Python | [![Python 3.10](https://img.shields.io/badge/python-3.10-blue.svg)](https://www.python.org/downloads/) | [![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/downloads/) |
 | RAM | ![RAM](https://img.shields.io/badge/RAM-8GB-yellow.svg) | ![RAM](https://img.shields.io/badge/RAM-16GB-green.svg) |
 | Storage | ![Storage](https://img.shields.io/badge/Storage-10GB-yellow.svg) | ![Storage](https://img.shields.io/badge/Storage-20GB-green.svg) |
 | GPU | ![GPU](https://img.shields.io/badge/GPU-Optional-lightgrey.svg) | ![GPU](https://img.shields.io/badge/GPU-CUDA-green.svg) |
@@ -96,12 +96,4 @@ We welcome contributions to improve this textbook! If you have suggestions, corr
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/UVU-AI-Innovate/UTTA/blob/main/LICENSE)
 
-This project is licensed under the MIT License - see the [LICENSE](https://github.com/UVU-AI-Innovate/UTTA/blob/main/LICENSE) file for details.
-
----
-
-<div align="center">
-
-[Home](Home) | [Getting Started](Introduction-to-GenAI-for-Education) | [Core Technologies](NLP-Fundamentals) | [Applications](Chatbot-Development)
-
-</div> 
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/UVU-AI-Innovate/UTTA/blob/main/LICENSE) file for details. 
