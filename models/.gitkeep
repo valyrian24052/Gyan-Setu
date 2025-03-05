@@ -1,9 +1,0 @@
-# This directory is for storing local LLM model files
-# Place your Llama 3 GGUF files here
-
-# Recommended model files:
-# - llama-3-8b.gguf (smaller, faster)
-# - llama-3-70b.gguf (larger, more capable)
-
-# These large binary files should not be tracked in version control
-# Add *.gguf to your .gitignore file 
