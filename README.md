@@ -199,4 +199,16 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-This project is licensed under the MIT License. For details, see the [LICENSE](./LICENSE) file in this repository. 
+This project is licensed under the [MIT License](./LICENSE).
+
+Copyright (c) 2025 UVU-AI-Innovate
+
+The MIT License is a permissive license that allows you to:
+- Use the software for commercial purposes
+- Modify the software
+- Distribute the software
+- Use and modify the software privately
+
+Under the condition that the original copyright and license notice are included in any copy of the software/source.
+
+The software is provided "as is", without warranty of any kind. 
