@@ -5,7 +5,7 @@
 [![Documentation](https://img.shields.io/badge/docs-wiki-orange.svg)](https://github.com/UVU-AI-Innovate/UTTA/wiki)
 [![Last Updated](https://img.shields.io/badge/last%20updated-April%202024-blue.svg)]()
 
-Welcome to our comprehensive textbook on Generative AI with Large Language Models (LLMs)! This course provides a structured learning path from foundational concepts to advanced applications, using the Utah Teacher Training Assistant (UTTA) project as a practical case study throughout.
+Welcome to our comprehensive wiki on Generative AI with Large Language Models (LLMs)! This course provides a structured learning path from foundational concepts to advanced applications, using the Utah Teacher Training Assistant (UTTA) project as a practical case study throughout.
 
 ## 📚 Course Structure
 
