@@ -1,4 +1,4 @@
-# LLM-Based Chatbot Development Framework
+# LLM-Based Chatbot Development
 
 ## Overview
 
