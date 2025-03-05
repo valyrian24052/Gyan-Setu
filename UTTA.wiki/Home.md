@@ -96,4 +96,30 @@ We welcome contributions to improve this textbook! If you have suggestions, corr
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/UVU-AI-Innovate/UTTA/blob/main/LICENSE)
 
-This project is licensed under the MIT License - see the [LICENSE](https://github.com/UVU-AI-Innovate/UTTA/blob/main/LICENSE) file for details. 
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/UVU-AI-Innovate/UTTA/blob/main/LICENSE) file for details.
+
+---
+
+<div align="center">
+
+### 📚 Navigation
+
+[Home](Home) • [Getting Started](Introduction-to-GenAI-for-Education) • [Architecture](Architecture-Guide) • [Implementation](Implementation-Guide)
+
+### 🔍 Quick Links
+
+[Report an Issue](https://github.com/UVU-AI-Innovate/UTTA/issues) • [Make a Contribution](Contributing) • [Join Discussion](https://github.com/UVU-AI-Innovate/UTTA/discussions)
+
+### 📖 Documentation Status
+
+[![Documentation Status](https://img.shields.io/badge/docs-current-brightgreen.svg)](https://github.com/UVU-AI-Innovate/UTTA/wiki)
+[![Last Updated](https://img.shields.io/badge/last%20updated-April%202024-blue.svg)]()
+[![Made with Love](https://img.shields.io/badge/made%20with-❤️-red.svg)](https://github.com/UVU-AI-Innovate/UTTA)
+
+</div>
+
+---
+
+<div align="center">
+<sub>© 2024 Utah Valley University AI Innovate. All rights reserved.</sub>
+</div> 

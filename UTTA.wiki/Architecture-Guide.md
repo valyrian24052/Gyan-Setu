@@ -102,66 +102,135 @@ graph TB
 
 ## 📊 Data Flow
 
-### Process Flow
-```mermaid
-graph TB
-    Input[1. User Input] --> Process[2. Processing]
-    Process --> Engine[3. Core Engine]
-    Engine --> Knowledge[4. Knowledge Integration]
-    Knowledge --> Response[5. Response Generation]
-    Response --> UI[6. UI Update]
+The UTTA system follows a structured data flow pattern that processes user inputs through multiple stages to generate appropriate educational responses.
 
-    style Input fill:#bbdefb
-    style Process fill:#c8e6c9
-    style Engine fill:#f8bbd0
-    style Knowledge fill:#e1bee7
-    style Response fill:#ffe0b2
-    style UI fill:#b2dfdb
+### Process Flow Diagram
+
+```mermaid
+flowchart TD
+    A[User Input] --> B[Text Processing]
+    B --> C[Core Engine]
+    C --> D[Knowledge Retrieval]
+    D --> E[Response Generation]
+    E --> F[UI Presentation]
+
+    classDef blue fill:#bbdefb,stroke:#1976d2
+    classDef green fill:#c8e6c9,stroke:#388e3c
+    classDef pink fill:#f8bbd0,stroke:#c2185b
+    classDef purple fill:#e1bee7,stroke:#7b1fa2
+    classDef orange fill:#ffe0b2,stroke:#f57c00
+    classDef teal fill:#b2dfdb,stroke:#00796b
+
+    class A blue
+    class B green
+    class C pink
+    class D purple
+    class E orange
+    class F teal
 ```
+
+### Component Flow
+
+Each stage in the process flow serves a specific purpose:
+
+1. **User Input**
+   - Captures text input from teachers
+   - Handles various input formats
+   - Validates input parameters
+
+2. **Text Processing**
+   - Tokenization and normalization
+   - Language detection
+   - Intent classification
+
+3. **Core Engine**
+   - LLM integration
+   - Context management
+   - Prompt optimization
+
+4. **Knowledge Retrieval**
+   - Vector database queries
+   - Semantic search
+   - Context ranking
+
+5. **Response Generation**
+   - Template selection
+   - Content generation
+   - Response validation
+
+6. **UI Presentation**
+   - Format response
+   - Apply styling
+   - Handle interactions
 
 ## 🔌 Integration Points
 
 ### Component Interfaces
-- **Event-Driven Communication**
-  ```json
-  {
-    "event_type": "teaching_response",
-    "data": {
-      "input": "teacher_action",
-      "context": "scenario_details",
-      "timestamp": "iso_datetime"
-    }
-  }
-  ```
 
-- **API Endpoints**
-  ```yaml
-  /api/v1:
-    /scenarios:
-      - GET: List available scenarios
-      - POST: Create new scenario
-    /responses:
-      - POST: Submit teaching response
-      - GET: Get feedback
-    /progress:
-      - GET: View teaching progress
-  ```
+1. **Event-Driven Communication**
+   - WebSocket connections for real-time updates
+   - Event queues for asynchronous processing
+   - State management broadcasts
 
-### Extension Guidelines
-1. **Interface Standards**
-   - Use standard event formats
-   - Follow REST principles
-   - Implement error handling
+2. **API Endpoints**
+   - REST APIs for CRUD operations
+   - GraphQL interface for complex queries
+   - Streaming endpoints for continuous data
 
-2. **Architecture Patterns**
-   - Event-driven design
-   - Microservices approach
-   - Loose coupling
+3. **Database Connections**
+   - Vector store for embeddings
+   - Document store for content
+   - Cache layer for performance
 
-3. **Documentation**
-   - API specifications
-   - Event schemas
-   - Integration examples
+### System Integration
+
+```mermaid
+flowchart LR
+    UI[Frontend UI] <--> API[API Layer]
+    API <--> Engine[Core Engine]
+    Engine <--> DB[(Knowledge Base)]
+    Engine <--> LLM[LLM Service]
+
+    classDef component fill:#e3f2fd,stroke:#1565c0
+    classDef service fill:#f3e5f5,stroke:#6a1b9a
+    
+    class UI,API component
+    class Engine,DB,LLM service
+```
+
+## 🔐 Security Layer
+
+1. **Authentication**
+   - JWT token validation
+   - Role-based access control
+   - Session management
+
+2. **Data Protection**
+   - Encryption at rest
+   - Secure communication channels
+   - PII data handling
+
+3. **Monitoring**
+   - Access logs
+   - Error tracking
+   - Performance metrics
+
+## 📈 Scalability Design
+
+1. **Horizontal Scaling**
+   - Load balancing
+   - Service replication
+   - Distributed caching
+
+2. **Resource Management**
+   - Auto-scaling policies
+   - Resource quotas
+   - Performance optimization
+
+3. **High Availability**
+   - Failover mechanisms
+   - Data replication
+   - Health monitoring
 
 ## 🚀 Deployment Architecture
 
@@ -229,3 +298,29 @@ graph TB
    - Inference latency
    - Token throughput
    - Memory efficiency 
+
+---
+
+<div align="center">
+
+### 📚 Navigation
+
+[Home](Home) • [Getting Started](Introduction-to-GenAI-for-Education) • [Architecture](Architecture-Guide) • [Implementation](Implementation-Guide)
+
+### 🔍 Quick Links
+
+[Report an Issue](https://github.com/UVU-AI-Innovate/UTTA/issues) • [Make a Contribution](Contributing) • [Join Discussion](https://github.com/UVU-AI-Innovate/UTTA/discussions)
+
+### 📖 Documentation Status
+
+[![Documentation Status](https://img.shields.io/badge/docs-current-brightgreen.svg)](https://github.com/UVU-AI-Innovate/UTTA/wiki)
+[![Last Updated](https://img.shields.io/badge/last%20updated-April%202024-blue.svg)]()
+[![Made with Love](https://img.shields.io/badge/made%20with-❤️-red.svg)](https://github.com/UVU-AI-Innovate/UTTA)
+
+</div>
+
+---
+
+<div align="center">
+<sub>© 2024 Utah Valley University AI Innovate. All rights reserved.</sub>
+</div> 
