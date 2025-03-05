@@ -86,37 +86,6 @@ sequenceDiagram
     end
 ```
 
-### Component Architecture
-
-```mermaid
-graph TB
-    UI[Streamlit Interface] --> Core[Core Engine]
-    Core --> Knowledge[Knowledge Base]
-    Core --> LLM[LLM Service]
-    
-    subgraph Core
-        State[Session State]
-        Process[Text Processing]
-        Context[Context Management]
-    end
-
-    subgraph Knowledge
-        ChromaDB[Vector Store]
-        Files[Document Store]
-        Cache[Streamlit Cache]
-    end
-
-    subgraph LLM
-        OpenAI[OpenAI API]
-        SBERT[Sentence Transformers]
-    end
-
-    style UI fill:#f0f7ff,stroke:#1976d2
-    style Core fill:#e8f5e9,stroke:#2e7d32
-    style Knowledge fill:#fff3e0,stroke:#ef6c00
-    style LLM fill:#f3e5f5,stroke:#6a1b9a
-```
-
 ### Core Components
 
 1. **Streamlit Interface**
