@@ -1,4 +1,4 @@
-# UTTA System Architecture
+# Architecture Guide
 
 ## Overview
 
