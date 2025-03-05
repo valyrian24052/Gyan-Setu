@@ -1,16 +1,18 @@
-# Generative AI with LLMs: From Foundations to Applications
+# LLM-Based Chatbot Development Framework
 
 [![Python Version](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/UVU-AI-Innovate/UTTA/blob/main/LICENSE)
-[![Documentation](https://img.shields.io/badge/docs-wiki-orange.svg)](https://github.com/UVU-AI-Innovate/UTTA/wiki)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/UVU-AI-Innovate/LLM-Based-Chatbot-Development-Framework/blob/main/LICENSE)
+[![Documentation](https://img.shields.io/badge/docs-wiki-orange.svg)](https://github.com/UVU-AI-Innovate/LLM-Based-Chatbot-Development-Framework/wiki)
 [![Last Updated](https://img.shields.io/badge/last%20updated-April%202024-blue.svg)]()
 
-Welcome to our comprehensive wiki on Generative AI with Large Language Models (LLMs)! This course provides a structured learning path from foundational concepts to advanced applications, using the Utah Teacher Training Assistant (UTTA) project as a practical case study throughout.
+Welcome to our comprehensive wiki on developing advanced LLM-based chatbots with sophisticated knowledge retrieval capabilities! This framework provides a structured approach to building domain-specific AI assistants that leverage both general LLM capabilities and specialized knowledge bases.
 
-## 📚 Course Structure
+The **Utah Teacher Training Assistant (UTTA)** is featured as a complete case study throughout the documentation - a practical implementation of the framework for educational purposes. This system provides realistic classroom management scenarios for elementary education teachers, showcasing how domain-specific knowledge can be integrated with LLMs to create powerful, context-aware applications.
+
+## 📚 Framework Structure
 
 ### 🎯 Getting Started
-- [Introduction to GenAI for Education](Introduction-to-GenAI-for-Education)
+- [Introduction to LLM Chatbots](Introduction-to-GenAI-for-Education)
 - [Architecture Guide](Architecture-Guide)
 - [Implementation Guide](Implementation-Guide)
 - [Deployment Guide](Deployment-Guide)
@@ -31,14 +33,14 @@ Welcome to our comprehensive wiki on Generative AI with Large Language Models (L
    - [Knowledge Applications](Knowledge-Applications)
 
 ### 🤖 Applications
-1. **Educational Systems**
+1. **Chatbot Development**
    - [Chatbot Development](Chatbot-Development)
    - [Educational Content](Educational-Content)
 
 ## 📊 Learning Path
 
 ### Beginner Level
-1. Start with [Introduction to GenAI for Education](Introduction-to-GenAI-for-Education)
+1. Start with [Introduction to LLM Chatbots](Introduction-to-GenAI-for-Education)
 2. Review [Architecture Guide](Architecture-Guide)
 3. Study [NLP Fundamentals](NLP-Fundamentals)
 4. Explore [Knowledge Base Overview](Knowledge-Base-Overview)
@@ -63,37 +65,36 @@ Welcome to our comprehensive wiki on Generative AI with Large Language Models (L
 | Storage | ![Storage](https://img.shields.io/badge/Storage-10GB-yellow.svg) | ![Storage](https://img.shields.io/badge/Storage-20GB-green.svg) |
 | GPU | ![GPU](https://img.shields.io/badge/GPU-Optional-lightgrey.svg) | ![GPU](https://img.shields.io/badge/GPU-CUDA-green.svg) |
 
-## 🛠️ Practical Projects
+## 🛠️ Framework Components
 
-Throughout this textbook, you'll build components of a practical GenAI system:
+This framework provides all the components needed to build a sophisticated LLM-based chatbot:
 
-1. **Development Environment**: Configure local and server environments
-2. **Text Processing Pipeline**: Build a system for processing raw text
+1. **Document Processing Pipeline**: Process various document formats (PDF, EPUB, TXT, JSON)
+2. **Vector Knowledge Base**: Store and retrieve information using semantic search
 3. **Embedding Generator**: Create and visualize vector representations
-4. **LLM Integration**: Connect with and optimize language models
+4. **LLM Integration**: Connect with OpenAI, Anthropic, and local LLM models
 5. **Knowledge Retrieval System**: Implement efficient semantic search
-6. **Educational Chatbot**: Build a complete conversational assistant
+6. **Web Application Integration**: Ready-to-use utilities for Flask and FastAPI
 7. **Evaluation Framework**: Assess and improve system performance
 
-## 📊 Learning Approach
+## 📊 Case Study: UTTA
 
-This textbook follows a comprehensive learning approach:
+The Utah Teacher Training Assistant (UTTA) demonstrates the framework's capabilities:
 
-1. **Core concepts** explained with clear theoretical foundations
-2. **Practical implementations** with real-world code examples
-3. **Case study applications** showing concepts applied to the UTTA project
-4. **Hands-on exercises** for practicing key techniques
-5. **Chapter projects** to build integrated components
+1. **Domain-Specific Knowledge**: Educational content for teacher training
+2. **Realistic Scenarios**: Classroom management situations for practice
+3. **Performance Tracking**: Monitoring which knowledge is most effective
+4. **Customized Responses**: Tailored feedback based on teacher interactions
 
 ## 🤝 Contributing
 
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](Contributing)
 [![Contributors](https://img.shields.io/badge/contributors-welcome-blue.svg)](Contributing)
 
-We welcome contributions to improve this textbook! If you have suggestions, corrections, or additional content you'd like to contribute, please see our [Contributing Guide](Contributing).
+We welcome contributions to improve this framework and documentation! If you have suggestions, corrections, or additional content you'd like to contribute, please see our [Contributing Guide](Contributing).
 
 ## 📄 License
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/UVU-AI-Innovate/UTTA/blob/main/LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/UVU-AI-Innovate/LLM-Based-Chatbot-Development-Framework/blob/main/LICENSE)
 
-This project is licensed under the MIT License - see the [LICENSE](https://github.com/UVU-AI-Innovate/UTTA/blob/main/LICENSE) file for details. 
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/UVU-AI-Innovate/LLM-Based-Chatbot-Development-Framework/blob/main/LICENSE) file for details. 

@@ -1,22 +1,32 @@
-# Building Educational Chatbots
+# Building LLM-Based Chatbots with Knowledge Retrieval
 
 [![Status](https://img.shields.io/badge/status-complete-green.svg)]() 
-[![Last Updated](https://img.shields.io/badge/last%20updated-February%202024-blue.svg)]()
+[![Last Updated](https://img.shields.io/badge/last%20updated-April%202024-blue.svg)]()
 
 ## Learning Objectives
 
 By the end of this guide, you'll be able to:
-- Design educational chatbot architectures that support effective learning experiences
-- Implement conversation management systems for tracking context and student progress
-- Create personalization strategies that adapt to individual learning needs
-- Build comprehensive assessment and feedback mechanisms
-- Deploy and evaluate educational chatbots in real-world scenarios
+- Design sophisticated chatbot architectures with knowledge retrieval capabilities
+- Implement conversation management systems for tracking context and user interactions
+- Create personalization strategies that adapt to specific domain requirements
+- Build comprehensive knowledge integration and retrieval mechanisms
+- Deploy and evaluate LLM-based chatbots in real-world scenarios
 
-## Educational Chatbot Architecture
+## LLM-Based Chatbot Architecture
 
-### Interaction Flow
+### Core Components
 
-The core architecture of an educational chatbot follows this pattern:
+The framework architecture consists of these essential components:
+
+1. **Document Processing Pipeline**: Processes various document formats to extract domain knowledge
+2. **Vector Knowledge Base**: Stores and retrieves information using semantic search
+3. **LLM Integration Layer**: Connects with various LLM providers (OpenAI, Anthropic, etc.)
+4. **Conversation Manager**: Maintains context and manages the flow of interactions
+5. **Response Generator**: Creates coherent and contextually relevant responses
+
+### Case Study: UTTA
+
+The Utah Teacher Training Assistant (UTTA) implements this architecture for educational purposes:
 
 ```mermaid
 graph LR

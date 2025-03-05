@@ -1,22 +1,22 @@
-# Introduction to GenAI for Education
+# Introduction to LLM-Based Chatbots
 
 [![Status](https://img.shields.io/badge/status-complete-green.svg)]() 
 [![Last Updated](https://img.shields.io/badge/last%20updated-April%202024-blue.svg)]()
 
 ## Overview
 
-This guide introduces Generative AI (GenAI) technologies for educational applications, with a focus on how these tools can enhance teaching, learning, and educational content development. Using the Utah Teacher Training Assistant (UTTA) project as a case study, we'll explore practical implementations of GenAI in educational contexts.
+This guide introduces Large Language Model (LLM) based chatbot development, with a focus on building sophisticated conversational agents with knowledge retrieval capabilities. We'll explore the fundamental concepts, architecture, and implementation strategies for creating domain-specific AI assistants. The Utah Teacher Training Assistant (UTTA) project is featured as a practical case study throughout, demonstrating how these technologies can be applied in educational contexts.
 
 ## Learning Objectives
 
 By the end of this guide, you'll be able to:
-- Understand the fundamental concepts of Generative AI and its educational applications
-- Set up a basic development environment for educational GenAI projects
-- Identify opportunities to enhance teaching and learning with AI technologies
-- Implement simple GenAI applications for educational contexts
-- Apply best practices for responsible AI use in education
+- Understand the fundamental concepts of LLM-based chatbots and their applications
+- Set up a development environment for chatbot projects
+- Identify opportunities for domain-specific knowledge integration
+- Implement basic chatbot applications with knowledge retrieval
+- Apply best practices for responsible AI use in conversational systems
 
-## 1. What is Generative AI?
+## 1. What are LLM-Based Chatbots?
 
 Generative AI refers to artificial intelligence systems that can create new content, including text, images, audio, and more. In educational contexts, these systems can:
 
