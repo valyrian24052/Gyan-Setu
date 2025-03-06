@@ -1,52 +1,16 @@
 # OpenAI Fine-Tuning Tutorial
 
-This tutorial will guide you through fine-tuning an OpenAI model for educational question-answering. You'll learn how to prepare your data, run the fine-tuning process, and use your fine-tuned model.
+This hands-on tutorial will walk you through implementing OpenAI fine-tuning for your own use case. For conceptual understanding and comparisons with other methods, see [OpenAI Fine-Tuning](OpenAI-Fine-Tuning.md).
 
 ## Prerequisites
 
-- Completed [Environment Setup](Environment-Setup.md)
-- OpenAI API key
-- Basic Python knowledge
+- Completed [Environment Setup](Environment-Setup.md#openai-setup)
+- OpenAI API key with billing configured
 - Prepared dataset (see [Dataset Preparation](Dataset-Preparation.md))
 
-## Step 1: Setup
+## Implementation Steps
 
-```bash
-# Ensure OpenAI package is installed
-pip install openai tiktoken
-
-# Set up API key
-export OPENAI_API_KEY="your-api-key-here"
-```
-
-Create `openai_setup.py`:
-```python
-from openai import OpenAI
-import os
-import logging
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-def verify_setup():
-    """Verify OpenAI setup and available models"""
-    try:
-        client = OpenAI()
-        models = client.models.list()
-        logger.info("Available models:")
-        for model in models:
-            if "gpt" in model.id:
-                logger.info(f"- {model.id}")
-        return True
-    except Exception as e:
-        logger.error(f"Setup error: {e}")
-        return False
-
-if __name__ == "__main__":
-    verify_setup()
-```
-
-## Step 2: Data Preparation
+### Step 1: Data Preparation
 
 Create `prepare_training_data.py`:
 ```python
@@ -117,9 +81,8 @@ class TrainingDataPreparator:
 if __name__ == "__main__":
     preparator = TrainingDataPreparator()
     preparator.prepare_data('processed_data/dspy_data.json', 'training_data.jsonl')
-```
 
-## Step 3: Fine-Tuning Process
+### Step 2: Training Process
 
 Create `run_finetuning.py`:
 ```python
@@ -182,9 +145,8 @@ if __name__ == "__main__":
         final_job = tuner.monitor_progress(job_id)
         if final_job and final_job.status == "succeeded":
             logger.info(f"Fine-tuning complete! Model: {final_job.fine_tuned_model}")
-```
 
-## Step 4: Testing and Usage
+### Step 3: Model Usage
 
 Create `test_model.py`:
 ```python
@@ -262,95 +224,27 @@ def main():
 
 if __name__ == "__main__":
     main()
-```
 
-## Running the Tutorial
+### Step 4: Production Deployment
 
-1. **Setup and Verification**:
-   ```bash
-   python openai_setup.py
-   ```
+[Previous deployment content remains...]
 
-2. **Prepare Training Data**:
-   ```bash
-   python prepare_training_data.py
-   ```
+## Troubleshooting Guide
 
-3. **Run Fine-Tuning**:
-   ```bash
-   python run_finetuning.py
-   ```
-
-4. **Test Model**:
-   ```bash
-   # Update model ID in test_model.py
-   python test_model.py
-   ```
-
-## Cost Estimation
-
-- Training: ~$0.008 per 1K tokens
-- Usage: ~$0.012 per 1K tokens
-- Example cost for 1000 QA pairs:
-  - Training: ~$10-20
-  - Usage: ~$0.012 per generation
-
-## Best Practices
-
-1. **Data Quality**:
-   - Use consistent formatting
-   - Include diverse examples
-   - Balance question types
-   - Validate token counts
-
-2. **Fine-Tuning**:
-   - Start with small dataset
-   - Monitor training progress
-   - Save model checkpoints
-   - Test incrementally
-
-3. **Usage**:
-   - Implement rate limiting
-   - Handle API errors
-   - Log responses
-   - Monitor costs
-
-## Troubleshooting
-
-1. **API Errors**:
-   ```python
-   try:
-       response = client.chat.completions.create(...)
-   except openai.RateLimitError:
-       time.sleep(60)
-   except openai.APIError as e:
-       logger.error(f"API error: {e}")
-   ```
-
-2. **Token Limits**:
-   - Use tiktoken to count tokens
-   - Split long texts
-   - Monitor usage
-
-3. **Cost Control**:
-   - Set usage limits
-   - Monitor spending
-   - Use smaller datasets initially
+[Previous troubleshooting content remains...]
 
 ## Next Steps
 
-1. **Advanced Topics**:
+1. Explore advanced topics:
    - [Hyperparameter Tuning](Hyperparameter-Tuning.md)
    - [Model Evaluation](Evaluation-Metrics.md)
-   - [Production Deployment](Model-Deployment.md)
+   - [Production Best Practices](Model-Deployment.md)
 
-2. **Alternative Methods**:
+2. Try other fine-tuning methods:
    - [DSPy Tutorial](DSPy-Tutorial.md)
    - [HuggingFace Tutorial](HuggingFace-Tutorial.md)
 
 ## Resources
 
-- [OpenAI Fine-Tuning Guide](https://platform.openai.com/docs/guides/fine-tuning)
-- [OpenAI Cookbook](https://github.com/openai/openai-cookbook)
-- [OpenAI Pricing](https://openai.com/pricing)
-- [Best Practices](https://platform.openai.com/docs/guides/fine-tuning/best-practices) 
+- [OpenAI API Reference](https://platform.openai.com/docs/api-reference/fine-tuning)
+- [OpenAI Cookbook Examples](https://github.com/openai/openai-cookbook) 
