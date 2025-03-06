@@ -55,6 +55,33 @@ llm-chatbot-framework/
 
 ## Installation
 
+### Using Conda (Recommended)
+
+1. Clone the repository:
+   ```
+   git clone https://github.com/yourusername/llm-chatbot-framework.git
+   cd llm-chatbot-framework
+   ```
+
+2. Create and activate the conda environment:
+   ```
+   conda create -n utta python=3.10
+   conda activate utta
+   ```
+
+3. Install dependencies:
+   ```
+   pip install -r requirements.txt
+   ```
+
+4. Fix any environment issues (recommended):
+   ```
+   cd tools/setup
+   bash fix_environment.sh
+   ```
+
+### Using venv (Alternative)
+
 1. Clone the repository:
    ```
    git clone https://github.com/yourusername/llm-chatbot-framework.git
@@ -81,6 +108,20 @@ llm-chatbot-framework/
 
 ## Usage
 
+### Simple Chatbot Example
+
+To run the simple chatbot example:
+
+```bash
+conda activate utta  # If using conda
+cd llm-chatbot-framework
+python examples/simple_chatbot.py
+```
+
+This will:
+1. Initialize a simple vector database with sample knowledge
+2. Start an interactive chat session where you can ask questions about classroom management, instruction, or assessment
+
 ### Teacher Training System Example
 
 The Teacher Training System is an example application that demonstrates how to use the framework to create a system that helps teachers practice classroom scenarios.
@@ -88,6 +129,8 @@ The Teacher Training System is an example application that demonstrates how to u
 To run the Teacher Training System:
 
 ```bash
+conda activate utta  # If using conda
+cd llm-chatbot-framework
 python -m examples.teacher_training.run
 ```
 
@@ -95,6 +138,7 @@ This will:
 1. Process educational documents in `data/sample_documents/`
 2. Build a knowledge base
 3. Start an interactive session where you can practice responding to classroom scenarios
+4. Receive feedback on your teaching strategies and see simulated student responses
 
 ### Creating Your Own Chatbot
 
@@ -135,8 +179,10 @@ from src.core.vector_database import VectorDatabase
 # Initialize with default settings
 db = VectorDatabase()
 
-# Add documents
-db.add_document("Document text", {"source": "example.pdf"})
+# Add documents (note: use add_chunks method)
+db.add_chunks([
+    {"text": "Document text", "metadata": {"source": "example.pdf"}}
+])
 
 # Search for similar documents
 results = db.search("Query text")
@@ -150,13 +196,16 @@ The `DSPyLLMHandler` class provides a unified interface for interacting with lan
 from src.llm.dspy.handler import DSPyLLMHandler
 
 # Initialize with default settings
-handler = DSPyLLMHandler()
+handler = DSPyLLMHandler(model_name="gpt-3.5-turbo")
 
 # Generate text
 response = handler.generate("Explain the concept of differentiated instruction.")
 
-# Answer a question
-answer = handler.answer_question("What are effective classroom management strategies?")
+# Process structured messages
+messages = [
+    {"role": "user", "content": "What are effective classroom management strategies?"}
+]
+answer = handler.get_llm_response(messages)
 ```
 
 ### Document Processor
@@ -192,6 +241,29 @@ retriever.index_documents("path/to/documents")
 # Query the index
 results = retriever.query("What are effective teaching strategies?")
 ```
+
+## Troubleshooting
+
+If you encounter any issues:
+
+1. Make sure you have activated the correct environment:
+   ```
+   conda activate utta
+   ```
+
+2. Run the environment fix script:
+   ```
+   cd llm-chatbot-framework/tools/setup
+   bash fix_environment.sh
+   ```
+
+3. Check the log files for detailed error messages:
+   - General log: `teacher_training.log`
+   - Vector database log: `vector_database.log`
+
+4. Common issues:
+   - Invalid distribution warning: This can be ignored, or fix with `find ~/.local/lib/python3.10/site-packages -name "*-orch*" -type d | xargs rm -rf`
+   - Missing dependencies: Make sure all dependencies are installed with `pip install -r requirements.txt`
 
 ## Contributing
 

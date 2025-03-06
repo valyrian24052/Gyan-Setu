@@ -37,20 +37,20 @@ def main():
     
     # Add some sample knowledge to the vector database
     print("Adding sample knowledge to the database...")
-    vector_db.add_document(
-        "Effective classroom management involves clear expectations and consistent routines.",
-        {"topic": "classroom_management"}
-    )
-    
-    vector_db.add_document(
-        "Differentiated instruction adapts teaching methods to meet diverse student needs.",
-        {"topic": "instruction"}
-    )
-    
-    vector_db.add_document(
-        "Formative assessment provides ongoing feedback to improve learning.",
-        {"topic": "assessment"}
-    )
+    vector_db.add_chunks([
+        {
+            "text": "Effective classroom management involves clear expectations and consistent routines.",
+            "metadata": {"topic": "classroom_management"}
+        },
+        {
+            "text": "Differentiated instruction adapts teaching methods to meet diverse student needs.",
+            "metadata": {"topic": "instruction"}
+        },
+        {
+            "text": "Formative assessment provides ongoing feedback to improve learning.",
+            "metadata": {"topic": "assessment"}
+        }
+    ])
     
     # Simple chat loop
     print("\nSimple Chatbot is ready! Type 'exit' to quit.")
@@ -73,7 +73,7 @@ def main():
         if search_results:
             context = "Based on the following information:\n\n"
             for i, result in enumerate(search_results):
-                context += f"{i+1}. {result['document']}\n"
+                context += f"{i+1}. {result['text']}\n"
         
         # Generate response using LLM
         prompt = f"""

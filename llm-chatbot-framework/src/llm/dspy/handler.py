@@ -999,3 +999,74 @@ class PedagogicalLanguageProcessor:
             logging.error(f"Error generating student reaction: {e}")
             # Return a fallback response in case of error
             return "I'm not sure how to respond to that." 
+
+class DSPyLLMHandler:
+    """
+    A simplified wrapper for DSPy LLM handling functionality.
+    This class serves as the main interface for applications 
+    to interact with the DSPy-based LLM capabilities.
+    """
+    
+    def __init__(self, model_name="gpt-3.5-turbo"):
+        """
+        Initialize the DSPy LLM handler.
+        
+        Args:
+            model_name (str): Name of the LLM model to use
+        """
+        self.interface = EnhancedDSPyLLMInterface(model_name=model_name)
+        
+    def generate(self, prompt):
+        """
+        Generate a response using the LLM.
+        
+        Args:
+            prompt (str): The prompt to send to the LLM
+            
+        Returns:
+            str: The generated response
+        """
+        # Convert simple prompt to messages format
+        messages = [{"role": "user", "content": prompt}]
+        return self.interface.get_llm_response(messages)
+        
+    def get_llm_response(self, messages, output_format=None):
+        """
+        Get a response from the LLM using a structured messages format.
+        
+        Args:
+            messages (list): List of message dictionaries with role and content
+            output_format (dict, optional): Expected output format
+            
+        Returns:
+            str: The generated response
+        """
+        return self.interface.get_llm_response(messages, output_format)
+        
+    def generate_student_reaction(self, teacher_input, student_profile, scenario_context=""):
+        """
+        Generate a simulated student reaction to teacher input.
+        
+        Args:
+            teacher_input (str): The teacher's input or question
+            student_profile (dict): Profile of the student
+            scenario_context (str): Additional context for the scenario
+            
+        Returns:
+            str: The generated student reaction
+        """
+        return self.interface.generate_student_reaction(teacher_input, student_profile, scenario_context)
+        
+    def analyze_teaching_strategies(self, teacher_input, student_profile, scenario_context):
+        """
+        Analyze teaching strategies used in the teacher's input.
+        
+        Args:
+            teacher_input (str): The teacher's input to analyze
+            student_profile (dict): Profile of the student
+            scenario_context (str): Additional context for the scenario
+            
+        Returns:
+            dict: Analysis of the teaching strategies
+        """
+        return self.interface.analyze_teaching_strategies(teacher_input, student_profile, scenario_context) 

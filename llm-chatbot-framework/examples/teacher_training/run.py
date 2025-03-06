@@ -24,6 +24,7 @@ import time
 import json
 import logging
 import argparse
+import importlib
 from pathlib import Path
 from typing import Dict, List, Any, Optional
 
@@ -281,9 +282,26 @@ def main():
         print("\nContinuing with integrated knowledge base from knowledge_base/default_strategies...")
     
     try:
-        # Import the enhanced agent
-        from ai_agent import EnhancedTeacherTrainingAgent
-        from llm_handler import EnhancedLLMInterface, PedagogicalLanguageProcessor
+        # Use existing components instead of importing the missing ai_agent module
+        print("\nInitializing teacher training components...")
+        
+        # Initialize the vector database
+        vector_db = VectorDatabase(db_path=VECTOR_DB_PATH)
+        
+        # Initialize the document processor
+        doc_processor = DocumentProcessor()
+        
+        # Initialize the LLM handler
+        llm_handler = DSPyLLMHandler(model_name="gpt-3.5-turbo")
+        
+        # Initialize the scenario generator
+        scenario_generator = ClassroomScenarioGenerator(vector_db=vector_db, llm=llm_handler)
+        
+        # Initialize the response evaluator
+        evaluator = ResponseEvaluator(vector_db=vector_db, llm_handler=llm_handler)
+        
+        # Initialize the student simulator
+        student_simulator = StudentSimulator(vector_db=vector_db, llm_handler=llm_handler)
         
         # Check if knowledge base exists
         kb_exists = knowledge_base_exists()
@@ -300,70 +318,56 @@ def main():
             print("\nTemporarily using basic strategies from knowledge_base/default_strategies")
             print("until scientific books are added.")
         
-        # Create and run the enhanced agent
-        print("\nInitializing scientific book-based teacher training agent...")
+        # Create a simple interactive session
+        print("\nStarting interactive teacher training session...")
+        print("\nType 'exit' to quit the session.")
         
-        # Try to initialize with use_existing parameter if knowledge base exists
-        try:
-            if kb_exists:
-                agent = EnhancedTeacherTrainingAgent(use_existing=True)
-            else:
-                agent = EnhancedTeacherTrainingAgent()
-                
-            # Ensure LLM system is ready and display comprehensive information
-            print("\nInitializing LLM system...")
+        # Generate a scenario
+        scenario = scenario_generator.generate_scenario()
+        print("\n" + "="*80)
+        print("CLASSROOM SCENARIO".center(80))
+        print("="*80)
+        print(f"\n{scenario['scenario_content']}")
+        
+        while True:
+            # Get teacher input
+            teacher_input = input("\nYour response as a teacher: ")
             
-            # Get Hugging Face token securely
-            hf_token = get_huggingface_token()
+            # Check if user wants to exit
+            if teacher_input.lower() in ["exit", "quit", "bye"]:
+                print("\nThank you for using the teacher training system!")
+                break
             
-            # Choose appropriate model based on token availability
-            if hf_token:
-                model_name = 'meta-llama/Llama-3-8b-hf'  # Gated model requiring authentication
-                print(f"Using {model_name} with authentication")
-            else:
-                model_name = 'microsoft/phi-2'  # Open-access model
-                print(f"Using {model_name} (open-access model)")
+            # Generate student response
+            student_profile = scenario.get('student_profile', {})
+            student_response = student_simulator.generate_student_response(
+                teacher_input=teacher_input,
+                student_profile=student_profile,
+                scenario_context=scenario
+            )
+            print(f"\nStudent: {student_response}")
             
-            processor = PedagogicalLanguageProcessor(
-                model_name=model_name,
-                quantization="8-bit",  # 8-bit quantization for good balance of quality and efficiency
-                token=hf_token         # Token might be None, which is handled by the processor
+            # Evaluate teacher response
+            evaluation = evaluator.evaluate_teacher_response(
+                teacher_response=teacher_input,
+                scenario=scenario,
+                student_state=student_profile
             )
             
-            processor.ensure_server_running()  # This now displays detailed LLM info
+            print("\n" + "="*80)
+            print("FEEDBACK".center(80))
+            print("="*80)
+            print(f"\nStrengths:")
+            for strength in evaluation.get('strengths', []):
+                print(f"- {strength}")
             
-            # Start interactive session
-            agent.start_enhanced_interactive_session()
+            print(f"\nAreas for improvement:")
+            for area in evaluation.get('areas_for_improvement', []):
+                print(f"- {area}")
             
-        except TypeError:
-            # If that doesn't work, try without the parameter
-            agent = EnhancedTeacherTrainingAgent()
+            print(f"\nEffectiveness score: {evaluation.get('effectiveness_score', 0)}/10")
+            print(f"\nRationale: {evaluation.get('rationale', '')}")
             
-            # Ensure LLM system is ready and display comprehensive information
-            print("\nInitializing LLM system...")
-            
-            # Get Hugging Face token securely
-            hf_token = get_huggingface_token()
-            
-            # Choose appropriate model based on token availability
-            if hf_token:
-                model_name = 'meta-llama/Llama-3-8b-hf'  # Gated model requiring authentication
-                print(f"Using {model_name} with authentication")
-            else:
-                model_name = 'microsoft/phi-2'  # Open-access model
-                print(f"Using {model_name} (open-access model)")
-            
-            processor = PedagogicalLanguageProcessor(
-                model_name=model_name,
-                quantization="8-bit",  # 8-bit quantization for good balance of quality and efficiency
-                token=hf_token         # Token might be None, which is handled by the processor
-            )
-            
-            processor.ensure_server_running()  # This now displays detailed LLM info
-            
-            # Start interactive session
-            agent.start_enhanced_interactive_session()
-        
     except ImportError as e:
         logger.error(f"Import error: {e}")
         print(f"\nError importing required modules: {e}")
