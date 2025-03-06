@@ -1,397 +1,502 @@
 # HuggingFace LoRA Fine-Tuning Tutorial
 
-This tutorial provides a step-by-step guide to implementing HuggingFace fine-tuning with LoRA (Low-Rank Adaptation) for educational question-answering. You'll learn how to prepare your data, set up the training environment, implement LoRA fine-tuning, and use your fine-tuned model.
+This tutorial will guide you through fine-tuning a large language model using HuggingFace's PEFT library with LoRA (Low-Rank Adaptation). You'll learn how to prepare your data, implement LoRA fine-tuning, and use your fine-tuned model.
 
 ## Prerequisites
 
-- Python 3.8+
-- CUDA-capable GPU (recommended)
-- Basic understanding of PyTorch and transformers
-- The LLM Fine-Tuning Toolkit installed
+- Completed [Environment Setup](Environment-Setup.md)
+- GPU with 8GB+ VRAM
+- Basic PyTorch knowledge
+- Prepared dataset (see [Dataset Preparation](Dataset-Preparation.md))
 
-## Environment Setup
-
-1. Create a virtual environment and install the required packages:
+## Step 1: Setup
 
 ```bash
-conda create -n utta python=3.8
-conda activate utta
-pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
-pip install transformers datasets peft tqdm evaluate
+# Install required packages
+pip install torch transformers datasets peft evaluate accelerate bitsandbytes
+pip install tensorboard  # for training monitoring
+
+# Verify installations
+python -c "import torch; print(f'CUDA available: {torch.cuda.is_available()}')"
+python -c "import transformers; print(f'Transformers: {transformers.__version__}')"
 ```
 
-2. Verify CUDA is available:
-
+Create `setup_utils.py`:
 ```python
 import torch
-print(f"CUDA available: {torch.cuda.is_available()}")
-print(f"Current device: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'CPU'}")
-```
+import logging
+from transformers import AutoTokenizer, AutoModelForCausalLM
+from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 
-## Dataset Preparation
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-### 1. Create a Sample Dataset
-
-Create `create_dataset.py`:
-
-```python
-import pandas as pd
-from datasets import Dataset
-
-def create_sample_dataset():
-    data = {
-        'instruction': [
-            "Answer the following question about science:",
-            "Explain the following concept:",
-        ],
-        'input': [
-            "What is photosynthesis?",
-            "What is the water cycle?",
-        ],
-        'output': [
-            "Photosynthesis is the process by which plants convert sunlight, water, and carbon dioxide into glucose and oxygen. This process is essential for life on Earth as it provides food for plants and oxygen for all living things.",
-            "The water cycle, also known as the hydrologic cycle, is the continuous movement of water on Earth. It involves processes like evaporation (water turning into vapor), condensation (vapor forming clouds), precipitation (rain or snow), and collection (water gathering in bodies of water or groundwater)."
-        ]
-    }
+class ModelSetup:
+    def __init__(self, model_name="meta-llama/Llama-2-7b-hf"):
+        self.model_name = model_name
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
     
-    # Create DataFrame
-    df = pd.DataFrame(data)
-    
-    # Convert to HuggingFace Dataset
-    dataset = Dataset.from_pandas(df)
-    
-    # Split into train and validation
-    dataset = dataset.train_test_split(test_size=0.2)
-    
-    # Save datasets
-    dataset['train'].save_to_disk('data/train')
-    dataset['test'].save_to_disk('data/validation')
-
-if __name__ == "__main__":
-    create_sample_dataset()
-```
-
-### 2. Create the Data Processing Script
-
-Create `process_data.py`:
-
-```python
-from transformers import AutoTokenizer
-from datasets import load_from_disk
-
-def process_data(model_name="meta-llama/Llama-2-7b-hf"):
-    # Load tokenizer
-    tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
-    tokenizer.pad_token = tokenizer.eos_token
-    
-    def tokenize_function(examples):
-        # Combine instruction, input, and output
-        prompt = [f"### Instruction: {instruction}\n### Input: {input}\n### Response: {output}"
-                 for instruction, input, output in zip(examples['instruction'], 
-                                                     examples['input'], 
-                                                     examples['output'])]
+    def load_base_model(self):
+        """Load and prepare base model for LoRA fine-tuning"""
+        logger.info(f"Loading model: {self.model_name}")
         
-        # Tokenize
-        return tokenizer(prompt, truncation=True, padding="max_length", 
-                        max_length=512, return_tensors="pt")
+        # Load model in 4-bit
+        model = AutoModelForCausalLM.from_pretrained(
+            self.model_name,
+            load_in_4bit=True,
+            torch_dtype=torch.float16,
+            device_map="auto"
+        )
+        
+        # Prepare for training
+        model = prepare_model_for_kbit_training(model)
+        
+        return model
     
-    # Load and process datasets
-    train_dataset = load_from_disk('data/train')
-    val_dataset = load_from_disk('data/validation')
+    def load_tokenizer(self):
+        """Load and configure tokenizer"""
+        logger.info("Loading tokenizer...")
+        tokenizer = AutoTokenizer.from_pretrained(self.model_name)
+        tokenizer.pad_token = tokenizer.eos_token
+        tokenizer.padding_side = "right"
+        return tokenizer
     
-    # Apply tokenization
-    train_tokenized = train_dataset.map(tokenize_function, batched=True)
-    val_tokenized = val_dataset.map(tokenize_function, batched=True)
-    
-    # Save processed datasets
-    train_tokenized.save_to_disk('data/train_tokenized')
-    val_tokenized.save_to_disk('data/val_tokenized')
-
-if __name__ == "__main__":
-    process_data()
-```
-
-## Fine-Tuning Implementation
-
-### 1. Create the LoRA Configuration
-
-Create `lora_config.py`:
-
-```python
-from peft import LoraConfig, TaskType
-
-def get_lora_config():
-    return LoraConfig(
-        task_type=TaskType.CAUSAL_LM,
-        inference_mode=False,
-        r=8,  # Rank of LoRA update matrices
-        lora_alpha=32,  # Alpha scaling factor
-        lora_dropout=0.1,
-        # Target modules for LoRA
-        target_modules=["q_proj", "v_proj", "k_proj", "o_proj",
-                       "gate_proj", "up_proj", "down_proj"]
-    )
-```
-
-### 2. Create the Training Script
-
-Create `train_lora.py`:
-
-```python
-import torch
-from transformers import (
-    AutoModelForCausalLM,
-    AutoTokenizer,
-    Trainer,
-    TrainingArguments,
-    DataCollatorForLanguageModeling
-)
-from peft import get_peft_model
-from datasets import load_from_disk
-from lora_config import get_lora_config
-
-def train():
-    # Load model and tokenizer
-    model_name = "meta-llama/Llama-2-7b-hf"
-    tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
-    model = AutoModelForCausalLM.from_pretrained(
-        model_name,
-        torch_dtype=torch.float16,
-        device_map="auto"
-    )
-    
-    # Apply LoRA config
-    lora_config = get_lora_config()
-    model = get_peft_model(model, lora_config)
-    
-    # Load processed datasets
-    train_dataset = load_from_disk('data/train_tokenized')
-    val_dataset = load_from_disk('data/val_tokenized')
-    
-    # Training arguments
-    training_args = TrainingArguments(
-        output_dir="output",
-        num_train_epochs=3,
-        per_device_train_batch_size=4,
-        per_device_eval_batch_size=4,
-        gradient_accumulation_steps=4,
-        evaluation_strategy="steps",
-        eval_steps=100,
-        save_strategy="steps",
-        save_steps=100,
-        logging_steps=10,
-        learning_rate=2e-4,
-        weight_decay=0.01,
-        fp16=True,
-        bf16=False,
-        max_grad_norm=0.3,
-        warmup_ratio=0.03,
-        lr_scheduler_type="cosine",
-        report_to="none"
-    )
-    
-    # Data collator
-    data_collator = DataCollatorForLanguageModeling(
-        tokenizer=tokenizer,
-        mlm=False
-    )
-    
-    # Initialize trainer
-    trainer = Trainer(
-        model=model,
-        args=training_args,
-        train_dataset=train_dataset,
-        eval_dataset=val_dataset,
-        data_collator=data_collator,
-    )
-    
-    # Train
-    trainer.train()
-    
-    # Save the final model
-    trainer.save_model("final_model")
-
-if __name__ == "__main__":
-    train()
-```
-
-### 3. Create the Inference Script
-
-Create `inference.py`:
-
-```python
-import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer
-from peft import PeftModel
-
-def load_model(base_model_name, adapter_path):
-    # Load base model and tokenizer
-    tokenizer = AutoTokenizer.from_pretrained(base_model_name)
-    model = AutoModelForCausalLM.from_pretrained(
-        base_model_name,
-        torch_dtype=torch.float16,
-        device_map="auto"
-    )
-    
-    # Load LoRA adapter
-    model = PeftModel.from_pretrained(model, adapter_path)
-    return model, tokenizer
-
-def generate_response(model, tokenizer, instruction, input_text):
-    # Format prompt
-    prompt = f"### Instruction: {instruction}\n### Input: {input_text}\n### Response:"
-    
-    # Tokenize
-    inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
-    
-    # Generate
-    with torch.no_grad():
-        outputs = model.generate(
-            **inputs,
-            max_new_tokens=512,
-            temperature=0.7,
-            top_p=0.9,
-            repetition_penalty=1.1
+    def create_lora_config(self):
+        """Create LoRA configuration"""
+        return LoraConfig(
+            r=16,  # rank
+            lora_alpha=32,  # scaling factor
+            target_modules=["q_proj", "v_proj"],
+            lora_dropout=0.05,
+            bias="none",
+            task_type="CAUSAL_LM"
         )
     
-    # Decode and return
-    response = tokenizer.decode(outputs[0], skip_special_tokens=True)
-    return response.split("### Response:")[-1].strip()
+    def prepare_model(self):
+        """Prepare complete model for training"""
+        # Load components
+        base_model = self.load_base_model()
+        tokenizer = self.load_tokenizer()
+        lora_config = self.create_lora_config()
+        
+        # Apply LoRA
+        model = get_peft_model(base_model, lora_config)
+        
+        # Print trainable parameters
+        model.print_trainable_parameters()
+        
+        return model, tokenizer
+
+if __name__ == "__main__":
+    setup = ModelSetup()
+    model, tokenizer = setup.prepare_model()
+    logger.info("Setup complete!")
+```
+
+## Step 2: Data Preparation
+
+Create `prepare_data.py`:
+```python
+from datasets import Dataset, load_from_disk
+from torch.utils.data import DataLoader
+import logging
+from typing import Dict, List
+import json
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+class DataPreparator:
+    def __init__(self, tokenizer, max_length=512):
+        self.tokenizer = tokenizer
+        self.max_length = max_length
+    
+    def load_dataset(self, dataset_path: str) -> Dataset:
+        """Load dataset from disk"""
+        return load_from_disk(dataset_path)
+    
+    def format_prompt(self, example: Dict) -> str:
+        """Format example into prompt"""
+        return f"""### Question: {example['input']}
+
+### Answer: {example['output']}
+
+"""
+    
+    def tokenize_function(self, examples: Dict) -> Dict:
+        """Tokenize examples"""
+        prompts = [self.format_prompt(ex) for ex in examples]
+        
+        # Tokenize
+        tokenized = self.tokenizer(
+            prompts,
+            truncation=True,
+            max_length=self.max_length,
+            padding="max_length",
+            return_tensors="pt"
+        )
+        
+        # Prepare labels (same as input_ids for causal LM)
+        tokenized["labels"] = tokenized["input_ids"].clone()
+        
+        return tokenized
+    
+    def prepare_dataset(self, dataset_path: str):
+        """Prepare complete dataset for training"""
+        # Load dataset
+        dataset = self.load_dataset(dataset_path)
+        logger.info(f"Loaded dataset with {len(dataset)} examples")
+        
+        # Tokenize dataset
+        tokenized_dataset = dataset.map(
+            self.tokenize_function,
+            batched=True,
+            remove_columns=dataset.column_names
+        )
+        
+        return tokenized_dataset
+    
+    def create_dataloaders(self, dataset: Dataset, batch_size: int = 4):
+        """Create train and validation dataloaders"""
+        # Split dataset
+        dataset = dataset.train_test_split(test_size=0.1)
+        
+        # Create dataloaders
+        train_dataloader = DataLoader(
+            dataset["train"],
+            batch_size=batch_size,
+            shuffle=True
+        )
+        
+        val_dataloader = DataLoader(
+            dataset["test"],
+            batch_size=batch_size
+        )
+        
+        return train_dataloader, val_dataloader
+
+if __name__ == "__main__":
+    from setup_utils import ModelSetup
+    
+    # Setup
+    setup = ModelSetup()
+    _, tokenizer = setup.prepare_model()
+    
+    # Prepare data
+    preparator = DataPreparator(tokenizer)
+    dataset = preparator.prepare_dataset("processed_data/hf_dataset")
+    train_dataloader, val_dataloader = preparator.create_dataloaders(dataset)
+    
+    logger.info("Data preparation complete!")
+```
+
+## Step 3: Training Process
+
+Create `train.py`:
+```python
+import torch
+from transformers import Trainer, TrainingArguments
+from peft import PeftModel
+import logging
+from pathlib import Path
+import json
+from typing import Dict, List
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+class LoRATrainer:
+    def __init__(
+        self,
+        model,
+        tokenizer,
+        train_dataset,
+        val_dataset,
+        output_dir: str = "results"
+    ):
+        self.model = model
+        self.tokenizer = tokenizer
+        self.train_dataset = train_dataset
+        self.val_dataset = val_dataset
+        self.output_dir = Path(output_dir)
+    
+    def create_training_args(self):
+        """Create training arguments"""
+        return TrainingArguments(
+            output_dir=str(self.output_dir / "checkpoints"),
+            num_train_epochs=3,
+            per_device_train_batch_size=4,
+            gradient_accumulation_steps=4,
+            learning_rate=2e-4,
+            fp16=True,
+            logging_steps=10,
+            evaluation_strategy="steps",
+            eval_steps=50,
+            save_strategy="steps",
+            save_steps=50,
+            warmup_steps=50,
+            weight_decay=0.01,
+            report_to="tensorboard"
+        )
+    
+    def train(self):
+        """Run training process"""
+        # Create training arguments
+        training_args = self.create_training_args()
+        
+        # Initialize trainer
+        trainer = Trainer(
+            model=self.model,
+            args=training_args,
+            train_dataset=self.train_dataset,
+            eval_dataset=self.val_dataset
+        )
+        
+        # Train
+        logger.info("Starting training...")
+        trainer.train()
+        
+        # Save model
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+        trainer.save_model(str(self.output_dir / "final_model"))
+        
+        # Save training stats
+        stats = {
+            "train_loss": trainer.state.log_history[-1]["train_loss"],
+            "eval_loss": trainer.state.log_history[-1]["eval_loss"]
+        }
+        
+        with open(self.output_dir / "training_stats.json", "w") as f:
+            json.dump(stats, f, indent=2)
+        
+        logger.info("Training complete!")
+        return stats
+
+if __name__ == "__main__":
+    from setup_utils import ModelSetup
+    from prepare_data import DataPreparator
+    
+    # Setup
+    setup = ModelSetup()
+    model, tokenizer = setup.prepare_model()
+    
+    # Prepare data
+    preparator = DataPreparator(tokenizer)
+    dataset = preparator.prepare_dataset("processed_data/hf_dataset")
+    
+    # Train
+    trainer = LoRATrainer(
+        model=model,
+        tokenizer=tokenizer,
+        train_dataset=dataset["train"],
+        val_dataset=dataset["test"]
+    )
+    stats = trainer.train()
+```
+
+## Step 4: Testing and Usage
+
+Create `test_model.py`:
+```python
+import torch
+from transformers import AutoTokenizer, AutoModelForCausalLM
+from peft import PeftModel
+import logging
+from pathlib import Path
+import json
+from typing import List, Dict
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+class ModelTester:
+    def __init__(self, model_path: str, base_model_name: str = "meta-llama/Llama-2-7b-hf"):
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        
+        # Load model and tokenizer
+        logger.info("Loading model...")
+        self.base_model = AutoModelForCausalLM.from_pretrained(
+            base_model_name,
+            load_in_4bit=True,
+            torch_dtype=torch.float16,
+            device_map="auto"
+        )
+        self.model = PeftModel.from_pretrained(self.base_model, model_path)
+        
+        self.tokenizer = AutoTokenizer.from_pretrained(base_model_name)
+        self.tokenizer.pad_token = self.tokenizer.eos_token
+    
+    def generate_answer(self, question: str) -> str:
+        """Generate answer for a question"""
+        # Format prompt
+        prompt = f"### Question: {question}\n\n### Answer:"
+        
+        # Tokenize
+        inputs = self.tokenizer(
+            prompt,
+            return_tensors="pt",
+            truncation=True,
+            max_length=512
+        ).to(self.device)
+        
+        # Generate
+        with torch.no_grad():
+            outputs = self.model.generate(
+                **inputs,
+                max_new_tokens=256,
+                temperature=0.7,
+                num_return_sequences=1
+            )
+        
+        # Decode
+        answer = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+        
+        # Extract answer part
+        answer = answer.split("### Answer:")[-1].strip()
+        
+        return answer
+    
+    def run_test_cases(self, test_cases: List[Dict]) -> List[Dict]:
+        """Run multiple test cases"""
+        results = []
+        
+        for case in test_cases:
+            question = case["question"]
+            expected = case["answer"]
+            generated = self.generate_answer(question)
+            
+            results.append({
+                "question": question,
+                "expected": expected,
+                "generated": generated
+            })
+        
+        return results
 
 def main():
-    # Load model
-    base_model = "meta-llama/Llama-2-7b-hf"
-    adapter_path = "final_model"
-    model, tokenizer = load_model(base_model, adapter_path)
+    # Test cases
+    test_cases = [
+        {
+            "question": "What is photosynthesis?",
+            "answer": "Photosynthesis is the process by which plants convert sunlight into energy."
+        },
+        {
+            "question": "Explain Newton's first law.",
+            "answer": "Newton's first law states that an object remains at rest or in motion unless acted upon by an external force."
+        }
+    ]
     
-    # Example usage
-    instruction = "Answer the following question about science:"
-    input_text = "What is cellular respiration?"
+    # Run tests
+    tester = ModelTester("results/final_model")
+    results = tester.run_test_cases(test_cases)
     
-    response = generate_response(model, tokenizer, instruction, input_text)
-    print(f"Question: {input_text}")
-    print(f"Response: {response}")
+    # Save results
+    with open("test_results.json", "w") as f:
+        json.dump(results, f, indent=2)
+    
+    logger.info("Test results saved to test_results.json")
 
 if __name__ == "__main__":
     main()
 ```
 
-## Running the Fine-Tuning Process
+## Running the Tutorial
 
-1. Create and process the dataset:
-```bash
-python create_dataset.py
-python process_data.py
-```
+1. **Setup and Verification**:
+   ```bash
+   python setup_utils.py
+   ```
 
-2. Start the training:
-```bash
-python train_lora.py
-```
+2. **Prepare Data**:
+   ```bash
+   python prepare_data.py
+   ```
 
-3. Test the model:
-```bash
-python inference.py
-```
+3. **Run Training**:
+   ```bash
+   python train.py
+   ```
 
-## Best Practices and Tips
+4. **Test Model**:
+   ```bash
+   python test_model.py
+   ```
 
-1. **Model Selection**:
-   - Choose an appropriate base model size
-   - Consider using smaller models for faster iteration
-   - Ensure your GPU has enough VRAM
+## Cost and Resource Requirements
 
-2. **LoRA Parameters**:
-   - Adjust rank (r) based on task complexity
-   - Experiment with different target modules
-   - Balance between adaptation and stability
+- **GPU**: 8GB+ VRAM (16GB+ recommended)
+- **Storage**: ~20GB for model and datasets
+- **RAM**: 16GB+ recommended
+- **Training Time**: 2-8 hours depending on dataset size
+- **Cost**: Computing resources only (no API costs)
 
-3. **Training Optimization**:
-   - Use gradient accumulation for larger batch sizes
-   - Monitor training loss and validation metrics
-   - Implement early stopping if needed
+## Best Practices
 
-4. **Memory Management**:
-   - Use mixed precision training (fp16)
-   - Adjust batch size based on available GPU memory
-   - Enable gradient checkpointing for large models
+1. **Data Preparation**:
+   - Clean and validate data
+   - Use consistent formatting
+   - Balance dataset
+   - Check token lengths
+
+2. **Training**:
+   - Start with small datasets
+   - Monitor training loss
+   - Use gradient accumulation
+   - Save checkpoints
+
+3. **Resource Management**:
+   - Use 4-bit quantization
+   - Implement gradient checkpointing
+   - Monitor GPU memory
+   - Use appropriate batch size
+
+4. **Model Usage**:
+   - Implement proper error handling
+   - Use appropriate generation parameters
+   - Cache results when possible
+   - Monitor inference time
 
 ## Troubleshooting
 
-Common issues and solutions:
-
-1. **Out of Memory Errors**:
+1. **CUDA Out of Memory**:
    ```python
-   RuntimeError: CUDA out of memory
+   # Solutions:
+   # 1. Reduce batch size
+   training_args = TrainingArguments(
+       per_device_train_batch_size=2,  # Reduce from 4
+       gradient_accumulation_steps=8    # Increase from 4
+   )
+   
+   # 2. Enable gradient checkpointing
+   model.gradient_checkpointing_enable()
    ```
-   Solutions:
-   - Reduce batch size
-   - Enable gradient checkpointing
-   - Use a smaller base model
 
-2. **Training Instability**:
-   ```python
-   Loss becomes NaN
-   ```
-   Solutions:
-   - Reduce learning rate
-   - Adjust gradient clipping
-   - Check for data preprocessing issues
+2. **Training Issues**:
+   - Monitor loss curves
+   - Check learning rate
+   - Validate data format
+   - Inspect generated outputs
 
-3. **Slow Training**:
-   Solutions:
-   - Enable mixed precision training
-   - Increase batch size (if memory allows)
-   - Use gradient accumulation
-
-## Advanced Topics
-
-1. **Custom Dataset Creation**:
-```python
-from datasets import Dataset
-
-def create_custom_dataset(data_path):
-    # Load your custom data
-    # Format it appropriately
-    # Convert to HuggingFace Dataset
-    dataset = Dataset.from_dict(your_data)
-    return dataset
-```
-
-2. **Custom Training Loop**:
-```python
-def custom_training_loop(model, dataloader, optimizer, epochs):
-    for epoch in range(epochs):
-        for batch in dataloader:
-            outputs = model(**batch)
-            loss = outputs.loss
-            loss.backward()
-            optimizer.step()
-            optimizer.zero_grad()
-```
-
-3. **Evaluation Metrics**:
-```python
-from evaluate import load
-
-def compute_metrics(pred):
-    rouge = load('rouge')
-    predictions = tokenizer.batch_decode(pred.predictions)
-    references = tokenizer.batch_decode(pred.label_ids)
-    return rouge.compute(predictions=predictions, references=references)
-```
+3. **Inference Problems**:
+   - Check GPU memory
+   - Reduce generation length
+   - Validate input format
+   - Monitor temperature
 
 ## Next Steps
 
-1. Experiment with different LoRA configurations
-2. Implement custom evaluation metrics
-3. Try different base models
-4. Add model quantization
-5. Implement model merging
+1. **Advanced Topics**:
+   - [Hyperparameter Tuning](Hyperparameter-Tuning.md)
+   - [Model Evaluation](Evaluation-Metrics.md)
+   - [Production Deployment](Model-Deployment.md)
+
+2. **Alternative Methods**:
+   - [DSPy Tutorial](DSPy-Tutorial.md)
+   - [OpenAI Tutorial](OpenAI-Tutorial.md)
 
 ## Resources
 
 - [PEFT Documentation](https://huggingface.co/docs/peft)
 - [LoRA Paper](https://arxiv.org/abs/2106.09685)
 - [Transformers Documentation](https://huggingface.co/docs/transformers)
-- [PyTorch Documentation](https://pytorch.org/docs) 
+- [Best Practices Guide](https://huggingface.co/docs/transformers/v4.18.0/en/performance) 
