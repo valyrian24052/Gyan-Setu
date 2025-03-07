@@ -45,4 +45,12 @@ bitsandbytes>=0.40.0  # For quantization
 scikit-learn>=1.0.0  # For evaluation metrics
 backoff>=2.2.0  # For retry logic
 jsonlines>=3.1.0  # For JSONL file processing
-langchain_openai>=0.0.1  # For OpenAI integration 
+langchain_openai>=0.0.1  # For OpenAI integration
+
+# Evaluation metrics
+rouge-score>=0.1.2
+bert-score>=0.3.13
+sacrebleu>=2.3.1
+nltk>=3.8.1
+pyyaml>=6.0.1
+numpy>=1.24.0 
