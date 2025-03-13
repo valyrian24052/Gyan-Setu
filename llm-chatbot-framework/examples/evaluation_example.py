@@ -4,11 +4,105 @@ Example script demonstrating the LLM evaluation framework.
 
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import argparse
+from pathlib import Path
+sys.path.append(str(Path(__file__).parent.parent))
 
+from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
+import torch
 from src.evaluation.metrics.automated_metrics import AutomatedMetrics
+from src.evaluation.metrics.system_metrics import SystemMetrics
 from src.evaluation.human.human_evaluation import HumanEvaluation
 from src.evaluation.benchmarks.benchmark_suite import BenchmarkSuite
+from config import (
+    load_token, list_available_models, get_model_config,
+    AVAILABLE_MODELS
+)
+
+def parse_args():
+    """Parse command line arguments."""
+    parser = argparse.ArgumentParser(description='LLM Evaluation Framework Demo')
+    parser.add_argument(
+        '--model',
+        choices=list(AVAILABLE_MODELS.keys()),
+        help='Model to use for evaluation'
+    )
+    parser.add_argument(
+        '--list-models',
+        action='store_true',
+        help='List available models and exit'
+    )
+    return parser.parse_args()
+
+def load_model(model_key=None):
+    """
+    Load a model from Hugging Face Hub with optimized multi-GPU configuration.
+    Uses 4-bit quantization and mixed precision for efficient loading.
+    """
+    # Initialize system metrics tracking
+    metrics = SystemMetrics()
+    metrics.print_gpu_stats("Before model loading")
+    
+    # Get token from config
+    token = load_token()
+    if not token:
+        raise ValueError("Hugging Face token not found. Please set it in config/.env")
+    
+    # Get model configuration
+    config = get_model_config(model_key)
+    model_name = config["model_name"]
+    
+    # Configure 4-bit quantization with optimal settings
+    quantization_config = BitsAndBytesConfig(
+        load_in_4bit=config["load_in_4bit"],
+        bnb_4bit_compute_dtype=getattr(torch, config["compute_dtype"]),
+        bnb_4bit_use_double_quant=config["double_quant"],
+        bnb_4bit_quant_type=config["quant_type"]
+    )
+    
+    # Create offload directory if needed
+    if config["offload_folder"]:
+        os.makedirs(config["offload_folder"], exist_ok=True)
+    
+    # Load tokenizer and model
+    print(f"\nLoading model: {model_name}")
+    print(f"Using token: {token[:8]}...")
+    print("\nModel Configuration:")
+    print(f"- Device Map: {config['device_map']}")
+    print(f"- Max Memory: {config['max_memory']}")
+    print(f"- 4-bit Quantization: {config['load_in_4bit']}")
+    print(f"- Compute Dtype: {config['compute_dtype']}")
+    print(f"- Quantization Type: {config['quant_type']}")
+    print(f"- Double Quantization: {config['double_quant']}")
+    
+    tokenizer = AutoTokenizer.from_pretrained(
+        model_name,
+        token=token,
+        trust_remote_code=config["trust_remote_code"]
+    )
+    
+    model = AutoModelForCausalLM.from_pretrained(
+        model_name,
+        device_map=config["device_map"],
+        max_memory=config["max_memory"],
+        torch_dtype=getattr(torch, config["compute_dtype"]),
+        token=token,
+        trust_remote_code=config["trust_remote_code"],
+        quantization_config=quantization_config,
+        offload_folder=config["offload_folder"]
+    )
+    
+    metrics.print_gpu_stats("After model loading")
+    metrics.print_model_stats(model)
+    
+    return model, tokenizer
+
+def demonstrate_system_metrics(model=None):
+    """Demonstrate system metrics monitoring."""
+    print("\n=== System Metrics Demo ===")
+    
+    metrics = SystemMetrics()
+    metrics.print_system_info(model)
 
 def demonstrate_automated_metrics():
     """Demonstrate automated metrics evaluation."""
@@ -131,9 +225,22 @@ def demonstrate_benchmark_suite():
 
 def main():
     """Run all demonstrations."""
+    args = parse_args()
+    
+    if args.list_models:
+        list_available_models()
+        return
+    
     print("LLM Evaluation Framework Demo")
     print("=" * 30)
     
+    # Load model with specified or default configuration
+    model, tokenizer = load_model(args.model)
+    
+    # Show system metrics first
+    demonstrate_system_metrics(model)
+    
+    # Run other demonstrations
     demonstrate_automated_metrics()
     demonstrate_human_evaluation()
     demonstrate_benchmark_suite()
