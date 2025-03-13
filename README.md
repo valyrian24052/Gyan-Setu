@@ -1,6 +1,6 @@
 # LLM Chatbot Framework
 
-This repository contains the LLM Chatbot Framework, a flexible framework for building educational LLM-powered chatbots with fine-tuning capabilities.
+This repository contains the LLM Chatbot Framework, a flexible framework for building and evaluating educational LLM-powered chatbots with fine-tuning capabilities.
 
 ## Repository Structure
 
@@ -29,11 +29,35 @@ pip install -r requirements.txt
 pip install -e .
 ```
 
-For detailed documentation, please see the [documentation](llm-chatbot-framework/docs/Home.md).
+## Model Access and Authentication
+
+The framework supports various LLM models, including:
+- LLaMA 2 models (7B, 13B, 70B variants)
+- Mistral models
+- Other Hugging Face models
+
+To use these models:
+
+1. Create a Hugging Face account at https://huggingface.co
+2. Generate an access token from your Hugging Face account settings
+3. Set up your credentials using one of these secure methods:
+   ```bash
+   # Method 1: Use the CLI tool (recommended)
+   huggingface-cli login
+   
+   # Method 2: The framework will prompt for your token when needed
+   # and store it securely
+   ```
+4. Request access to specific models (e.g., LLaMA 2) through their respective model pages on Hugging Face
 
 ## LLM Evaluation Framework
 
 The project includes a comprehensive evaluation framework for assessing chatbot performance:
+
+### Supported Models
+- LLaMA 2 series (7B, 13B, 70B)
+- Mistral-7B
+- Other Hugging Face compatible models
 
 ### Automated Metrics
 - ROUGE scores for text overlap
@@ -52,6 +76,14 @@ The project includes a comprehensive evaluation framework for assessing chatbot 
 - Automated benchmark running
 - Result comparison across versions
 - Predefined test sets for common scenarios
+- GPU resource monitoring and optimization
+
+### Running Evaluations
+
+```bash
+# Example of running an evaluation with LLaMA 2 13B
+python evaluate.py --model="meta-llama/Llama-2-13b-hf" --dataset="your_dataset"
+```
 
 For detailed documentation and examples, see the [LLM Evaluation Wiki](UTTA.wiki/LLM-Evaluation.md).
 
