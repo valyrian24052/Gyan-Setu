@@ -161,6 +161,9 @@ import time
 import random
 import logging
 from typing import List, Dict, Any, Optional, Union
+from pathlib import Path
+import hashlib
+from datetime import datetime
 
 # LangChain imports
 from langchain.prompts import PromptTemplate
@@ -407,150 +410,101 @@ class EnhancedLLMInterface(LLMInterface):
             for different educational scenarios
     """
     
-    def __init__(self, model_name="gpt-4"):
-        """
-        Initialize the enhanced LLM interface.
+    def __init__(self, model_name="gpt-4", cache_dir="./cache"):
+        """Initialize an enhanced LLM interface with optimized settings.
         
         Args:
             model_name (str): Name of the LLM model to use
+            cache_dir (str): Directory for caching responses
         """
-        self.model_name = model_name
+        super().__init__(model_name)
+        self.cache_dir = Path(cache_dir)
+        self.cache_dir.mkdir(exist_ok=True)
         
-        # Configure the appropriate chat model based on the model name
-        if "gpt" in model_name.lower():
-            self.chat_model = ChatOpenAI(
-                model_name=model_name,
-                temperature=0.7,
-                streaming=True
-            )
-        elif "claude" in model_name.lower():
-            self.chat_model = ChatAnthropic(
-                model=model_name,
-                temperature=0.7,
-                streaming=True
-            )
-        elif "llama-3" in model_name.lower():
-            # Use Ollama for Llama 3 models if available
-            try:
-                # Convert model name format for Ollama (llama-3-8b → llama3:8b)
-                ollama_model_name = "llama3:8b"
-                if "70b" in model_name.lower():
-                    ollama_model_name = "llama3:70b"
-                    
-                logging.info(f"Using Ollama model: {ollama_model_name}")
-                self.chat_model = ChatOllama(
-                    model=ollama_model_name,
-                    temperature=0.7
-                )
-                logging.info(f"Successfully initialized Ollama with model {ollama_model_name}")
-            except Exception as e:
-                logging.warning(f"Error initializing Ollama: {e}")
-                # Fall back to LlamaCpp if Ollama isn't available
-                logging.info("Falling back to LlamaCpp for Llama 3")
-                
-                try:
-                    # Set up callback manager for streaming with error handling
-                    callbacks = [StreamingStdOutCallbackHandler()]
-                    callback_manager = CallbackManager(callbacks)
-                    
-                    # Get the path to the model
-                    model_path = os.environ.get("LLAMA_MODEL_PATH", "./models/llama-3-8b.gguf")
-                    
-                    # Check if model exists
-                    if not os.path.exists(model_path):
-                        logging.error(f"Model file not found at {model_path}")
-                        logging.info("Please download Llama 3 and set LLAMA_MODEL_PATH environment variable")
-                        raise FileNotFoundError(f"Model file not found at {model_path}")
-                    
-                    # Determine model size (8B or 70B) to adjust parameters accordingly
-                    is_large_model = "70b" in model_path.lower()
-                    
-                    logging.info(f"Initializing LlamaCpp with {model_path}")
-                    logging.info("Using optimized settings for dual RTX A4000 GPUs")
-                    
-                    # Start with minimal settings to avoid errors
-                    self.chat_model = LlamaCpp(
-                        model_path=model_path,
-                        temperature=0.7,
-                        max_tokens=2000,
-                        # Reduce context size for better performance
-                        n_ctx=2048 if not is_large_model else 1024,
-                        # Use both GPUs
-                        n_gpu_layers=-1,  # Auto-detect layers for GPU
-                        # Specify primary GPU
-                        main_gpu=0,
-                        # Split the model evenly across both GPUs (50/50)
-                        tensor_split=[0.5, 0.5],
-                        # Increase batch size for better throughput
-                        n_batch=512 if not is_large_model else 256,
-                        # For streaming output
-                        callback_manager=callback_manager,
-                        # Logging for performance tuning
-                        verbose=True,
-                        # Use half precision
-                        f16_kv=True
-                    )
-                    logging.info(f"Successfully initialized LlamaCpp with model at {model_path}")
-                
-                except Exception as detailed_error:
-                    logging.error(f"Critical error initializing LlamaCpp: {detailed_error}")
-                    logging.error("Falling back to default model")
-                    # Fall back to a simpler initialization or a different model
-                    self.chat_model = ChatOpenAI(
-                        model_name="gpt-3.5-turbo",
-                        temperature=0.7,
-                        streaming=True
-                    )
-        else:
-            # Default to GPT-4
-            self.chat_model = ChatOpenAI(
-                model_name="gpt-4",
-                temperature=0.7,
-                streaming=True
-            )
-        
-        # Collection of specialized system prompts for different educational scenarios
-        self.system_prompts = {
-            "student_simulation": """You are simulating a student in a classroom setting. 
-            Your responses should reflect the student's knowledge level, learning style, challenges, and strengths.
-            Respond as the student would to the teacher's input.""",
-            
-            "teaching_analysis": """You are an expert educational consultant analyzing teaching approaches.
-            Evaluate the teaching response considering pedagogical best practices, student needs, and learning objectives.
-            Provide specific, actionable feedback with clear strengths and areas for improvement.""",
-            
-            "strategy_recommendation": """You are an educational specialist recommending teaching strategies.
-            Based on the student profile and teaching context, suggest evidence-based approaches 
-            that would be most effective for this specific learning situation."""
+        # Enhanced configuration for better performance
+        self.config = {
+            "temperature": 0.7,  # Balanced between creativity and consistency
+            "top_p": 0.9,       # Nucleus sampling for better response diversity
+            "max_tokens": 2000,  # Increased context window
+            "presence_penalty": 0.1,  # Slight penalty for repetition
+            "frequency_penalty": 0.1,  # Slight penalty for common tokens
+            "request_timeout": 60,     # Extended timeout for complex queries
         }
-    
-    def get_llm_response_with_context(self, messages, context_data, prompt_type="student_simulation"):
-        """
-        Get an LLM response with additional context and specialized prompting.
         
-        Args:
-            messages: List of message dictionaries with role and content
-            context_data: Dictionary with relevant contextual information
-            prompt_type: Type of specialized system prompt to use
+        # Initialize response cache
+        self.response_cache = {}
+        self.load_cache()
+        
+    def load_cache(self):
+        """Load cached responses from disk."""
+        cache_file = self.cache_dir / "response_cache.json"
+        if cache_file.exists():
+            with open(cache_file, "r") as f:
+                self.response_cache = json.load(f)
+                
+    def save_cache(self):
+        """Save cached responses to disk."""
+        cache_file = self.cache_dir / "response_cache.json"
+        with open(cache_file, "w") as f:
+            json.dump(self.response_cache, f)
             
-        Returns:
-            str: The model's response incorporating the context
-        """
-        # Create a context-aware system prompt
-        system_prompt = self.system_prompts.get(prompt_type, "You are a helpful assistant.")
+    def get_cache_key(self, messages, context_data=None):
+        """Generate a unique cache key for the request."""
+        key_data = {
+            "messages": messages,
+            "context": context_data
+        }
+        return hashlib.md5(json.dumps(key_data, sort_keys=True).encode()).hexdigest()
+            
+    def get_llm_response_with_context(self, messages, context_data, prompt_type="student_simulation"):
+        """Get LLM response with context and caching."""
+        cache_key = self.get_cache_key(messages, context_data)
         
-        # Add context to the system prompt
-        context_str = json.dumps(context_data, indent=2)
-        enhanced_prompt = f"{system_prompt}\n\nCONTEXT INFORMATION:\n{context_str}"
+        # Check cache first
+        if cache_key in self.response_cache:
+            return self.response_cache[cache_key]
         
-        # Ensure the first message is a system message with our enhanced prompt
-        if messages and messages[0].get("role") == "system":
-            messages[0]["content"] = enhanced_prompt
-        else:
-            messages.insert(0, {"role": "system", "content": enhanced_prompt})
+        # Prepare enhanced context
+        enhanced_context = self._prepare_enhanced_context(context_data, prompt_type)
+        messages = self._inject_context_to_messages(messages, enhanced_context)
         
-        # Get response from the base method
-        return self.get_llm_response(messages)
+        # Get response with retries and error handling
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                response = self.get_llm_response(
+                    messages,
+                    output_format=self.config.get("output_format"),
+                    max_retries=1  # Single retry per attempt here
+                )
+                
+                # Cache successful response
+                self.response_cache[cache_key] = response
+                self.save_cache()
+                
+                return response
+            except Exception as e:
+                if attempt == max_retries - 1:
+                    raise e
+                time.sleep(2 ** attempt)  # Exponential backoff
+                
+    def _prepare_enhanced_context(self, context_data, prompt_type):
+        """Prepare enhanced context with additional metadata."""
+        enhanced_context = {
+            "base_context": context_data,
+            "prompt_type": prompt_type,
+            "timestamp": datetime.now().isoformat(),
+            "model_config": self.config
+        }
+        return enhanced_context
+        
+    def _inject_context_to_messages(self, messages, enhanced_context):
+        """Inject context into messages for better response quality."""
+        context_message = {
+            "role": "system",
+            "content": f"Context: {json.dumps(enhanced_context)}\nRespond considering this context."
+        }
+        return [context_message] + messages
     
     def generate_student_response(self, teacher_input, student_profile, scenario_context):
         """
