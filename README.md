@@ -1,4 +1,4 @@
-# <img src="logo.png" alt="Logo" width="100" height="100">Utah Teacher Training Assistant (UTTA) 
+# <img src="logo.png" alt="Logo" width="120" height="120">Utah Teacher Training Assistant (UTTA) 
 
 A sophisticated AI-powered platform for teacher training that combines advanced language models, automated evaluation metrics, and an intuitive web interface to help educators improve their teaching skills through simulated student interactions.
 
