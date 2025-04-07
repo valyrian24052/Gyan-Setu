@@ -1,6 +1,6 @@
 # Utah Teacher Training Assistant (UTTA)
 
-![UTTA Logo](logo.png)
+![Logo](logo.png)
 
 A sophisticated AI-powered platform for teacher training that combines advanced language models, automated evaluation metrics, and an intuitive web interface to help educators improve their teaching skills through simulated student interactions.
 
