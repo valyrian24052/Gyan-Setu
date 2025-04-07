@@ -5,10 +5,11 @@ Uses DSPy for efficient and reliable LLM interactions.
 """
 
 import streamlit as st
+import uuid
 
 # Set page configuration first - this must be the first Streamlit command
 st.set_page_config(
-    page_title="Teacher Training Simulator",
+    page_title="Utah Teacher Training Assistant",
     page_icon="👨‍🏫",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -24,6 +25,11 @@ import subprocess
 import getpass
 import logging
 import random
+import time
+import traceback
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 # Import our DSPy adapter and implementations
 from dspy_adapter import create_llm_interface, EnhancedLLMInterface
@@ -32,7 +38,11 @@ from dspy_llm_handler import PedagogicalLanguageProcessor
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler("app.log"),
+        logging.StreamHandler()
+    ]
 )
 
 # Load environment variables from .env file
@@ -40,86 +50,36 @@ load_dotenv()
 
 class WebInterface:
     def __init__(self):
-        """Initialize the web interface and session state with defaults."""
-        # Initialize session state variables
-        if 'llm_interface' not in st.session_state:
-            st.session_state.llm_interface = None
-        if 'pedagogical_processor' not in st.session_state:
-            st.session_state.pedagogical_processor = None
-        if 'scenario' not in st.session_state:
-            st.session_state.scenario = None
-        if 'history' not in st.session_state:
-            st.session_state.history = []
-        if 'messages' not in st.session_state:
-            st.session_state.messages = []
-        if 'analysis' not in st.session_state:
-            st.session_state.analysis = None
-        if 'strategies' not in st.session_state:
-            st.session_state.strategies = []
-        if 'teacher_feedback' not in st.session_state:
-            st.session_state.teacher_feedback = None
-        if 'conversation_id' not in st.session_state:
-            st.session_state.conversation_id = None
-        if 'student_profile' not in st.session_state:
-            st.session_state.student_profile = None
-        if 'reflection' not in st.session_state:
-            st.session_state.reflection = None
-        if 'app_mode' not in st.session_state:
-            st.session_state.app_mode = "Chat Interface"
-        if 'model_name' not in st.session_state:
-            st.session_state.model_name = "gpt-3.5-turbo"
-        if 'classroom_management_strategies' not in st.session_state:
-            st.session_state.classroom_management_strategies = []
+        """Initialize the web interface."""
+        # Load students and scenarios first
+        self.students = self.load_students()
+        self.scenarios = self.load_scenarios()
         
-        # Auto-initialize the LLM on startup with default model
-        if not st.session_state.llm_interface:
-            try:
-                self.initialize_llm(st.session_state.model_name)
-            except Exception as e:
-                logging.error(f"Error initializing LLM: {e}", exc_info=True)
+        # Initialize session state
+        self.init_session_state()
+        
+        # Apply custom CSS
+        self.apply_custom_css()
+        
+        # Comment out the metrics evaluator initialization
+        # Initialize the metrics evaluator if not already done
+        # if 'metrics_evaluator' not in st.session_state:
+        #     st.session_state.metrics_evaluator = AutomatedMetricsEvaluator()
+        
+        # Run the application
+        self.run()
 
-    # Dictionary of classroom management strategies from educational books
-    classroom_management_books = {
-        "Teach Like a Champion (Doug Lemov)": [
-            {"name": "No Opt Out", "description": "Turn a student's 'I don't know' into a success by ensuring they answer the question correctly with support."},
-            {"name": "Right Is Right", "description": "Set and defend high standards for correct answers, ensuring precision and accuracy."},
-            {"name": "Cold Call", "description": "Call on students regardless of whether they have raised their hands, strategically engaging all students."},
-            {"name": "Wait Time", "description": "Allow students time to think after asking a question before calling on someone to answer."},
-            {"name": "Stretch It", "description": "Extend student responses by asking follow-up questions that require deeper thinking."}
-        ],
-        "Classroom Management That Works (Robert Marzano)": [
-            {"name": "Establishing Rules and Procedures", "description": "Create clear expectations for behavior and routines in the classroom."},
-            {"name": "Disciplinary Interventions", "description": "Use a graduated system of responses to disruptive behavior."},
-            {"name": "Teacher-Student Relationships", "description": "Build positive connections with students based on appropriate levels of dominance and cooperation."},
-            {"name": "Mental Set", "description": "Maintain an objective, business-like attitude about behavior while remaining emotionally aware."},
-            {"name": "Student Responsibility", "description": "Provide opportunities for students to take on meaningful responsibility for classroom management."}
-        ],
-        "The First Days of School (Harry Wong)": [
-            {"name": "Classroom Procedures", "description": "Teach specific procedures for every classroom activity and transition."},
-            {"name": "Classroom Routines", "description": "Establish consistent, repeated patterns of behavior for daily activities."},
-            {"name": "Positive Expectations", "description": "Communicate belief in students' ability to succeed academically and behaviorally."},
-            {"name": "Classroom Organization", "description": "Structure the physical environment and materials to optimize learning and minimize disruption."},
-            {"name": "Professional Behavior", "description": "Model and require respectful, appropriate behavior at all times."}
-        ],
-        "Conscious Classroom Management (Rick Smith)": [
-            {"name": "Prevention Through Connection", "description": "Create personal connections to prevent behavior problems before they begin."},
-            {"name": "Using Body Language", "description": "Leverage non-verbal communication to manage the classroom effectively."},
-            {"name": "Collaborative Problem-Solving", "description": "Work with students to find solutions rather than imposing them."},
-            {"name": "Managing Moments of Escalation", "description": "Use specific strategies to de-escalate tension and conflict."},
-            {"name": "Creating Community", "description": "Build a sense of belonging and mutual respect within the classroom."}
-        ]
-    }
-
-    def setup_page(self):
-        """Set up the page with title, favicon, and basic layout."""
+    def apply_custom_css(self):
+        """Apply custom CSS styles to the Streamlit app."""
         st.markdown("""
         <style>
-            /* Global styling */
+            /* Global styling with UVU color palette */
             :root {
-                --primary-color: #4F46E5;
-                --primary-light: #EEF2FF;
-                --secondary-color: #10B981;
-                --secondary-light: #ECFDF5;
+                --uvu-green: #275D38;
+                --uvu-green-light: #6E9D7D;
+                --uvu-green-dark: #1A3F26;
+                --uvu-black: #000000;
+                --uvu-white: #FFFFFF;
                 --neutral-50: #F9FAFB;
                 --neutral-100: #F3F4F6;
                 --neutral-200: #E5E7EB;
@@ -149,7 +109,7 @@ class WebInterface:
                 flex-direction: column;
                 min-height: calc(100vh - 80px);
                 border-radius: var(--radius);
-                background-color: white;
+                background-color: var(--uvu-white);
                 box-shadow: var(--shadow);
                 overflow: hidden;
             }
@@ -157,8 +117,8 @@ class WebInterface:
             /* Header styling */
             .app-header {
                 padding: 1rem 1.5rem;
-                background: linear-gradient(135deg, var(--primary-color), #6366F1);
-                color: white;
+                background: linear-gradient(135deg, var(--uvu-green), var(--uvu-green-dark));
+                color: var(--uvu-white);
                 border-radius: var(--radius) var(--radius) 0 0;
                 margin-bottom: 1rem;
             }
@@ -167,7 +127,7 @@ class WebInterface:
                 font-size: 1.75rem;
                 margin: 0;
                 font-weight: 600;
-                color: white;
+                color: var(--uvu-white);
                 text-align: center;
             }
             
@@ -206,15 +166,20 @@ class WebInterface:
                 border-radius: var(--radius);
                 padding: 1rem;
                 margin-bottom: 1rem;
-                height: 550px;
-                overflow-y: auto;
                 display: flex;
                 flex-direction: column;
                 background-color: var(--neutral-50);
                 border: 1px solid var(--neutral-200);
+                min-height: 200px;
+                max-height: 600px;
+                overflow-y: auto;
             }
             
             /* Custom chat bubbles */
+            .stChatMessage {
+                margin-bottom: 0.5rem;
+            }
+            
             .stChatMessage [data-testid="chatAvatarIcon-user"] {
                 background-color: var(--primary-color) !important;
             }
@@ -227,6 +192,7 @@ class WebInterface:
                 border-radius: var(--radius) !important;
                 padding: 0.75rem 1rem !important;
                 box-shadow: var(--shadow-sm) !important;
+                margin: 0 !important;
             }
             
             .stChatMessage.user [data-testid="stChatMessageContent"] {
@@ -441,42 +407,226 @@ class WebInterface:
         </style>
         """, unsafe_allow_html=True)
 
+    def init_session_state(self):
+        """Initialize the Streamlit session state."""
+        # Default session state for conversation
+        if "messages" not in st.session_state:
+            st.session_state.messages = []
+            
+        # Initialize the LLM interface
+        if "llm_interface" not in st.session_state:
+            try:
+                st.session_state.llm_interface = create_llm_interface()
+            except Exception as e:
+                st.error(f"Failed to initialize LLM interface: {str(e)}")
+                st.session_state.llm_interface = None
+        
+        # Set unique conversation ID if not present
+        if "conversation_id" not in st.session_state:
+            st.session_state.conversation_id = str(uuid.uuid4())
+            
+        # Student profile and scenario defaults
+        if "student_profile" not in st.session_state:
+            st.session_state.student_profile = self.students[0] if self.students else None
+            
+        if "scenario" not in st.session_state:
+            st.session_state.scenario = self.scenarios[0] if self.scenarios else None
+            
+        # Set default app mode to expert feedback
+        if "app_mode" not in st.session_state:
+            st.session_state.app_mode = "expert_feedback"
+            
+        # Initialize expert data collections
+        if "expert_examples" not in st.session_state:
+            st.session_state.expert_examples = []
+            
+        if "expert_reviews" not in st.session_state:
+            st.session_state.expert_reviews = []
+            
+        # Initialize gamification components
+        if "expert_points" not in st.session_state:
+            st.session_state.expert_points = 0
+            
+        if "expert_level" not in st.session_state:
+            st.session_state.expert_level = "Novice Teacher"
+            
+        if "badges" not in st.session_state:
+            st.session_state.badges = []
+            
+        if "streak_days" not in st.session_state:
+            st.session_state.streak_days = 1
+            
+        if "last_contribution_date" not in st.session_state:
+            st.session_state.last_contribution_date = datetime.now().strftime("%Y-%m-%d")
+            
+        if "awards" not in st.session_state:
+            st.session_state.awards = {
+                "literacy_star": False,
+                "math_wizard": False, 
+                "science_explorer": False,
+                "feedback_champion": False
+            }
+            
+        # Initialize announcement banner state
+        if "show_announcement" not in st.session_state:
+            st.session_state.show_announcement = True
+
+    def load_students(self):
+        """Load student profiles from data files."""
+        # Default student profiles for demonstration
+        return [
+            {
+                "name": "Alex Johnson",
+                "grade_level": "8th Grade",
+                "learning_style": ["Visual", "Active"],
+                "challenges": ["Limited attention span", "Math anxiety"],
+                "interests": ["Sports", "Video games", "Science fiction"]
+            },
+            {
+                "name": "Maya Rodriguez",
+                "grade_level": "5th Grade",
+                "learning_style": ["Auditory", "Reflective"],
+                "challenges": ["Reading comprehension", "Shy in groups"],
+                "interests": ["Art", "Music", "Animals"]
+            },
+            {
+                "name": "Jamal Washington",
+                "grade_level": "11th Grade",
+                "learning_style": ["Kinesthetic", "Practical"],
+                "challenges": ["Test anxiety", "Difficulty with abstract concepts"],
+                "interests": ["Basketball", "Computer programming", "History"]
+            },
+            {
+                "name": "Emma Chen",
+                "grade_level": "3rd Grade",
+                "learning_style": ["Visual", "Sequential"],
+                "challenges": ["English as second language", "Fine motor skills"],
+                "interests": ["Reading", "Drawing", "Nature"]
+            }
+        ]
+        
+    def load_scenarios(self):
+        """Load teaching scenarios from data files."""
+        # Default scenarios for demonstration
+        return [
+            {
+                "title": "Classroom Management",
+                "description": "Managing student behavior and creating a positive learning environment",
+                "teaching_challenge": "Students are disruptive during group work",
+                "subject_area": "General"
+            },
+            {
+                "title": "Mathematics Instruction",
+                "description": "Teaching mathematical concepts effectively",
+                "teaching_challenge": "Students struggling with fractions and decimals",
+                "subject_area": "Mathematics"
+            },
+            {
+                "title": "Science Engagement",
+                "description": "Making science topics interesting and accessible",
+                "teaching_challenge": "Getting students excited about the scientific method",
+                "subject_area": "Science"
+            },
+            {
+                "title": "Reading Comprehension",
+                "description": "Helping students understand and analyze texts",
+                "teaching_challenge": "Students read but don't comprehend deeper meaning",
+                "subject_area": "Language Arts"
+            },
+            {
+                "title": "Historical Context",
+                "description": "Teaching history with proper context and engagement",
+                "teaching_challenge": "Making historical events relevant to modern students",
+                "subject_area": "Social Studies"
+            }
+        ]
+
+    def setup_page(self):
+        """Set up the page with header and description."""
+        # Header with logo and title side by side
+        col1, col2 = st.columns([1, 3])
+        
+        with col1:
+            st.image("logo.png", width=150)
+            
+        with col2:
+            st.title("Utah Teacher Training Assistant")
+            st.markdown("""
+            ### Subject Matter Expert Platform
+            Share your teaching expertise to help improve AI-assisted instruction for K-5 education.
+            """)
+            
+        # Display current app version and UVU styling based on color palette
+        st.markdown("""
+        <style>
+            :root {
+                --uvu-green: #275D38;
+                --uvu-black: #000000;
+                --uvu-white: #FFFFFF;
+                --uvu-light-green: #E9F2ED;
+            }
+            
+            .stApp {
+                background-color: var(--uvu-white);
+            }
+            
+            h1, h2, h3 {
+                color: var(--uvu-green);
+            }
+            
+            .stButton button {
+                background-color: var(--uvu-green);
+                color: var(--uvu-white);
+            }
+            
+            .info-box {
+                background-color: var(--uvu-light-green);
+                border-left: 5px solid var(--uvu-green);
+                padding: 10px;
+                margin-bottom: 10px;
+            }
+        </style>
+        <div style="text-align: right; font-size: 0.8em; color: gray;">Version 3.0</div>
+        """, unsafe_allow_html=True)
+
     def initialize_llm(self, model_name="gpt-3.5-turbo"):
-        """Initialize the LLM interface with specified model."""
+        """Initialize the LLM interface with the specified model."""
         try:
-            logging.info(f"Initializing DSPy LLM interface with model: {model_name}")
+            logging.info(f"Initializing DSPy LLM Interface with model: {model_name}")
+            
+            # Create the LLM interface - this goes directly to the underlying implementation
+            st.session_state.llm_interface = create_llm_interface(model_name=model_name)
             
             # Store the model name in session state
             st.session_state.model_name = model_name
             
-            # Create the LLM interface
-            llm_interface = create_llm_interface(model_name, enhanced=True)
-            
-            # Explicitly ensure DSPy is configured
-            if hasattr(llm_interface, 'dspy_interface') and hasattr(llm_interface.dspy_interface, 'configure_dspy_settings'):
-                success = llm_interface.dspy_interface.configure_dspy_settings()
-                if not success:
-                    st.error("Failed to configure DSPy settings. Using fallback mode.")
-                    logging.error("Failed to configure DSPy settings. Using fallback mode.")
-                    
-            # Store the interface in session state
-            st.session_state.llm_interface = llm_interface
-            
-            # Initialize pedagogical processor
-            logging.info(f"Initializing pedagogical processor with model: {model_name}")
-            processor = PedagogicalLanguageProcessor(model_name)
-            st.session_state.pedagogical_processor = processor
-            logging.info("Pedagogical processor set successfully")
-            
-            # Set the processor in the interface
-            if hasattr(llm_interface, 'set_pedagogical_processor'):
-                llm_interface.set_pedagogical_processor(processor)
-            
-            return llm_interface
+            logging.info(f"Initialized LLM interface with model: {model_name}")
+            return True
         except Exception as e:
-            st.error(f"Error initializing LLM: {str(e)}")
-            logging.error(f"LLM initialization error: {e}", exc_info=True)
-            return None
+            logging.error(f"Failed to initialize LLM interface: {str(e)}")
+            st.error(f"Failed to initialize LLM interface: {str(e)}")
+            return False
+            
+    def _format_conversation_history(self, messages, max_messages=10):
+        """Format the conversation history for the LLM context.
+        
+        Args:
+            messages: List of message dictionaries with 'role' and 'content'
+            max_messages: Maximum number of recent messages to include
+        
+        Returns:
+            Formatted conversation string
+        """
+        # Get the most recent messages
+        recent_messages = messages[-max_messages:] if len(messages) > max_messages else messages
+        
+        # Format each message with role and content
+        formatted_history = ""
+        for msg in recent_messages:
+            role = "Teacher" if msg["role"] == "teacher" else "Student"
+            formatted_history += f"{role}: {msg['content']}\n\n"
+        
+        return formatted_history
 
     def create_scenario(self):
         """Create a teaching scenario with specified parameters."""
@@ -725,44 +875,235 @@ class WebInterface:
         """Display the conversation history in a chat-like interface."""
         st.markdown("### Conversation")
         
-        # Create a container for the conversation
-        conversation_container = st.container()
+        # Display conversation header
+        st.markdown("""
+        <div class="conversation-header">
+            <h3>Classroom Conversation</h3>
+            <p>Interact with the simulated student below.</p>
+        </div>
+        """, unsafe_allow_html=True)
         
-        with conversation_container:
+        # Use a container with dynamic height for the conversation
+        chat_container = st.container()
+        with chat_container:
+            # Display the conversation
             for message in st.session_state.messages:
-                role = message["role"]
-                content = message["content"]
-                timestamp = message.get("timestamp", "")
+                with st.chat_message(message["role"], avatar="👨‍🎓" if message["role"] == "student" else "👨‍🏫"):
+                    st.write(f"{message['timestamp']}")
+                    st.markdown(message["content"])
+        
+        # Get teacher input
+        teacher_input = st.chat_input("Type your response as the teacher...")
+        
+        if teacher_input:
+            # Add teacher message to chat history
+            st.session_state.messages.append({"role": "teacher", "content": teacher_input, "timestamp": self._get_timestamp()})
+            
+            # Process student response in the background
+            try:
+                # Format conversation history for context
+                history = self._format_conversation_history(st.session_state.messages)
                 
-                # Use different styles for different roles
-                if role == "teacher":
-                    st.markdown(
-                        f"""
-                        <div class="teacher-message">
-                            <div class="message-header">
-                                <span class="role">Teacher</span>
-                                <span class="timestamp">{timestamp}</span>
-                            </div>
-                            <div class="message-content">{content}</div>
-                        </div>
-                        """, 
-                        unsafe_allow_html=True
+                # Get the last student response to avoid repetition
+                last_student_response = ""
+                for msg in reversed(st.session_state.messages):
+                    if msg["role"] == "student":
+                        last_student_response = msg["content"]
+                        break
+                
+                # Add classroom management strategies to the context if any are selected
+                strategy_instructions = ""
+                if st.session_state.classroom_management_strategies:
+                    strategy_instructions = "\n\nThe teacher is using the following classroom management strategies:\n"
+                    for strategy in st.session_state.classroom_management_strategies:
+                        strategy_instructions += f"- {strategy['name']}: {strategy['description']}\n"
+                    strategy_instructions += "\nThe student should respond appropriately to these teaching strategies. If the teacher effectively uses the strategy, the student should show a slightly more positive, engaged, or improved response. If the strategy is not effectively applied, the student can show confusion or maintain their previous state."
+                
+                # Create an enhanced teacher input with explicit instructions to be conversational
+                enhanced_teacher_input = f"""
+                The teacher just said: "{teacher_input}"
+                
+                You are {student_profile.get('name', 'Jamie')}, a {student_profile.get('grade_level', '7th grade')} student.
+                Respond naturally as yourself in a brief, realistic way.
+                
+                KEY INSTRUCTIONS:
+                1. DO NOT repeat your introduction or describe yourself again
+                2. DO NOT say "As a 7th-grade student who..." or anything like that
+                3. Respond directly to what the teacher just said
+                4. Keep your response short (1-3 sentences)
+                5. Use casual, age-appropriate language
+                6. Show your personality through your response
+                7. If the teacher just said "hello" or greeted you, respond naturally and maybe mention something about the class or ask a question
+                8. NEVER list your traits, challenges or learning style directly - these should only be implied by your response
+                9. IMPORTANT: NEVER repeat any of your previous responses verbatim
+                10. Each of your responses should be unique and move the conversation forward
+                {strategy_instructions}
+                
+                Your previous response was: "{last_student_response}"
+                DO NOT repeat this response - say something completely new and different that makes sense in the context of this conversation.
+                """
+                
+                # Create context with conversation history and last response
+                context_with_history = scenario.copy()
+                context_with_history['conversation_history'] = history
+                context_with_history['previous_response'] = last_student_response
+                context_with_history['session_state'] = {'last_student_response': last_student_response}
+                context_with_history['instruction'] = "Be brief and conversational, like a real student in class"
+                
+                # Add classroom management strategies to the context
+                if st.session_state.classroom_management_strategies:
+                    context_with_history['classroom_management_strategies'] = st.session_state.classroom_management_strategies
+                
+                # Try to get the student's response with fallbacks
+                try:
+                    response = st.session_state.llm_interface.simulate_student_response(
+                        teacher_input=enhanced_teacher_input,
+                        student_profile=student_profile,
+                        scenario_context=context_with_history
                     )
-                elif role == "student":
-                    st.markdown(
-                        f"""
-                        <div class="student-message">
-                            <div class="message-header">
-                                <span class="role">Student</span>
-                                <span class="timestamp">{timestamp}</span>
-                            </div>
-                            <div class="message-content">{content}</div>
-                        </div>
-                        """, 
-                        unsafe_allow_html=True
-                    )
-                # Add a small spacing between messages
-                st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
+                    
+                    # Check if response is identical to any previous student response
+                    previous_responses = [msg["content"] for msg in st.session_state.messages if msg["role"] == "student"]
+                    if response in previous_responses:
+                        logging.warning("Generated response is identical to a previous one. Using fallback.")
+                        
+                        # Random conversational responses that can work in various contexts
+                        fallback_options = [
+                            "I'm not sure I understand. Could you explain that differently?",
+                            "That's interesting. Can we talk more about how this works?",
+                            "I've been thinking about what you said. Can you give another example?",
+                            "OK, I think I'm starting to get it.",
+                            "Let me try to understand this from another angle.",
+                            "I'm still confused about part of this.",
+                            "So what does that mean for our assignment?",
+                            "I hadn't thought about it that way before."
+                        ]
+                        
+                        # Choose a random fallback that's not in previous responses
+                        filtered_fallbacks = [opt for opt in fallback_options if opt not in previous_responses]
+                        if filtered_fallbacks:
+                            response = random.choice(filtered_fallbacks)
+                        else:
+                            # Create a unique response by adding a small random modifier
+                            response = f"I see. {random.choice(['Actually, ', 'Well, ', 'Hmm, ', 'So, '])}I'm still working through this."
+                except Exception as e:
+                    logging.error(f"Error generating student response: {e}", exc_info=True)
+                    # Set up a fallback response
+                    response = "I'm not sure how to respond to that."
+                
+                # Check if response is empty or has an error
+                if not response or "Error" in response:
+                    # Create a simple fallback response based on the teacher's input
+                    if "?" in teacher_input:
+                        response = "I'm not really sure about that. Can you explain it differently?"
+                    else:
+                        response = "Okay, I understand. What should we do next?"
+                
+                # Check if response seems like a self-description rather than a natural response
+                # We'll look for common patterns that indicate the student is describing themselves
+                description_indicators = [
+                    "as a", "my learning style", "I am a", "my strengths", 
+                    "my challenges", "I struggle with", "my teachers say"
+                ]
+                
+                is_description = any(indicator in response.lower() for indicator in description_indicators)
+                
+                # If it's a description or too long, generate a simpler response
+                if is_description or len(response.split()) > 50:
+                    logging.info("Detected self-description in student response, generating simpler response")
+                    
+                    # Generate a very simple, age-appropriate response
+                    if "hello" in teacher_input.lower() or "hi" in teacher_input.lower() or "hey" in teacher_input.lower():
+                        fallback_options = [
+                            f"Hi! Are we starting algebra today?",
+                            f"Hey! Do we need our textbooks for today's lesson?",
+                            f"Hello! I was just trying to figure out this math problem.",
+                            f"Hi there! Is this going to be on the test?",
+                            f"Hey teacher, I was wondering what we're covering today.",
+                            f"Hi! I've been stuck on problem number 5, can you help me?"
+                        ]
+                        # Avoid repeating the last student response
+                        last_response = ""
+                        for msg in reversed(st.session_state.messages):
+                            if msg["role"] == "student":
+                                last_response = msg["content"]
+                                break
+                        
+                        # Filter out any options that match the previous response
+                        filtered_options = [opt for opt in fallback_options if opt != last_response]
+                        
+                        # If we have options left, choose from them, otherwise use a more generic response
+                        if filtered_options:
+                            response = random.choice(filtered_options)
+                        else:
+                            response = "Sorry, I didn't catch what you said. Can you explain what we're doing today?"
+                    elif "?" in teacher_input:
+                        fallback_options = [
+                            "Um, I'm not really sure.",
+                            "I don't know, can you explain it again?",
+                            "Maybe? I get confused with all these x's and y's.",
+                            "I think so... but I'm not 100% sure.",
+                            "Could you break that down for me?",
+                            "I'm still trying to understand that concept.",
+                            "Not completely. Could you show an example?"
+                        ]
+                        # Avoid repeating the last student response
+                        last_response = ""
+                        for msg in reversed(st.session_state.messages):
+                            if msg["role"] == "student":
+                                last_response = msg["content"]
+                                break
+                        
+                        # Filter out any options that match the previous response
+                        filtered_options = [opt for opt in fallback_options if opt != last_response]
+                        
+                        # If we have options left, choose from them, otherwise use a more generic response
+                        if filtered_options:
+                            response = random.choice(filtered_options)
+                        else:
+                            response = "I'm confused about that question. Can we try a different approach?"
+                    else:
+                        fallback_options = [
+                            "Okay, I'll try that.",
+                            "That makes sense, I think.",
+                            "So we're supposed to solve for x?",
+                            "Can you show me an example first?",
+                            "Math is so confusing sometimes.",
+                            "I'll give it my best shot.",
+                            "Let me see if I understand the process correctly.",
+                            "That's clearer now, thanks!"
+                        ]
+                        # Avoid repeating the last student response
+                        last_response = ""
+                        for msg in reversed(st.session_state.messages):
+                            if msg["role"] == "student":
+                                last_response = msg["content"]
+                                break
+                        
+                        # Filter out any options that match the previous response
+                        filtered_options = [opt for opt in fallback_options if opt != last_response]
+                        
+                        # If we have options left, choose from them, otherwise use a more generic response
+                        if filtered_options:
+                            response = random.choice(filtered_options)
+                        else:
+                            response = "I'll work on that. Is there something specific I should focus on?"
+                
+                # Add the response to messages
+                timestamp = self._get_timestamp()
+                st.session_state.messages.append({"role": "student", "content": response, "timestamp": timestamp})
+                
+            except Exception as e:
+                error_message = f"Error generating student response: {str(e)}"
+                logging.error(f"{error_message}", exc_info=True)
+                
+                # Provide a fallback response
+                fallback_response = f"Sorry, what do you mean?"
+                timestamp = self._get_timestamp()
+                st.session_state.messages.append({"role": "student", "content": fallback_response, "timestamp": timestamp})
+            
+            # Rerun the app to display the updated conversation
+            st.rerun()
     
     def display_analysis(self):
         """Display analysis of the teaching interaction."""
@@ -1007,12 +1348,15 @@ class WebInterface:
             """)
     
     def chat_interface(self):
-        """Display the chat interface for the teacher to interact with the simulated student."""
-        # Get the scenario and student profile
-        if "scenario" not in st.session_state:
-            self.create_default_scenario()
+        """Display the chat interface for teacher-student interaction."""
         
+        # Get scenario from session state, create default if None
         scenario = st.session_state.scenario
+        if scenario is None:
+            scenario = self.create_default_scenario()
+            st.session_state.scenario = scenario
+            
+        # Now safely use the scenario object, which is guaranteed to be initialized
         student_profile = scenario.get('student_profile', {})
         
         # Initialize the LLM if not already done
@@ -1115,80 +1459,18 @@ class WebInterface:
             st.markdown("""
             <div class="conversation-header">
                 <h3>Classroom Conversation</h3>
-                <p>The student has started the conversation. Respond as the teacher to help them learn.</p>
+                <p>Interact with the simulated student below.</p>
             </div>
             """, unsafe_allow_html=True)
             
-            # Display active classroom management strategies if any are selected
-            if st.session_state.classroom_management_strategies:
-                with st.expander("Active Classroom Management Strategies"):
-                    st.markdown("<div style='background-color: #F0FFF4; padding: 15px; border-radius: 5px; border: 1px solid #C6F6D5;'>", unsafe_allow_html=True)
-                    st.markdown("**Your Selected Teaching Strategies:**")
-                    
-                    # Group strategies by book
-                    strategies_by_book = {}
-                    for strategy in st.session_state.classroom_management_strategies:
-                        book = strategy.get("book", "Unknown")
-                        if book not in strategies_by_book:
-                            strategies_by_book[book] = []
-                        strategies_by_book[book].append(strategy)
-                    
-                    # Display strategies grouped by book
-                    for book, strategies in strategies_by_book.items():
-                        st.markdown(f"##### From: {book}")
-                        for i, strategy in enumerate(strategies, 1):
-                            st.markdown(f"**{strategy['name']}**: {strategy['description']}")
-                            
-                    st.markdown("</div>", unsafe_allow_html=True)
-                    
-                    # Add a tip on how to use the strategies
-                    st.markdown("<div style='margin-top: 10px; background-color: #FFFFD0; padding: 15px; border-radius: 5px; border: 1px solid #E2E8F0;'>", unsafe_allow_html=True)
-                    st.markdown("""**How to use these strategies:**
-                    - Actively implement these techniques in your responses
-                    - The student will respond according to how effectively you apply the strategies
-                    - Mix different strategies for a comprehensive approach
-                    """)
-                    st.markdown("</div>", unsafe_allow_html=True)
-            
-            # Add example problems if they exist
-            if scenario.get('example_problems'):
-                with st.expander("Example Problems"):
-                    st.markdown("<div style='background-color: #F0F7FF; padding: 15px; border-radius: 5px; border: 1px solid #D0E3FF;'>", unsafe_allow_html=True)
-                    st.markdown("**Current Worksheet Problems:**")
-                    for i, problem in enumerate(scenario.get('example_problems', []), 1):
-                        st.markdown(f"{i}. {problem}")
-                    st.markdown("</div>", unsafe_allow_html=True)
-                    
-                    if scenario.get('teaching_challenge'):
-                        st.markdown("<div style='margin-top: 10px; background-color: #FFF0F0; padding: 15px; border-radius: 5px; border: 1px solid #FFD0D0;'>", unsafe_allow_html=True)
-                        st.markdown(f"**Teaching Challenge:** {scenario.get('teaching_challenge')}")
-                        st.markdown("</div>", unsafe_allow_html=True)
-            
-            # Use a container with fixed height and scrolling for the conversation
-            with st.container():
-                # Create a scrollable container for messages
-                st.markdown('<div class="chat-container" id="chat-messages">', unsafe_allow_html=True)
-                
+            # Use a container with dynamic height for the conversation
+            chat_container = st.container()
+            with chat_container:
                 # Display the conversation
                 for message in st.session_state.messages:
                     with st.chat_message(message["role"], avatar="👨‍🎓" if message["role"] == "student" else "👨‍🏫"):
                         st.write(f"{message['timestamp']}")
                         st.markdown(message["content"])
-                
-                st.markdown('</div>', unsafe_allow_html=True)
-                
-                # Auto-scroll to bottom (using JavaScript)
-                st.markdown("""
-                <script>
-                    function scrollToBottom() {
-                        const chatContainer = document.querySelector('#chat-messages');
-                        if (chatContainer) {
-                            chatContainer.scrollTop = chatContainer.scrollHeight;
-                        }
-                    }
-                    setTimeout(scrollToBottom, 500);
-                </script>
-                """, unsafe_allow_html=True)
             
             # Get teacher input
             teacher_input = st.chat_input("Type your response as the teacher...")
@@ -1521,224 +1803,1607 @@ class WebInterface:
             # Close the info panel div
             st.markdown('</div>', unsafe_allow_html=True)
 
-    def _format_conversation_history(self, messages):
-        """Format the conversation history to provide context for the LLM."""
-        formatted_history = []
-        
-        for message in messages:
-            role = "Teacher" if message["role"] == "teacher" else "Student"
-            formatted_history.append(f"{role}: {message['content']}")
-        
-        return "\n".join(formatted_history)
-
     def _get_timestamp(self):
         """Get the current timestamp for messages."""
         return datetime.now().strftime("%H:%M:%S")
 
     def create_default_scenario(self):
-        """Create a default scenario if none exists."""
-        if not st.session_state.scenario:
-            # Create a more detailed default student profile
-            default_student_profile = {
+        """Create a default teaching scenario when none is selected."""
+        default_scenario = {
+            "title": "Basic Math Lesson",
+            "description": "A typical middle school math lesson focusing on basic algebra concepts.",
+            "topic_description": "Basic algebra, focusing on solving linear equations.",
+                "grade_level": "7th grade",
+            "subject": "Math",
+            "student_profile": {
                 "name": "Jamie",
-                "grade_level": "7th grade",
                 "age": 12,
-                "learning_style": ["visual", "hands-on"],
-                "challenges": ["math anxiety", "difficulty with abstract concepts", "attention span"],
-                "strengths": ["creativity", "verbal expression", "collaborative work"],
-                "interests": ["art", "music", "working with friends"],
-                "personality": "curious but easily frustrated when concepts seem too abstract"
-            }
-            
-            # Create a more detailed default scenario
-            default_scenario = {
-                "subject": "Mathematics",
-                "topic": "Introduction to Algebra",
                 "grade_level": "7th grade",
-                "difficulty": "moderate",
-                "classroom_setting": "Small group work on algebraic expressions",
-                "learning_objectives": [
-                    "Understand variables as representing unknown quantities",
-                    "Translate word problems into algebraic expressions",
-                    "Solve simple linear equations"
-                ],
-                "scenario_description": "Students are working on translating word problems into algebraic expressions. Jamie has been struggling with the concept of variables and is showing signs of frustration. The teacher needs to help Jamie understand the concept while maintaining engagement and confidence.",
-                "current_activity": "Students are working on a worksheet with word problems that need to be translated into algebraic expressions. Jamie is stuck on a problem about finding the unknown number.",
-                "student_profile": default_student_profile,
-                "teaching_challenge": "Help the student overcome math anxiety while building understanding of abstract algebraic concepts",
+                "learning_style": "Visual learner",
+                "strengths": "Good at recognizing patterns",
+                "challenges": "Sometimes struggles with abstract concepts",
+                "interests": "Video games, basketball, music",
+                "background": "Generally does well in school but has been struggling recently with math concepts."
+            },
                 "example_problems": [
-                    "If a number plus 5 equals 12, what is the number?",
-                    "Sarah is 3 years older than twice Miguel's age. If Sarah is 15, how old is Miguel?"
-                ]
-            }
-            
+                "Solve for x: 3x + 5 = 20",
+                "If 2(x + 3) = 16, what is x?",
+                "Find the value of y in the equation y - 7 = 15"
+            ],
+            "teaching_challenge": "The student has difficulty understanding the concept of variables in algebra."
+        }
+        
+        # Set in session state
             st.session_state.scenario = default_scenario
-            st.session_state.student_profile = default_student_profile
-            
-            logging.info("Created detailed default scenario")
-            return True
-        return False
+        
+        # Also return the scenario object
+        return default_scenario
 
-    def run(self):
-        """Run the Streamlit web application."""
-        # Setup the page
-        self.setup_page()
+    def show_evaluation_section(self):
+        """Display the evaluation section for teacher responses."""
+        st.markdown("### Teaching Improvement Center")
+        st.markdown("""
+        This section allows you to get scenario-specific recommendations and 
+        contribute your expertise to improve the system through human feedback.
+        """)
         
-        # Create default scenario if needed
-        self.create_default_scenario()
+        # Check if there are any messages to evaluate
+        teacher_messages = [m for m in st.session_state.messages if m["role"] == "teacher"]
+        if not st.session_state.messages or len(teacher_messages) == 0:
+            st.warning("No teaching responses yet. Please have a conversation with the student first.")
+            return
         
-        # Sidebar for navigation and settings
-        self.setup_sidebar()
+        # Create tabs for different evaluation views
+        tabs = st.tabs(["Scenario Recommendations", "Human Feedback"])
         
-        # Main content area based on selected mode
-        if st.session_state.app_mode == "Chat Interface":
-            self.chat_interface()
-        elif st.session_state.app_mode == "Create New Scenario":
-            self.create_scenario()
-        elif st.session_state.app_mode == "Analysis":
-            self.display_analysis()
-        elif st.session_state.app_mode == "Resources":
-            self.display_resources()
-        else:
-            # Default to chat interface
-            self.chat_interface()
-
-    def setup_sidebar(self):
-        """Set up the sidebar with navigation and settings."""
-        with st.sidebar:
-            # Settings section - simplified
-            st.markdown('<div class="sidebar-section">', unsafe_allow_html=True)
-            st.markdown('<div class="sidebar-title">Settings</div>', unsafe_allow_html=True)
+        with tabs[0]:
+            self._show_scenario_recommendations()
             
-            st.markdown("**Select Language Model**")
+        with tabs[1]:
+            self._show_human_feedback_section()
             
-            # Model selection - simplified options
-            model_options = ["GPT-3.5 Turbo", "GPT-4"]
-            selected_model = st.selectbox(
-                "Select a model", 
-                model_options, 
-                index=0, 
-                label_visibility="collapsed"
-            )
+    def _show_scenario_recommendations(self):
+        """Show teaching recommendations based on the current scenario."""
+        scenario = st.session_state.scenario
+        student_profile = st.session_state.student_profile or {}
+        
+        st.markdown("### Teaching Recommendations")
+        st.markdown("Based on the current scenario and student profile, here are some recommended teaching strategies:")
+        
+        # Get scenario-specific recommendations
+        with st.container():
+            st.markdown("#### Scenario Context")
+            scenario_description = scenario.get('description', 'No scenario description available.')
+            teaching_challenge = scenario.get('teaching_challenge', 'No specific challenge identified.')
             
-            # Map the display name to the model identifier
-            model_mapping = {
-                "GPT-3.5 Turbo": "gpt-3.5-turbo",
-                "GPT-4": "gpt-4"
-            }
+            st.markdown(f"**Scenario:** {scenario_description}")
+            st.markdown(f"**Teaching Challenge:** {teaching_challenge}")
             
-            # Display current model
-            st.markdown(f"**Current model:** {selected_model}")
+            # Display a divider
+            st.markdown("---")
             
-            # Initialize or switch model if needed
-            if "model_name" not in st.session_state or st.session_state.model_name != model_mapping[selected_model]:
-                if st.button("Apply Model"):
-                    with st.spinner(f"Initializing {selected_model}..."):
-                        self.initialize_llm(model_mapping[selected_model])
-                        st.success(f"Model switched to {selected_model}")
-                        st.session_state.messages = []  # Reset conversation with new model
+            # Provide recommendations based on student profile
+            st.markdown("#### Student-Specific Strategies")
             
-            st.markdown('</div>', unsafe_allow_html=True)
+            learning_style = student_profile.get('learning_style', 'Not specified')
+            challenges = student_profile.get('challenges', 'Not specified')
             
-            # Classroom Management Strategies section
-            st.markdown('<div class="sidebar-section">', unsafe_allow_html=True)
-            st.markdown('<div class="sidebar-title">🧠 Classroom Management Strategies</div>', unsafe_allow_html=True)
+            if isinstance(learning_style, list):
+                learning_style = ", ".join(learning_style)
+            if isinstance(challenges, list):
+                challenges = ", ".join(challenges)
             
-            # Book selection
-            selected_book = st.selectbox(
-                "Select a book",
-                list(self.classroom_management_books.keys()),
-                index=0,
-                key="strategy_book"
-            )
+            st.markdown(f"**Learning Style:** {learning_style}")
+            st.markdown(f"**Challenges:** {challenges}")
             
-            # Strategy selection from the chosen book
-            if selected_book:
-                strategies = self.classroom_management_books[selected_book]
-                strategy_names = [strategy["name"] for strategy in strategies]
+            # Generate recommendations based on learning style
+            learning_style_recommendations = self._get_learning_style_recommendations(learning_style)
+            st.markdown("##### Learning Style Recommendations:")
+            for rec in learning_style_recommendations:
+                st.markdown(f"- {rec}")
                 
-                selected_strategies = st.multiselect(
-                    "Select strategies to apply",
-                    strategy_names,
-                    key="selected_strategies"
-                )
-                
-                # Display descriptions of selected strategies
-                if selected_strategies:
-                    st.markdown("### Selected Strategies")
-                    for strategy_name in selected_strategies:
-                        # Find the strategy object with this name
-                        for strategy in strategies:
-                            if strategy["name"] == strategy_name:
-                                with st.expander(strategy_name):
-                                    st.markdown(f"**{strategy_name}**")
-                                    st.markdown(strategy["description"])
-                                break
-                    
-                    # Update session state with selected strategies
-                    if st.button("Apply Strategies"):
-                        # Collect full strategy objects (with descriptions) for the selected strategy names
-                        full_selected_strategies = []
-                        for strategy_name in selected_strategies:
-                            for strategy in strategies:
-                                if strategy["name"] == strategy_name:
-                                    full_selected_strategies.append({
-                                        "name": strategy["name"],
-                                        "description": strategy["description"],
-                                        "book": selected_book
-                                    })
-                                    break
-                        
-                        st.session_state.classroom_management_strategies = full_selected_strategies
-                        st.success(f"Applied {len(full_selected_strategies)} classroom management strategies!")
+            # Generate recommendations based on challenges
+            challenge_recommendations = self._get_challenge_recommendations(challenges)
+            st.markdown("##### Challenge-Specific Recommendations:")
+            for rec in challenge_recommendations:
+                st.markdown(f"- {rec}")
             
-            st.markdown('</div>', unsafe_allow_html=True)
-            
-            # Navigation section - simplified
-            st.markdown('<div class="sidebar-section">', unsafe_allow_html=True)
-            st.markdown('<div class="sidebar-title">Navigation</div>', unsafe_allow_html=True)
-            
-            # Simple navigation options
-            mode_options = [
-                {"label": "Chat Interface", "value": "chat", "icon": "💬"},
-                {"label": "Create New Scenario", "value": "create_scenario", "icon": "🔧"}
+            # Add general teaching strategies
+            st.markdown("#### General Teaching Strategies")
+            general_strategies = [
+                "Use clear and concise explanations with concrete examples",
+                "Check for understanding frequently using a variety of assessment methods",
+                "Connect new content to students' prior knowledge and experiences",
+                "Provide scaffolded support that gradually releases responsibility",
+                "Use visual aids and manipulatives to represent abstract concepts",
+                "Incorporate opportunities for active learning and student discussion"
             ]
             
-            # Create radio buttons for navigation
-            selected_mode = st.radio(
-                "Select Mode",
-                [f"{option['icon']} {option['label']}" for option in mode_options],
-                label_visibility="collapsed"
+            for strategy in general_strategies:
+                st.markdown(f"- {strategy}")
+                
+    def _get_learning_style_recommendations(self, learning_style):
+        """Get teaching recommendations based on learning style."""
+        learning_style = learning_style.lower()
+        
+        recommendations = []
+        
+        if "visual" in learning_style:
+            recommendations.extend([
+                "Use diagrams, charts, and visual models to explain concepts",
+                "Incorporate color-coding to highlight key information",
+                "Provide graphic organizers to structure information",
+                "Use videos and animations to demonstrate processes"
+            ])
+            
+        if "auditory" in learning_style or "verbal" in learning_style:
+            recommendations.extend([
+                "Use clear verbal explanations with varied tone and emphasis",
+                "Incorporate discussions and think-aloud strategies",
+                "Use rhymes, mnemonics, or songs to aid memory",
+                "Provide opportunities for students to explain concepts verbally"
+            ])
+            
+        if "kinesthetic" in learning_style or "hands-on" in learning_style or "tactile" in learning_style:
+            recommendations.extend([
+                "Incorporate manipulatives and hands-on activities",
+                "Use role-play and physical movement to represent concepts",
+                "Provide opportunities for students to build models",
+                "Include experiments and demonstrations where students actively participate"
+            ])
+            
+        if not recommendations:
+            recommendations = [
+                "Use multi-modal teaching approaches that combine visual, auditory, and hands-on elements",
+                "Vary instructional methods to engage different learning preferences",
+                "Provide multiple representations of key concepts",
+                "Offer choices in how students demonstrate understanding"
+            ]
+            
+        return recommendations
+        
+    def _get_challenge_recommendations(self, challenges):
+        """Get teaching recommendations based on student challenges."""
+        challenges = challenges.lower()
+        
+        recommendations = []
+        
+        if "attention" in challenges or "focus" in challenges:
+            recommendations.extend([
+                "Break longer tasks into smaller, manageable chunks",
+                "Use timers and clear transitions between activities",
+                "Minimize distractions in the learning environment",
+                "Incorporate movement breaks between tasks"
+            ])
+            
+        if "anxiety" in challenges or "confidence" in challenges:
+            recommendations.extend([
+                "Create a supportive environment where mistakes are viewed as learning opportunities",
+                "Provide private feedback and avoid putting the student on the spot",
+                "Use specific praise to build confidence",
+                "Gradually increase task difficulty to build success"
+            ])
+            
+        if "abstract" in challenges or "conceptual" in challenges:
+            recommendations.extend([
+                "Connect abstract concepts to concrete, real-world examples",
+                "Use analogies and metaphors to explain complex ideas",
+                "Provide step-by-step procedures with visual supports",
+                "Use manipulatives and models to represent abstract concepts"
+            ])
+            
+        if "math" in challenges or "calculation" in challenges:
+            recommendations.extend([
+                "Use visual representations of mathematical concepts",
+                "Break down multi-step problems into smaller steps",
+                "Connect mathematical procedures to conceptual understanding",
+                "Provide opportunities for repeated practice with immediate feedback"
+            ])
+            
+        if "reading" in challenges or "literacy" in challenges:
+            recommendations.extend([
+                "Pre-teach key vocabulary and concepts",
+                "Use text-to-speech or read material aloud",
+                "Provide graphic organizers to structure reading comprehension",
+                "Break text into smaller sections with comprehension checks"
+            ])
+            
+        if not recommendations:
+            recommendations = [
+                "Use scaffolded instruction with gradual release of responsibility",
+                "Provide clear, specific feedback focused on improvement",
+                "Check for understanding frequently during instruction",
+                "Use multiple modalities to present information"
+            ]
+            
+        return recommendations
+        
+    def _show_human_feedback_section(self):
+        """Show a section for capturing expert knowledge and examples."""
+        st.markdown("### Expert Knowledge Capture")
+        st.markdown("""
+        Share your teaching expertise to improve the system. We learn directly from how experts respond to student questions.
+        """)
+        
+        # Two tabs for different ways to contribute expertise
+        feedback_tabs = st.tabs(["Improve Responses", "View Collected Examples"])
+        
+        with feedback_tabs[0]:
+            # Get the last student message as context
+            student_messages = [m for m in st.session_state.messages if m["role"] == "student"]
+            teacher_messages = [m for m in st.session_state.messages if m["role"] == "teacher"]
+            
+            if not student_messages:
+                st.warning("No student questions available. Please have a conversation with the student first.")
+                return
+                
+            # Show the student's question
+            last_student_msg = student_messages[-1]["content"]
+            last_teacher_msg = teacher_messages[-1]["content"] if teacher_messages else ""
+            
+            st.markdown("#### Student Question")
+            st.info(last_student_msg)
+            
+            # Current system response (if any)
+            if last_teacher_msg:
+                st.markdown("#### Current Response")
+                st.info(last_teacher_msg)
+            
+            # Simple form for expert to provide a better response
+            st.markdown("#### Your Expert Response")
+            st.markdown("Please provide a better response to this student question:")
+            
+            with st.form("expert_response_form"):
+                # Expert's improved response
+                expert_response = st.text_area(
+                    "How would you respond to this student?",
+                    value=last_teacher_msg,
+                    height=150,
+                    placeholder="Type your expert response here..."
+                )
+                
+                # Simple rating of the original response
+                original_rating = st.slider(
+                    "How would you rate the original response? (1-10)",
+                    min_value=1,
+                    max_value=10,
+                    value=5
+                )
+                
+                # Why is the expert's response better?
+                improvement_reason = st.text_area(
+                    "What makes your response better? (Optional)",
+                    placeholder="My response is better because..."
+                )
+                
+                # Teaching techniques used
+                techniques = st.multiselect(
+                    "What teaching techniques did you use? (Select all that apply)",
+                    options=[
+                        "Clear explanation",
+                        "Real-world example",
+                        "Questioning technique",
+                        "Scaffolding",
+                        "Visual representation",
+                        "Analogy/metaphor",
+                        "Step-by-step process",
+                        "Connecting to prior knowledge",
+                        "Addressing misconception",
+                        "Encouraging reflection",
+                        "Positive reinforcement",
+                        "Differentiated approach"
+                    ]
+                )
+                
+                submit = st.form_submit_button("Submit Expert Response")
+                
+            if submit:
+                # Save the expert example
+                try:
+                    # Get context information
+                    scenario = st.session_state.scenario if hasattr(st.session_state, 'scenario') else {}
+                    student_profile = st.session_state.student_profile if hasattr(st.session_state, 'student_profile') else {}
+                    
+                    # Create an example
+                    import datetime
+                    
+                    example = {
+                        "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+                        "student_question": last_student_msg,
+                        "original_response": last_teacher_msg,
+                        "expert_response": expert_response,
+                        "original_rating": original_rating,
+                        "improvement_reason": improvement_reason,
+                        "techniques_used": techniques,
+                        "context": {
+                            "scenario": scenario.get("description", ""),
+                            "subject": scenario.get("subject", ""),
+                            "student_name": student_profile.get("name", ""),
+                            "grade_level": student_profile.get("grade_level", ""),
+                            "learning_style": student_profile.get("learning_style", "")
+                        }
+                    }
+                    
+                    # Store the example
+                    if "expert_examples" not in st.session_state:
+                        st.session_state.expert_examples = []
+                        
+                    st.session_state.expert_examples.append(example)
+                    
+                    # Save to disk
+                    self._save_expert_example(example)
+                    
+                    st.success("Thank you! Your expert response has been recorded.")
+                    
+                    # Option to use this response in the conversation
+                    if st.button("Use my response in the conversation"):
+                        # Add the expert's response to the conversation
+                        st.session_state.messages.append({
+                            "role": "teacher",
+                            "content": expert_response,
+                            "source": "expert"
+                        })
+                        st.rerun()
+                        
+                except Exception as e:
+                    st.error(f"Error saving example: {str(e)}")
+                    
+        with feedback_tabs[1]:
+            # Show collected expert examples
+            st.markdown("### Collected Expert Examples")
+            
+            if "expert_examples" not in st.session_state or not st.session_state.expert_examples:
+                st.info("No expert examples collected yet. Please contribute your expertise in the 'Improve Responses' tab.")
+            else:
+                st.success(f"{len(st.session_state.expert_examples)} expert examples collected")
+                
+                # Export option
+                if st.button("Export Expert Examples Dataset"):
+                    export_path = self._export_expert_examples()
+                    if export_path:
+                        st.success(f"Expert examples exported to: {export_path}")
+                    else:
+                        st.error("Failed to export expert examples")
+                        
+                # View collected examples
+                if st.session_state.expert_examples:
+                    for i, example in enumerate(st.session_state.expert_examples):
+                        with st.expander(f"Example #{i+1}: {example.get('context', {}).get('subject', 'Unknown')}"):
+                            st.markdown("**Student Question:**")
+                            st.info(example.get("student_question", ""))
+                            
+                            col1, col2 = st.columns(2)
+                            with col1:
+                                st.markdown("**Original Response:**")
+                                st.info(example.get("original_response", ""))
+                                st.markdown(f"Rating: {example.get('original_rating', 0)}/10")
+                                
+                            with col2:
+                                st.markdown("**Expert Response:**")
+                                st.success(example.get("expert_response", ""))
+                                
+                                if example.get("techniques_used"):
+                                    st.markdown("**Techniques Used:**")
+                                    for technique in example.get("techniques_used", []):
+                                        st.markdown(f"- {technique}")
+                            
+                            if example.get("improvement_reason"):
+                                st.markdown("**Improvement Reason:**")
+                                st.write(example.get("improvement_reason", ""))
+    
+    def _save_expert_example(self, example):
+        """Save an expert example to disk."""
+        import json
+        import os
+        from datetime import datetime
+        
+        # Create the examples directory if it doesn't exist
+        examples_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'expert_examples')
+        os.makedirs(examples_dir, exist_ok=True)
+        
+        # Create a filename based on timestamp
+        timestamp = example["timestamp"].replace(":", "-").replace(" ", "_")
+        filename = f"expert_example_{timestamp}.json"
+        filepath = os.path.join(examples_dir, filename)
+        
+        # Write to file
+        try:
+            with open(filepath, 'w') as f:
+                json.dump(example, f, indent=2)
+            logging.info(f"Expert example saved to {filepath}")
+            return filepath
+        except Exception as e:
+            logging.error(f"Error saving expert example: {str(e)}")
+            return None
+            
+    def _export_expert_examples(self):
+        """Export all expert examples as a dataset file."""
+        if "expert_examples" not in st.session_state or not st.session_state.expert_examples:
+            logging.warning("No expert examples to export")
+            return None
+            
+        import json
+        import os
+        from datetime import datetime
+        
+        try:
+            # Create the export directory
+            export_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'expert_datasets')
+            os.makedirs(export_dir, exist_ok=True)
+            
+            # Create a filename with timestamp
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"expert_teaching_dataset_{timestamp}.jsonl"
+            filepath = os.path.join(export_dir, filename)
+            
+            # Write all examples to a JSONL file (for easy machine reading)
+            with open(filepath, 'w') as f:
+                for example in st.session_state.expert_examples:
+                    f.write(json.dumps(example) + '\n')
+                    
+            # Also create a human-readable CSV version
+            csv_path = os.path.join(export_dir, f"expert_teaching_dataset_{timestamp}.csv")
+            try:
+                import csv
+                with open(csv_path, 'w', newline='') as csvfile:
+                    fieldnames = [
+                        'timestamp', 'student_question', 'original_response', 
+                        'expert_response', 'original_rating', 'improvement_reason', 
+                        'techniques_used', 'subject', 'grade_level'
+                    ]
+                    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+                    
+                    writer.writeheader()
+                    for example in st.session_state.expert_examples:
+                        writer.writerow({
+                            'timestamp': example.get('timestamp', ''),
+                            'student_question': example.get('student_question', ''),
+                            'original_response': example.get('original_response', ''),
+                            'expert_response': example.get('expert_response', ''),
+                            'original_rating': example.get('original_rating', ''),
+                            'improvement_reason': example.get('improvement_reason', ''),
+                            'techniques_used': ','.join(example.get('techniques_used', [])),
+                            'subject': example.get('context', {}).get('subject', ''),
+                            'grade_level': example.get('context', {}).get('grade_level', '')
+                        })
+            except Exception as e:
+                logging.error(f"Error creating CSV: {str(e)}")
+                
+            # Create a simple README
+            readme_path = os.path.join(export_dir, "README.md")
+            with open(readme_path, 'w') as f:
+                f.write(f"""# Expert Teaching Examples Dataset
+
+This dataset contains {len(st.session_state.expert_examples)} examples of expert teacher responses to student questions.
+
+## Dataset Format
+
+Each example includes:
+
+- Student question/comment
+- Original system response
+- Expert improved response
+- Rating of original response
+- Explanation of improvements
+- Teaching techniques used
+- Contextual information (subject, grade level, etc.)
+
+## Usage
+
+This dataset can be used for:
+
+1. Fine-tuning language models to better respond to student questions
+2. Creating teaching technique classifiers
+3. Analyzing patterns in expert teaching responses
+
+## Latest Dataset
+
+- JSONL Format: `{filename}` (machine-readable)
+- CSV Format: `{os.path.basename(csv_path)}` (human-readable)
+- Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+- Examples: {len(st.session_state.expert_examples)}
+""")
+            
+            logging.info(f"Expert examples exported with {len(st.session_state.expert_examples)} examples to {filepath}")
+            return filepath
+            
+        except Exception as e:
+            logging.error(f"Error exporting expert examples: {str(e)}")
+            import traceback
+            logging.error(traceback.format_exc())
+            return None
+
+    def _prepare_rlhf_dataset(self):
+        """Prepare the collected feedback for RLHF fine-tuning."""
+        if 'system_feedback' not in st.session_state or not st.session_state.system_feedback:
+            logging.warning("No feedback data available for RLHF preparation")
+            return None
+        
+        import json
+        import os
+        from datetime import datetime
+        
+        try:
+            # Create both RLHF and DSPy dataset directories
+            rlhf_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'rlhf_datasets')
+            dspy_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'dspy_datasets')
+            os.makedirs(rlhf_dir, exist_ok=True)
+            os.makedirs(dspy_dir, exist_ok=True)
+            
+            # Timestamp for the dataset
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            rlhf_filename = f"rlhf_dataset_{timestamp}.jsonl"
+            dspy_filename = f"dspy_dataset_{timestamp}.jsonl"
+            rlhf_filepath = os.path.join(rlhf_dir, rlhf_filename)
+            dspy_filepath = os.path.join(dspy_dir, dspy_filename)
+            
+            # Prepare the data in the format needed for RLHF
+            rlhf_ready_entries = []
+            
+            # Prepare data for DSPy fine-tuning
+            dspy_examples = []
+            
+            for entry in st.session_state.system_feedback:
+                # Get key data from the feedback
+                context = entry.get('student_response', "")
+                teacher_response = entry.get('teacher_response', "")
+                alternative = entry.get('alternative_response', "")
+                preference = entry.get('preference', "")
+                preference_reason = entry.get('preference_reason', "")
+                
+                # Fetch scenario information for context
+                scenario = st.session_state.scenario if hasattr(st.session_state, 'scenario') else {}
+                student_profile = st.session_state.student_profile if hasattr(st.session_state, 'student_profile') else {}
+                
+                # Create full context string for DSPy
+                full_context = f"""
+                SCENARIO: {scenario.get('description', 'Not specified')}
+                STUDENT: {student_profile.get('name', 'Student')}, Grade: {student_profile.get('grade_level', 'Not specified')}
+                LEARNING STYLE: {student_profile.get('learning_style', 'Not specified')}
+                CHALLENGES: {student_profile.get('challenges', 'Not specified')}
+                
+                STUDENT QUESTION/COMMENT: {context}
+                """
+                
+                # Create DSPy fine-tuning example - including both responses but marking preferred one
+                dspy_example = {
+                    "task": "teaching_response",
+                    "input": full_context.strip(),
+                    "output": teacher_response,
+                    "alternatives": [alternative],
+                    "preferred": 0 if preference == "Original response is better" else 1,
+                    "feedback": preference_reason,
+                    "metadata": {
+                        "scenario_type": scenario.get('title', 'Unknown'),
+                        "subject": scenario.get('subject', 'Not specified'),
+                        "effectiveness_rating": entry.get('effectiveness_rating', 0),
+                        "strengths": entry.get('strengths', ''),
+                        "improvements": entry.get('improvements', '')
+                    }
+                }
+                
+                dspy_examples.append(dspy_example)
+                
+                # Only process entries with clear preferences for RLHF
+                if 'preference' in entry and entry['preference'] != "Both are equally effective":
+                    # Get the original and alternative responses
+                    original = entry['teacher_response']
+                    
+                    if not alternative:
+                        continue  # Skip if no alternative available
+                    
+                    # Determine which is preferred (chosen vs rejected)
+                    if entry['preference'] == "Original response is better":
+                        chosen = original
+                        rejected = alternative
+                    else:  # "Alternative response is better"
+                        chosen = alternative
+                        rejected = original
+                    
+                    # Create RLHF entry
+                    rlhf_entry = {
+                        "prompt": context,
+                        "chosen": chosen,
+                        "rejected": rejected,
+                        "reason": entry.get('preference_reason', ""),
+                        "metadata": {
+                            "scenario": scenario.get('title', 'Unknown'),
+                            "effectiveness_rating": entry.get('effectiveness_rating', 0),
+                            "timestamp": entry.get('timestamp', "")
+                        }
+                    }
+                    
+                    rlhf_ready_entries.append(rlhf_entry)
+            
+            # Write to JSONL files
+            with open(rlhf_filepath, 'w') as f:
+                for entry in rlhf_ready_entries:
+                    f.write(json.dumps(entry) + '\n')
+                    
+            with open(dspy_filepath, 'w') as f:
+                for example in dspy_examples:
+                    f.write(json.dumps(example) + '\n')
+            
+            # Create a Python script that demonstrates how to use this data with DSPy
+            script_path = os.path.join(dspy_dir, f"dspy_finetuning_example_{timestamp}.py")
+            self._create_dspy_finetuning_script(script_path, dspy_filepath)
+            
+            logging.info(f"RLHF dataset prepared with {len(rlhf_ready_entries)} entries at {rlhf_filepath}")
+            logging.info(f"DSPy dataset prepared with {len(dspy_examples)} entries at {dspy_filepath}")
+            logging.info(f"DSPy finetuning script created at {script_path}")
+            
+            return {"rlhf": rlhf_filepath, "dspy": dspy_filepath, "script": script_path}
+            
+        except Exception as e:
+            logging.error(f"Error preparing datasets: {str(e)}")
+            import traceback
+            logging.error(traceback.format_exc())
+            return None
+            
+    def _create_dspy_finetuning_script(self, script_path, dataset_path):
+        """Create a Python script showing how to use the feedback data with DSPy."""
+        script_content = f'''"""
+DSPy Fine-tuning Example Using Teacher Feedback
+==============================================
+This script demonstrates how to use the collected teacher feedback
+to fine-tune a DSPy teaching model.
+"""
+
+import json
+import dspy
+from dspy.teleprompt import BootstrapFewShot
+from typing import List
+
+# Path to the dataset generated from feedback
+DATASET_PATH = "{dataset_path}"
+
+class TeachingProgram(dspy.Module):
+    """A DSPy program for generating teaching responses."""
+    
+    def __init__(self):
+        super().__init__()
+        self.generate_response = dspy.ChainOfThought("context -> teaching_response")
+    
+    def forward(self, context):
+        """Generate a teaching response based on the context."""
+        return self.generate_response(context=context)
+
+def load_feedback_data(filepath):
+    """Load the teaching feedback data collected from experts."""
+    examples = []
+    with open(filepath, 'r') as f:
+        for line in f:
+            examples.append(json.loads(line))
+    return examples
+
+def create_dspy_examples(feedback_data):
+    """Convert feedback data to DSPy examples."""
+    dspy_examples = []
+    for entry in feedback_data:
+        example = dspy.Example(
+            context=entry["input"],
+            teaching_response=entry["output"]
+        ).with_metadata(
+            preferred=entry["preferred"],
+            feedback=entry["feedback"],
+            alternatives=entry["alternatives"],
+            scenario_type=entry["metadata"]["scenario_type"],
+            subject=entry["metadata"]["subject"]
+        )
+        dspy_examples.append(example)
+    return dspy_examples
+
+def teacher_preference_metric(example, pred):
+    """Metric that evaluates predictions based on teacher preferences in examples."""
+    # This would be expanded to use more sophisticated evaluation logic
+    # based on the collected human feedback
+    correct_style = any([style in pred.teaching_response.lower() 
+                        for style in example.metadata.feedback.lower().split()])
+    return float(correct_style)
+
+def main():
+    # Load the model (default or fine-tuned)
+    model = dspy.OpenAI(model="gpt-3.5-turbo")
+    dspy.settings.configure(lm=model)
+    
+    # Load feedback data
+    feedback_data = load_feedback_data(DATASET_PATH)
+    examples = create_dspy_examples(feedback_data)
+    
+    print(f"Loaded {{len(examples)}} teaching examples from feedback")
+    
+    # Create and compile the teaching program
+    program = TeachingProgram()
+    
+    # Create a training set and validation set
+    train_size = int(len(examples) * 0.8)
+    train_set = examples[:train_size]
+    val_set = examples[train_size:]
+    
+    # Bootstrap the model with few-shot examples
+    optimizer = BootstrapFewShot(
+        metric=teacher_preference_metric,
+        max_bootstrapped_demos=5,
+        num_candidate_programs=10
+    )
+    
+    # Optimize the program using teacher feedback
+    optimized_program = optimizer.optimize(
+        program=program,
+        trainset=train_set,
+        valset=val_set
+    )
+    
+    # Test the optimized program
+    if val_set:
+        example = val_set[0]
+        prediction = optimized_program(example.context)
+        print(f"Context: {{example.context}}")
+        print(f"Prediction: {{prediction.teaching_response}}")
+    
+    # The optimized program can now be used in the teaching assistant
+    print("Optimization complete! The model has been fine-tuned with teacher feedback.")
+
+if __name__ == "__main__":
+    main()
+'''
+        try:
+            with open(script_path, 'w') as f:
+                f.write(script_content)
+            return True
+        except Exception as e:
+            logging.error(f"Error creating DSPy script: {str(e)}")
+        return False
+
+    def _save_system_feedback(self, feedback_entry):
+        """Save feedback to a file for future system fine-tuning."""
+        import json
+        import os
+        
+        # Create the feedback directory if it doesn't exist
+        feedback_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'feedback')
+        os.makedirs(feedback_dir, exist_ok=True)
+        
+        # Create a filename based on timestamp
+        timestamp = feedback_entry["timestamp"].replace(":", "-").replace(" ", "_")
+        filename = f"feedback_{timestamp}.json"
+        filepath = os.path.join(feedback_dir, filename)
+        
+        # Additional metadata
+        feedback_entry["scenario"] = st.session_state.scenario.get("title", "Unknown")
+        feedback_entry["student_profile"] = st.session_state.student_profile
+        
+        # Write to file
+        try:
+            with open(filepath, 'w') as f:
+                json.dump(feedback_entry, f, indent=4)
+            logging.info(f"Feedback saved to {filepath}")
+        except Exception as e:
+            logging.error(f"Error saving feedback: {str(e)}")
+            
+    def _show_feedback_statistics(self):
+        """Display statistics about the collected feedback."""
+        if 'system_feedback' not in st.session_state or not st.session_state.system_feedback:
+            st.info("No feedback data collected yet.")
+            return
+            
+        # Calculate average effectiveness rating
+        ratings = [entry.get("effectiveness_rating", 0) for entry in st.session_state.system_feedback]
+        avg_rating = sum(ratings) / len(ratings) if ratings else 0
+        
+        st.metric("Average Effectiveness Rating", f"{avg_rating:.1f}/10")
+        st.metric("Total Feedback Submissions", len(st.session_state.system_feedback))
+        
+        # Display feedback over time if there are multiple entries
+        if len(ratings) > 1:
+            import pandas as pd
+            import altair as alt
+            
+            # Create dataframe for visualization
+            feedback_data = {
+                "Timestamp": [entry.get("timestamp", "") for entry in st.session_state.system_feedback],
+                "Rating": ratings
+            }
+            df = pd.DataFrame(feedback_data)
+            
+            # Create chart
+            chart = alt.Chart(df).mark_line().encode(
+                x='Timestamp:O',
+                y=alt.Y('Rating:Q', scale=alt.Scale(domain=[1, 10])),
+                tooltip=['Timestamp', 'Rating']
+            ).properties(
+                title='Feedback Ratings Over Time'
             )
             
-            # Set the page based on selection
-            for option in mode_options:
-                if f"{option['icon']} {option['label']}" == selected_mode:
-                    st.session_state.page = option['value']
+            st.altair_chart(chart, use_container_width=True)
+
+    def run(self):
+        """Main method to run the Streamlit application."""
+        # Initialize session state, load data, and set up page
+        self.init_session_state()
+        self.setup_page()
+        
+        # Single page application focused on SME feedback
+        self.show_sme_feedback_interface()
+        
+    def show_sme_feedback_interface(self):
+        """Main interface focused on getting feedback from Subject Matter Experts."""
+        st.markdown("## Subject Matter Expert Feedback Platform")
+        st.markdown("Help improve our teaching assistant by providing your expertise and evaluating responses.")
+        
+        # Create tabs for different feedback activities
+        tabs = st.tabs(["Review Teaching Examples", "Submit Your Solutions", "View Collected Data"])
+        
+        with tabs[0]:
+            self._show_example_review()
             
-            st.markdown('</div>', unsafe_allow_html=True)
+        with tabs[1]:
+            self._show_teaching_examples_input()
             
-            # Options section - simplified
-            st.markdown('<div class="sidebar-section">', unsafe_allow_html=True)
-            st.markdown('<div class="sidebar-title">Options</div>', unsafe_allow_html=True)
+        with tabs[2]:
+            self._show_simplified_collected_data()
             
-            # Reset buttons
-            if st.button("Reset Conversation", key="sidebar_reset_conversation"):
-                st.session_state.messages = []
-                st.rerun()
+    def _show_example_review(self):
+        """Show example teaching scenarios for SMEs to review and provide feedback."""
+        st.subheader("Review Teaching Scenarios")
+        st.markdown("Compare AI-suggested responses with your expert solutions.")
+        
+        # Generate or load teaching examples
+        examples = self._create_sample_teaching_scenarios()
+        
+        if not examples:
+            st.info("No examples are available for review. Please check back later.")
+            return
             
-            if st.button("Reset Everything", key="sidebar_reset_everything"):
-                # Clear all session state variables
-                for key in list(st.session_state.keys()):
-                    if key != "model_name":
-                        del st.session_state[key]
-                # Explicitly reset classroom management strategies
-                st.session_state.classroom_management_strategies = []
-                st.rerun()
+        # Example selection
+        selected_example_idx = st.selectbox(
+            "Select a teaching scenario to review:",
+            options=range(len(examples)),
+            format_func=lambda i: f"Example {i+1}: {examples[i]['subject']} - {examples[i]['question'][:50]}..."
+        )
+        
+        selected_example = examples[selected_example_idx]
+        
+        # Display the selected example
+        with st.expander("Student Question", expanded=True):
+            st.markdown(f"**Subject Area:** {selected_example['subject']}")
+            st.markdown(f"**Grade Level:** {selected_example['grade_level']}")
+            st.markdown(f"**Question:**")
+            st.markdown(f"> {selected_example['question']}")
             
-            st.markdown('</div>', unsafe_allow_html=True)
+            # Display context if available
+            if 'context' in selected_example and selected_example['context']:
+                st.markdown(f"**Context:**")
+                st.markdown(f"> {selected_example['context']}")
+        
+        # Show AI recommendation from knowledge base
+        with st.expander("AI Recommended Response", expanded=True):
+            ai_response = selected_example.get('ai_response', 'AI is generating a response...')
+            st.markdown(ai_response)
+            
+            quality_score = st.slider(
+                "Rate this AI response (1-10):",
+                min_value=1,
+                max_value=10,
+                value=5,
+                step=1,
+                key=f"ai_rating_{selected_example_idx}"
+            )
+        
+        # Get SME solution
+        with st.expander("Your Expert Solution", expanded=True):
+            st.markdown("Please provide your expert response to this teaching scenario:")
+            
+            sme_response = st.text_area(
+                "Your response:",
+                height=200,
+                key=f"sme_response_{selected_example_idx}"
+            )
+            
+            teaching_techniques = st.multiselect(
+                "Teaching techniques used in your response:",
+                options=[
+                    "Scaffolding", "Inquiry-based learning", "Direct instruction",
+                    "Visual learning", "Differentiated instruction", "Formative assessment",
+                    "Peer learning", "Real-world examples", "Metacognitive strategies"
+                ],
+                key=f"techniques_{selected_example_idx}"
+            )
+            
+            explanation = st.text_area(
+                "Explain why your approach is effective:",
+                height=100,
+                key=f"explanation_{selected_example_idx}"
+            )
+        
+        # Submit feedback
+        if st.button("Submit Feedback", key=f"submit_{selected_example_idx}"):
+            if not sme_response:
+                st.error("Please provide your expert response before submitting.")
+                return
+                
+            # Save feedback data
+            feedback = {
+                "timestamp": self._get_timestamp(),
+                "example_id": selected_example_idx,
+                "subject": selected_example['subject'],
+                "grade_level": selected_example['grade_level'],
+                "question": selected_example['question'],
+                "context": selected_example.get('context', ''),
+                "ai_response": ai_response,
+                "ai_rating": quality_score,
+                "sme_response": sme_response,
+                "teaching_techniques": teaching_techniques,
+                "explanation": explanation
+            }
+            
+            self._save_sme_feedback(feedback)
+            self._update_expert_points("review", feedback)
+            
+            st.success("Thank you for your valuable feedback! Your expertise helps improve our teaching assistant.")
+            
+    def _create_sample_teaching_scenarios(self):
+        """Create sample teaching scenarios from various subjects and grade levels."""
+        # Check if we already have cached scenarios
+        if hasattr(self, '_cached_scenarios') and self._cached_scenarios:
+            return self._cached_scenarios
+            
+        # Create sample scenarios
+        scenarios = [
+            {
+                "subject": "Mathematics",
+                "grade_level": "3rd Grade",
+                "question": "I don't understand why I need to regroup numbers when I subtract. Can you explain it?",
+                "context": "Working on three-digit subtraction problems",
+                "ai_response": "Regrouping in subtraction is like borrowing. When you need to subtract a bigger number from a smaller one in a place value, you 'borrow' from the next higher place value. For example, in 43-25, you can't subtract 5 from 3, so you borrow 1 from the 4 (which is actually 10), making it 3, and the 3 becomes 13. Now you can subtract 5 from 13 to get 8, and then 2 from 3 to get 1, so 43-25=18. Would you like me to show you with a visual example?"
+            },
+            {
+                "subject": "Science",
+                "grade_level": "5th Grade",
+                "question": "How do plants make their own food? My friend said they eat dirt!",
+                "context": "Learning about photosynthesis",
+                "ai_response": "Plants don't eat dirt - they actually make their own food through a process called photosynthesis! They take in water through their roots, carbon dioxide from the air through tiny holes in their leaves, and energy from sunlight. Using these ingredients, they create glucose (sugar) and oxygen. The sugar is their food that gives them energy to grow, and they release the oxygen into the air for us to breathe. The soil provides important minerals and nutrients, but it's not their 'food.' Would you like to try a simple experiment to see photosynthesis in action?"
+            },
+            {
+                "subject": "Literacy",
+                "grade_level": "2nd Grade",
+                "question": "Why do some words sound the same but are spelled differently?",
+                "context": "Encountering homophones in a reading passage",
+                "ai_response": "Great question! Words that sound the same but are spelled differently are called homophones. They can be tricky! For example, 'bear' (the animal) and 'bare' (uncovered) sound exactly the same, but they have completely different meanings. English has many homophones because our language has borrowed words from different languages throughout history. When we read, the spelling helps us know which meaning is being used. Shall we make a fun game to practice some common homophones like 'their/there/they're' or 'to/too/two'?"
+            },
+            {
+                "subject": "Social Studies",
+                "grade_level": "4th Grade",
+                "question": "Why did people want to go west in the olden days? Was it dangerous?",
+                "context": "Studying westward expansion in American history",
+                "ai_response": "People moved west in the 1800s for several exciting reasons! Many wanted free or cheap land for farming through the Homestead Act. Others were searching for gold and silver after discoveries like the California Gold Rush. Some were seeking religious freedom or a fresh start in life. Yes, it was definitely dangerous - pioneers faced rough terrain, harsh weather, limited supplies, potential conflicts with Native American tribes protecting their lands, and disease. They typically traveled in wagon trains for safety and used routes like the Oregon Trail. What aspects of westward expansion do you find most interesting?"
+            }
+        ]
+        
+        # Add AI-generated recommendations from knowledge base
+        for scenario in scenarios:
+            if 'ai_response' not in scenario:
+                # In a real implementation, this would call the knowledge base
+                scenario['ai_response'] = "This would be an AI-generated response based on our knowledge base."
+        
+        # Cache the scenarios
+        self._cached_scenarios = scenarios
+        return scenarios
+        
+    def _save_sme_feedback(self, feedback):
+        """Save SME feedback to disk."""
+        # Create feedback directory if it doesn't exist
+        feedback_dir = os.path.join(os.path.dirname(__file__), "../../sme_feedback")
+        os.makedirs(feedback_dir, exist_ok=True)
+        
+        # Generate filename with timestamp
+        filename = f"sme_feedback_{self._get_timestamp(for_filename=True)}.json"
+        filepath = os.path.join(feedback_dir, filename)
+        
+        # Save the feedback as JSON
+        with open(filepath, 'w') as f:
+            json.dump(feedback, f, indent=2)
+            
+        # Update session state to include the new feedback
+        if "sme_feedback" not in st.session_state:
+            st.session_state.sme_feedback = []
+            
+        st.session_state.sme_feedback.append(feedback)
+        logging.info(f"SME feedback saved to {filepath}")
+        
+    def _show_simplified_collected_data(self):
+        """Display collected SME feedback in a simplified format."""
+        st.subheader("Collected Expert Feedback")
+        
+        # Initialize or get feedback data
+        if "sme_feedback" not in st.session_state:
+            st.session_state.sme_feedback = []
+            
+            # Look for existing feedback files
+            feedback_dir = os.path.join(os.path.dirname(__file__), "../../sme_feedback")
+            if os.path.exists(feedback_dir):
+                feedback_files = [f for f in os.listdir(feedback_dir) if f.endswith('.json')]
+                
+                for file in feedback_files:
+                    try:
+                        with open(os.path.join(feedback_dir, file), 'r') as f:
+                            st.session_state.sme_feedback.append(json.load(f))
+                    except Exception as e:
+                        logging.error(f"Error loading feedback file {file}: {str(e)}")
+        
+        # Display feedback statistics
+        total_feedback = len(st.session_state.sme_feedback)
+        
+        if total_feedback == 0:
+            st.info("No feedback data collected yet. Review teaching examples or submit your own solutions to contribute.")
+            return
+            
+        st.write(f"**Total contributions:** {total_feedback}")
+        
+        # Subject area breakdown
+        if total_feedback > 0:
+            subjects = {}
+            for feedback in st.session_state.sme_feedback:
+                subject = feedback.get('subject', 'Unknown')
+                subjects[subject] = subjects.get(subject, 0) + 1
+                
+            st.write("**Contributions by subject area:**")
+            for subject, count in subjects.items():
+                st.write(f"- {subject}: {count}")
+                
+        # Export data option
+        if st.button("Export All Feedback Data"):
+            export_data = json.dumps(st.session_state.sme_feedback, indent=2)
+            st.download_button(
+                label="Download JSON",
+                data=export_data,
+                file_name=f"sme_feedback_export_{self._get_timestamp(for_filename=True)}.json",
+                mime="application/json"
+            )
+            
+        # Browse feedback entries
+        st.subheader("Browse Feedback Entries")
+        
+        for i, feedback in enumerate(st.session_state.sme_feedback):
+            with st.expander(f"Feedback #{i+1}: {feedback.get('subject', 'Unknown')} - {feedback.get('timestamp', 'No date')}"):
+                st.write(f"**Subject:** {feedback.get('subject', 'Unknown')}")
+                st.write(f"**Grade Level:** {feedback.get('grade_level', 'Unknown')}")
+                st.write(f"**Question:** {feedback.get('question', 'No question')}")
+                
+                st.markdown("**AI Response:**")
+                st.markdown(f"> {feedback.get('ai_response', 'No AI response')}")
+                st.write(f"**AI Rating:** {feedback.get('ai_rating', 'Not rated')}/10")
+                
+                st.markdown("**Expert Response:**")
+                st.markdown(f"> {feedback.get('sme_response', 'No expert response')}")
+                
+                if 'teaching_techniques' in feedback and feedback['teaching_techniques']:
+                    st.write("**Teaching Techniques Used:**")
+                    for technique in feedback['teaching_techniques']:
+                        st.write(f"- {technique}")
+                        
+                if 'explanation' in feedback and feedback['explanation']:
+                    st.markdown("**Expert Explanation:**")
+                    st.markdown(f"> {feedback['explanation']}")
+                    
+    def _show_teaching_examples_input(self):
+        """Simplified interface for SMEs to submit their own teaching examples."""
+        st.subheader("Submit Your Teaching Examples")
+        st.markdown("Share your expertise by providing examples of how you would respond to student questions.")
+        
+        # Form for submitting examples
+        with st.form(key="teaching_example_form"):
+            # Basic metadata
+            subject = st.selectbox(
+                "Subject Area:",
+                options=["Mathematics", "Science", "Literacy", "Social Studies", "Art", "Music", "Physical Education", "Other"]
+            )
+            
+            grade_level = st.selectbox(
+                "Grade Level:",
+                options=["Kindergarten", "1st Grade", "2nd Grade", "3rd Grade", "4th Grade", "5th Grade"]
+            )
+            
+            # Student question
+            student_question = st.text_area(
+                "Student Question:",
+                placeholder="What question did the student ask?",
+                height=100
+            )
+            
+            # Optional context
+            context = st.text_area(
+                "Context (Optional):",
+                placeholder="Any relevant context about the student or classroom situation",
+                height=75
+            )
+            
+            # Expert response
+            expert_response = st.text_area(
+                "Your Expert Response:",
+                placeholder="How would you respond to this student?",
+                height=200
+            )
+            
+            # Teaching techniques used
+            teaching_techniques = st.multiselect(
+                "Teaching Techniques Used:",
+                options=[
+                    "Scaffolding", "Inquiry-based learning", "Direct instruction",
+                    "Visual learning", "Differentiated instruction", "Formative assessment",
+                    "Peer learning", "Real-world examples", "Metacognitive strategies"
+                ]
+            )
+            
+            # Explanation
+            explanation = st.text_area(
+                "Explain Your Approach:",
+                placeholder="Why is this an effective response? What makes it work well?",
+                height=150
+            )
+            
+            # Submit button
+            submit_button = st.form_submit_button("Submit Example")
+        
+        if submit_button:
+            # Validate inputs
+            if not student_question or not expert_response:
+                st.error("Please provide both a student question and your expert response.")
+                return
+                
+            # Create example object
+            example = {
+                "timestamp": self._get_timestamp(),
+                "subject": subject,
+                "grade_level": grade_level,
+                "question": student_question,
+                "context": context,
+                "sme_response": expert_response,
+                "teaching_techniques": teaching_techniques,
+                "explanation": explanation
+            }
+            
+            # Save the example
+            self._save_teaching_example(example)
+            self._update_expert_points("example", example)
+            
+            st.success("Thank you for sharing your teaching example! Your expertise is greatly appreciated.")
+            
+    def _save_teaching_example(self, example):
+        """Save a teaching example to disk."""
+        # Create examples directory if it doesn't exist
+        examples_dir = os.path.join(os.path.dirname(__file__), "../../teaching_examples")
+        os.makedirs(examples_dir, exist_ok=True)
+        
+        # Generate filename with timestamp
+        filename = f"teaching_example_{self._get_timestamp(for_filename=True)}.json"
+        filepath = os.path.join(examples_dir, filename)
+        
+        # Save the example as JSON
+        with open(filepath, 'w') as f:
+            json.dump(example, f, indent=2)
+            
+        # Update session state to include the new example
+        if "teaching_examples" not in st.session_state:
+            st.session_state.teaching_examples = []
+            
+        st.session_state.teaching_examples.append(example)
+        logging.info(f"Teaching example saved to {filepath}")
+        
+    def _get_timestamp(self, for_filename=False):
+        """Get a formatted timestamp for the current time."""
+        now = datetime.now()
+        if for_filename:
+            return now.strftime("%Y-%m-%d_%H-%M-%S")
+        return now.strftime("%Y-%m-%d %H:%M:%S")
+        
+    def setup_page(self):
+        """Set up the page with header and description."""
+        # Header with logo and title side by side
+        col1, col2 = st.columns([1, 3])
+        
+        with col1:
+            st.image("logo.png", width=150)
+            
+        with col2:
+            st.title("Utah Teacher Training Assistant")
+            st.markdown("""
+            ### Subject Matter Expert Platform
+            Share your teaching expertise to help improve AI-assisted instruction for K-5 education.
+            """)
+            
+        # Display current app version and UVU styling based on color palette
+        st.markdown("""
+        <style>
+            :root {
+                --uvu-green: #275D38;
+                --uvu-black: #000000;
+                --uvu-white: #FFFFFF;
+                --uvu-light-green: #E9F2ED;
+            }
+            
+            .stApp {
+                background-color: var(--uvu-white);
+            }
+            
+            h1, h2, h3 {
+                color: var(--uvu-green);
+            }
+            
+            .stButton button {
+                background-color: var(--uvu-green);
+                color: var(--uvu-white);
+            }
+            
+            .info-box {
+                background-color: var(--uvu-light-green);
+                border-left: 5px solid var(--uvu-green);
+                padding: 10px;
+                margin-bottom: 10px;
+            }
+        </style>
+        <div style="text-align: right; font-size: 0.8em; color: gray;">Version 3.0</div>
+        """, unsafe_allow_html=True)
+        
+    def init_session_state(self):
+        """Initialize the Streamlit session state with simplified variables."""
+        # Initialize points system
+        if "expert_points" not in st.session_state:
+            st.session_state.expert_points = 0
+            
+        if "expert_level" not in st.session_state:
+            st.session_state.expert_level = "Novice Teacher"
+            
+        # Initialize feedback and example collections
+        if "sme_feedback" not in st.session_state:
+            st.session_state.sme_feedback = []
+            
+        if "teaching_examples" not in st.session_state:
+            st.session_state.teaching_examples = []
+            
+        # Initialize announcement banner state
+        if "show_announcement" not in st.session_state:
+            st.session_state.show_announcement = True
+
+    def _update_expert_points(self, action_type, content=None):
+        """
+        Update expert points based on contributions and check for level-ups.
+        
+        Args:
+            action_type (str): Type of action performed (rating, review, streak)
+            content (dict, optional): Additional content for context-specific rewards
+        """
+        points_earned = 0
+        level_up = False
+        new_badges = []
+        
+        # Points for different actions
+        if action_type == "quick_rate":
+            points_earned = 10
+            
+            # Bonus points for comprehensive feedback
+            if content and "techniques_used" in content and len(content["techniques_used"]) >= 3:
+                points_earned += 5
+                
+            # Subject-specific bonuses
+            if content and "subject_area" in content:
+                subject = content["subject_area"].lower()
+                if "literacy" in subject or "language" in subject:
+                    if not st.session_state.awards["literacy_star"] and \
+                       len([ex for ex in st.session_state.expert_examples 
+                            if "subject_area" in ex and ("literacy" in ex["subject_area"].lower() 
+                                                        or "language" in ex["subject_area"].lower())]) >= 3:
+                        st.session_state.awards["literacy_star"] = True
+                        points_earned += 25
+                        new_badges.append("🌟 Literacy Star")
+                
+                elif "math" in subject:
+                    if not st.session_state.awards["math_wizard"] and \
+                       len([ex for ex in st.session_state.expert_examples 
+                            if "subject_area" in ex and "math" in ex["subject_area"].lower()]) >= 3:
+                        st.session_state.awards["math_wizard"] = True
+                        points_earned += 25
+                        new_badges.append("🧙 Math Wizard")
+                        
+                elif "science" in subject:
+                    if not st.session_state.awards["science_explorer"] and \
+                       len([ex for ex in st.session_state.expert_examples 
+                            if "subject_area" in ex and "science" in ex["subject_area"].lower()]) >= 3:
+                        st.session_state.awards["science_explorer"] = True
+                        points_earned += 25
+                        new_badges.append("🔬 Science Explorer")
+            
+        elif action_type == "response_review":
+            points_earned = 15
+            
+            # Bonus for detailed reasons
+            if content and "reasons" in content and len(content["reasons"]) >= 3:
+                points_earned += 8
+                
+            if len(st.session_state.expert_reviews) >= 5 and not st.session_state.awards["feedback_champion"]:
+                st.session_state.awards["feedback_champion"] = True
+                points_earned += 30
+                new_badges.append("🏆 Feedback Champion")
+                
+        elif action_type == "streak":
+            # Check if it's a new day compared to last contribution
+            today = datetime.now().strftime("%Y-%m-%d")
+            if today != st.session_state.last_contribution_date:
+                st.session_state.streak_days += 1
+                st.session_state.last_contribution_date = today
+                
+                # Bonus points for streaks
+                if st.session_state.streak_days >= 3:
+                    points_earned = st.session_state.streak_days * 5
+                    new_badges.append(f"🔥 {st.session_state.streak_days}-Day Streak")
+        
+        # Add points
+        st.session_state.expert_points += points_earned
+        
+        # Add any new badges to collection
+        if new_badges:
+            for badge in new_badges:
+                if badge not in st.session_state.badges:
+                    st.session_state.badges.append(badge)
+        
+        # Check for level-ups
+        current_level = st.session_state.expert_level
+        new_level = current_level
+        
+        # Define levels
+        levels = {
+            "Novice Teacher": 0,
+            "Assistant Teacher": 50,
+            "Lead Teacher": 100,
+            "Master Teacher": 200,
+            "Distinguished Educator": 350,
+            "Legendary Mentor": 500
+        }
+        
+        # Check if user has leveled up
+        for level, threshold in levels.items():
+            if st.session_state.expert_points >= threshold:
+                new_level = level
+                
+        # If there was a level up
+        if new_level != current_level:
+            st.session_state.expert_level = new_level
+            level_up = True
+            
+        return {
+            "points_earned": points_earned,
+            "level_up": level_up,
+            "new_level": new_level if level_up else None,
+            "new_badges": new_badges,
+            "total_points": st.session_state.expert_points
+        }
+
+    def _show_teaching_examples_input(self):
+        """Show the interface for experts to provide teaching examples."""
+        # Display current points and level
+        col1, col2 = st.columns([1, 1])
+        with col1:
+            st.subheader(f"Your Level: {st.session_state.expert_level}")
+            st.write(f"Points: {st.session_state.expert_points} points")
+            if st.session_state.streak_days > 1:
+                st.write(f"🔥 Current streak: {st.session_state.streak_days} days")
+        
+        with col2:
+            if st.session_state.badges:
+                st.subheader("Your Badges:")
+                badges_text = ", ".join(st.session_state.badges)
+                st.write(badges_text)
+        
+        st.markdown("---")
+        
+        # Input form for teaching examples
+        with st.form("teaching_example_form"):
+            st.subheader("Share Your Teaching Example")
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                # Allow selection of scenario/context
+                scenario_options = [s.name for s in self.scenarios]
+                selected_scenario = st.selectbox(
+                    "Select Teaching Context",
+                    options=scenario_options,
+                    index=0
+                )
+                
+                # Subject area selection
+                subject_area = st.selectbox(
+                    "Subject Area",
+                    options=["Math", "Literacy/Language Arts", "Science", "Social Studies", "Art/Music", "Physical Education", "Social-Emotional Learning"],
+                    index=0
+                )
+                
+                # Grade level selection
+                grade_level = st.selectbox(
+                    "Grade Level",
+                    options=["Kindergarten", "1st Grade", "2nd Grade", "3rd Grade", "4th Grade", "5th Grade"],
+                    index=2
+                )
+                
+            with col2:
+                # Student profile selection
+                student_options = [s.name for s in self.students]
+                selected_student = st.selectbox(
+                    "Select Student Profile",
+                    options=student_options,
+                    index=0
+                )
+                
+                # Difficulty level
+                difficulty = st.select_slider(
+                    "Challenge Level",
+                    options=["Easy", "Medium", "Challenging", "Very Challenging"],
+                    value="Medium"
+                )
+                
+                # Learning goal
+                learning_goal = st.text_input("Learning Goal/Objective")
+            
+            # Student question input
+            student_question = st.text_area(
+                "Student Question or Statement",
+                placeholder="Example: 'Teacher, I don't understand how to add fractions...'",
+                height=100
+            )
+            
+            # Expert response
+            expert_response = st.text_area(
+                "Your Expert Response",
+                placeholder="Enter your response as an elementary teacher...",
+                height=150
+            )
+            
+            # Multi-select for teaching techniques
+            techniques_used = st.multiselect(
+                "Teaching Techniques Used (select all that apply)",
+                options=[
+                    "Visual aids/demonstrations", 
+                    "Scaffolding", 
+                    "Growth mindset encouragement",
+                    "Real-world connections",
+                    "Personalized feedback",
+                    "Breaking down complex concepts",
+                    "Think-aloud modeling",
+                    "Positive reinforcement",
+                    "Questioning strategies",
+                    "Hands-on learning",
+                    "Student-led discovery",
+                    "Collaborative learning"
+                ]
+            )
+            
+            # Teaching approach explanation
+            approach_explanation = st.text_area(
+                "Briefly explain your teaching approach (optional)",
+                placeholder="Why did you respond this way? What makes this effective for elementary students?",
+                height=100
+            )
+            
+            # Submit button
+            submitted = st.form_submit_button("Submit Teaching Example")
+            
+            if submitted:
+                if not student_question or not expert_response:
+                    st.error("Please provide both a student question and your expert response.")
+                else:
+                    # Prepare example data
+                    example_data = {
+                        "scenario": selected_scenario,
+                        "subject_area": subject_area,
+                        "grade_level": grade_level,
+                        "student_profile": selected_student,
+                        "difficulty": difficulty,
+                        "learning_goal": learning_goal,
+                        "student_question": student_question,
+                        "expert_response": expert_response,
+                        "techniques_used": techniques_used,
+                        "approach_explanation": approach_explanation,
+                        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    }
+                    
+                    # Store the example
+                    if "expert_examples" not in st.session_state:
+                        st.session_state.expert_examples = []
+                    
+                    st.session_state.expert_examples.append(example_data)
+                    
+                    # Award points and check for level-up
+                    reward_info = self._update_expert_points("quick_rate", example_data)
+                    
+                    # Show success message with points
+                    st.success(f"✅ Example submitted successfully! You earned {reward_info['points_earned']} points.")
+                    
+                    # Show any new badges
+                    if reward_info['new_badges']:
+                        badges_text = ", ".join(reward_info['new_badges'])
+                        st.balloons()
+                        st.success(f"🎉 You earned new badges: {badges_text}")
+                    
+                    # Show level up notification
+                    if reward_info['level_up']:
+                        st.balloons()
+                        st.success(f"🌟 LEVEL UP! You are now a {reward_info['new_level']}!")
+
+    def _create_sample_responses(self):
+        """Create sample AI responses for review."""
+        return [
+            {
+                "subject": "Math",
+                "grade": "2nd Grade",
+                "student_profile": "Visual learner with attention challenges",
+                "student_question": "Why do I need to learn how to subtract? I don't get it.",
+                "ai_response": "Subtraction is important because we use it every day. For example, if you have 5 cookies and eat 2, you have 3 left. This is subtraction. It's used for calculating change, figuring out how much time is left, and many other everyday activities. Let's practice with some simple problems."
+            },
+            {
+                "subject": "Literacy",
+                "grade": "1st Grade",
+                "student_profile": "English language learner",
+                "student_question": "I can't remember the sounds that letters make.",
+                "ai_response": "Learning letter sounds can be challenging. Let's look at each letter and say its sound together. We can create a chart with pictures for each sound. For example, 'A' makes the 'ah' sound like in 'apple'. Let's practice with a few letters at a time."
+            },
+            {
+                "subject": "Science",
+                "grade": "3rd Grade",
+                "student_profile": "Gifted student who gets bored easily",
+                "student_question": "How do plants drink water?",
+                "ai_response": "Plants drink water through their roots. The water travels up through tiny tubes inside the stem to reach the leaves. It's similar to how you drink through a straw. We can do an experiment with celery and food coloring to actually see this process happening! Would you like to try that?"
+            },
+            {
+                "subject": "Social Studies",
+                "grade": "4th Grade",
+                "student_profile": "Student with anxiety about speaking in groups",
+                "student_question": "Why do we need to learn about maps?",
+                "ai_response": "Maps help us understand where places are in relation to each other. They're like pictures of the Earth from above. We use maps to find our way around towns, parks, and even inside big buildings like malls. Maps also help us learn about different cultures and environments around the world."
+            },
+            {
+                "subject": "Math",
+                "grade": "Kindergarten",
+                "student_profile": "Active learner who struggles to sit still",
+                "student_question": "I don't understand counting by twos.",
+                "ai_response": "Counting by twos means we skip every other number. We can practice by jumping while we count - jump once and say '2', jump again and say '4'. Let's try counting toys or blocks by putting them in pairs and counting each pair as one group of two."
+            },
+            {
+                "subject": "Art",
+                "grade": "5th Grade",
+                "student_profile": "Creative student with perfectionist tendencies",
+                "student_question": "I can't draw people right. They always look wrong.",
+                "ai_response": "Drawing people is challenging even for professional artists. Let's break it down into simple shapes first - ovals for heads, rectangles for bodies, and lines for limbs. Remember that practice helps us improve, and even famous artists had to learn step by step."
+            },
+            {
+                "subject": "Social-Emotional Learning",
+                "grade": "3rd Grade",
+                "student_profile": "Student who struggles with emotional regulation",
+                "student_question": "What do I do when I get really mad at school?",
+                "ai_response": "It's normal to feel angry sometimes. When you feel mad, you can take deep breaths, count to 10, or ask for a quick break. We can make a 'calm down plan' with steps that help you feel better when you're upset. Would you like to create your own plan?"
+            },
+            {
+                "subject": "Physical Education",
+                "grade": "1st Grade",
+                "student_profile": "Student with coordination difficulties",
+                "student_question": "I can't catch the ball. Everyone laughs at me.",
+                "ai_response": "Learning to catch takes practice. Let's start with a bigger, softer ball that moves more slowly. We can practice with just you and me first, before joining the group. Everyone learns at their own pace, and I'm here to help you improve step by step."
+            },
+            {
+                "subject": "Science",
+                "grade": "4th Grade",
+                "student_profile": "Curious student with many questions",
+                "student_question": "Why does the moon change shape?",
+                "ai_response": "The moon appears to change shape because of how sunlight hits it as it orbits Earth. The moon is always round, but we only see the parts that are lit by the sun. We can demonstrate this with a ball and a flashlight to show how the light creates different phases."
+            },
+            {
+                "subject": "Literacy",
+                "grade": "2nd Grade",
+                "student_profile": "Student with dyslexia",
+                "student_question": "Reading is too hard. The letters get mixed up.",
+                "ai_response": "Many students find reading challenging. We can use special tools like a reading guide to help focus on one line at a time. We'll also practice with games that strengthen your letter recognition. Remember that your brain is learning and getting stronger with each practice session."
+            }
+        ]
 
 # Run the application
 if __name__ == "__main__":
     app = WebInterface()
-    app.run() 

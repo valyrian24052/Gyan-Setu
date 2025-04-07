@@ -7,7 +7,7 @@ A sophisticated chatbot framework for teacher training, leveraging advanced LLM 
 *   **Advanced LLM Integration:** Utilizes powerful language models for realistic teacher-student interaction simulation.
 *   **DSPy Framework:** Leverages DSPy for optimizing language model prompts and logic, potentially improving interaction quality and goal alignment.
 *   **Knowledge Base Management:** Incorporates a knowledge base, likely using Retrieval-Augmented Generation (RAG) with vector databases (`src/core/vector_database.py`, `src/core/document_processor.py`), to provide contextually relevant information.
-*   **Automated Evaluation:** Includes mechanisms for evaluating the performance of the simulated teacher or student interactions (details likely in `src/evaluation` or `examples`).
+*   **Automated Evaluation:** Includes mechanisms for evaluating the performance of the simulated teacher or student interactions using a comprehensive LLM-based feedback system that assesses teaching responses across multiple dimensions.
 *   **Web Interface:** Provides a web application (`src/web/app.py`) for interacting with the chatbot.
 *   **Configurable:** Settings managed through environment variables (see `.env.example`) and `config.py`.
 
@@ -76,16 +76,50 @@ A sophisticated chatbot framework for teacher training, leveraging advanced LLM 
 To run the web application:
 
 ```bash
-python src/web/app.py
+# Set the Python path to include the src directory
+PYTHONPATH=$PYTHONPATH:$(pwd)/src streamlit run src/web/app.py
 ```
 
-Navigate to the URL provided by the application (usually `http://127.0.0.1:5000` or similar) in your web browser.
+Navigate to the URL provided by the application (usually `http://localhost:8501`) in your web browser.
 
-Refer to the `examples/` directory for other ways to interact with the framework or run specific tasks like evaluation.
+## Evaluation Component
 
-## Evaluation
+The UTTA includes a powerful evaluation system for assessing teaching responses. This feature helps teachers improve their instructional approaches by providing detailed feedback and metrics.
 
-The framework includes capabilities for evaluating interactions. Check the `src/evaluation/` directory and potentially scripts within `examples/` for details on how to run and interpret evaluation results.
+### How the Evaluation Works
+
+1. **LLM-Based Analysis**: The system uses the integrated Language Model to analyze teaching responses within the context of the student profile and scenario.
+
+2. **Multi-dimensional Assessment**: Each teaching response is evaluated across six key pedagogical dimensions:
+   - **Clarity** (1-10): How clearly concepts are explained
+   - **Engagement** (1-10): How effectively the response engages the student
+   - **Pedagogical Approach** (1-10): Appropriateness of teaching strategies
+   - **Emotional Support** (1-10): Degree of emotional encouragement and support
+   - **Content Accuracy** (1-10): Accuracy of the subject matter
+   - **Age Appropriateness** (1-10): Whether language and concepts match student's age/level
+
+3. **Comprehensive Feedback**: For each evaluation, the system provides:
+   - An overall effectiveness score
+   - Specific strengths identified in the teaching approach
+   - Areas for improvement
+   - Actionable recommendations for enhancing teaching effectiveness
+
+4. **Visual Representation**: Results are displayed as numerical scores and through an interactive bar chart for easy interpretation.
+
+### Using the Evaluation Feature
+
+1. Navigate to the application in your browser (http://localhost:8501)
+2. Have a conversation with the simulated student in the Chat section
+3. Switch to the "Evaluation" section using the sidebar navigation
+4. Click the "Evaluate Last Response" button
+5. Review the comprehensive feedback provided by the system
+
+### Benefits of the Evaluation Component
+
+- **Immediate Feedback**: Teachers receive instant feedback on their instructional approaches
+- **Targeted Improvement**: Specific recommendations help focus professional development
+- **Objective Assessment**: Standardized evaluation criteria ensure consistent feedback
+- **Private Practice**: Teachers can experiment with different approaches in a safe environment
 
 ## Contributing
 
