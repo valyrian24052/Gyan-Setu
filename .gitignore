@@ -1,63 +1,18 @@
-# Environment and configuration
-.env
-config/.env
-huggingface_access_tokens.txt
-*.env
-
 # Python
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-
-# Virtual Environment
 venv/
 ENV/
-env/
-.env/
-.venv/
-.conda/
+
+# Environment variables
+.env
 
 # IDE
-.idea/
 .vscode/
-*.swp
-*.swo
-.DS_Store
-
-# Logs and databases
-*.log
-*.sqlite
-*.db
-
-# Model checkpoints and cache
-*.pt
-*.pth
-*.bin
-.cache/
-checkpoint/
-runs/
-wandb/
-
-# Evaluation results
-evaluation_results/
-benchmark_results/
+.idea/
 
 # Data
 data/vectors/
