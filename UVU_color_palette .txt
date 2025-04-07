@@ -1,0 +1,17 @@
+Below is the primary UVU color palette for web design, as specified in the official university document:
+
+### Primary Colors
+
+**UVU Green (Pantone 7483)**
+- **RGB:** 36, 93, 56
+- **Hex:** #275D38
+- **CMYK:** 84c, 38m, 88y, 34k
+
+**Black (Pantone Black C)**
+- **RGB:** 35, 31, 32
+- **Hex:** #000000
+- **CMYK:** 100k
+
+**White**
+- **RGB:** 255, 255, 255
+- **Hex:** #FFFFFF

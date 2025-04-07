@@ -1,130 +1,156 @@
 # Utah Teacher Training Assistant (UTTA)
 
-A sophisticated chatbot framework for teacher training, leveraging advanced LLM capabilities with DSPy integration, knowledge base management, and automated evaluation metrics.
+![UTTA Logo](logo.png)
 
-## Features
+A sophisticated AI-powered platform for teacher training that combines advanced language models, automated evaluation metrics, and an intuitive web interface to help educators improve their teaching skills through simulated student interactions.
 
-*   **Advanced LLM Integration:** Utilizes powerful language models for realistic teacher-student interaction simulation.
-*   **DSPy Framework:** Leverages DSPy for optimizing language model prompts and logic, potentially improving interaction quality and goal alignment.
-*   **Knowledge Base Management:** Incorporates a knowledge base, likely using Retrieval-Augmented Generation (RAG) with vector databases (`src/core/vector_database.py`, `src/core/document_processor.py`), to provide contextually relevant information.
-*   **Automated Evaluation:** Includes mechanisms for evaluating the performance of the simulated teacher or student interactions using a comprehensive LLM-based feedback system that assesses teaching responses across multiple dimensions.
-*   **Web Interface:** Provides a web application (`src/web/app.py`) for interacting with the chatbot.
-*   **Configurable:** Settings managed through environment variables (see `.env.example`) and `config.py`.
+## 🌟 Key Features
 
-## Project Structure
+### 1. Interactive Teaching Simulation
+- **Realistic Student Interactions:** Engage with AI-powered student personas across different grade levels and subjects
+- **Scenario-Based Learning:** Practice teaching in various classroom situations and challenges
+- **Real-time Feedback:** Receive immediate feedback on your teaching approaches
+- **Subject Matter Expert Mode:** Contribute to and review teaching examples
 
-```
-├── src/                      # Main source code
-│   ├── core/                 # Core backend logic (document processing, vector DB)
-│   ├── evaluation/           # Evaluation scripts and modules
-│   ├── llm/                  # Language model interaction logic
-│   ├── retrieval/            # Retrieval specific logic (likely RAG)
-│   ├── utils/                # Utility functions
-│   └── web/                  # Web application (Flask/FastAPI) and static files
-├── knowledge_base/           # Directory for storing knowledge base documents
-├── tests/                    # Unit and integration tests
-├── examples/                 # Example scripts demonstrating usage
-├── tools/                    # Utility tools or scripts
-├── data/                     # Data files used by the application
-├── docs/                     # Documentation files
-├── .env.example              # Example environment variable file
-├── config.py                 # Configuration settings
-├── requirements.txt          # Python package dependencies
-└── README.md                 # This file
-```
+### 2. Advanced Evaluation System
+- **Multi-dimensional Assessment:** Evaluation across six key teaching dimensions:
+  - Clarity (1-10)
+  - Engagement (1-10)
+  - Pedagogical Approach (1-10)
+  - Emotional Support (1-10)
+  - Content Accuracy (1-10)
+  - Age Appropriateness (1-10)
+- **Detailed Feedback:** Strengths, areas for improvement, and actionable recommendations
+- **Visual Analytics:** Interactive charts and metrics visualization
 
-## Getting Started
+### 3. Customizable Scenarios
+- **Grade Levels:** From Kindergarten through 5th Grade
+- **Subject Areas:** Mathematics, Science, Literacy, Social Studies, Art, Music, and Physical Education
+- **Student Profiles:** Various learning styles and needs
+- **Teaching Styles:** Multiple pedagogical approaches
+
+### 4. Technical Features
+- **DSPy Integration:** Optimized language model interactions
+- **Knowledge Base Management:** Context-aware responses
+- **Modern Web Interface:** Built with Streamlit for ease of use
+- **Extensible Architecture:** Modular design for easy updates
+
+## 🚀 Getting Started
 
 ### Prerequisites
 
-*   Python (version specified in requirements or assumed >= 3.8)
-*   `pip` for package installation
-*   A virtual environment tool (like `venv` or `conda`) is recommended.
-    ```bash
-    python -m venv venv
-    source venv/bin/activate # On Windows use `venv\Scripts\activate`
-    ```
-    *Or using conda:*
-    ```bash
-    conda create -n utta python=3.9 # Or desired version
-    conda activate utta
-    ```
-*   Required environment variables (see Configuration section).
+- Python 3.9 or higher
+- Conda package manager
+- Git
 
-### Installation
+### Quick Start
 
-1.  **Clone the repository (if you haven't already):**
-    ```bash
-    git clone <repository-url>
-    cd llm-chatbot-framework
-    ```
-2.  **Install dependencies:**
-    ```bash
-    pip install -r requirements.txt
-    ```
+1. **Clone the Repository:**
+   ```bash
+   git clone https://github.com/UVU-AI-Innovate/UTTA.git
+   cd UTTA
+   ```
 
-### Configuration
+2. **Create and Activate Conda Environment:**
+   ```bash
+   conda create -n utta python=3.9
+   conda activate utta
+   ```
 
-1.  Copy the example environment file:
-    ```bash
-    cp .env.example .env
-    ```
-2.  Edit the `.env` file and fill in the required values, such as API keys for language models, database connection details, etc. Refer to `config.py` for details on how these variables are used.
+3. **Install Dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-## Usage
+4. **Set Up Environment:**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your configuration
+   ```
 
-To run the web application:
+5. **Run the Application:**
+   ```bash
+   PYTHONPATH=src streamlit run src/web/simple_app.py
+   ```
 
-```bash
-# Set the Python path to include the src directory
-PYTHONPATH=$PYTHONPATH:$(pwd)/src streamlit run src/web/app.py
+### 📁 Project Structure
+
+```
+UTTA/
+├── src/                      # Source code
+│   ├── core/                 # Core functionality
+│   ├── evaluation/          # Evaluation metrics
+│   │   └── metrics/        # Automated assessment
+│   ├── llm/                 # Language model integration
+│   │   └── dspy/          # DSPy framework adapters
+│   └── web/                # Web interface
+├── docs/                    # Documentation
+│   ├── evaluation.md       # Evaluation system details
+│   └── fine-tuning/       # Model fine-tuning guides
+├── knowledge_base/         # Teaching resources
+└── training_datasets/      # Training data
 ```
 
-Navigate to the URL provided by the application (usually `http://localhost:8501`) in your web browser.
+## 💡 Usage Guide
 
-## Evaluation Component
+### Starting a Teaching Session
 
-The UTTA includes a powerful evaluation system for assessing teaching responses. This feature helps teachers improve their instructional approaches by providing detailed feedback and metrics.
+1. Launch the application and access it at `http://localhost:8501`
+2. Use the sidebar to navigate between different modes:
+   - **Chat:** Practice teaching with simulated students
+   - **Evaluation:** Review your teaching performance
+   - **Expert Mode:** Contribute teaching examples
 
-### How the Evaluation Works
+### Creating a Teaching Scenario
 
-1. **LLM-Based Analysis**: The system uses the integrated Language Model to analyze teaching responses within the context of the student profile and scenario.
+1. Select "Create Scenario" from the interface
+2. Follow the hierarchical selection process:
+   - Choose grade level
+   - Select subject area
+   - Pick challenge type
+   - Define student profile
+   - Choose teaching style
+3. Add scenario details and student question
+4. Begin the teaching interaction
 
-2. **Multi-dimensional Assessment**: Each teaching response is evaluated across six key pedagogical dimensions:
-   - **Clarity** (1-10): How clearly concepts are explained
-   - **Engagement** (1-10): How effectively the response engages the student
-   - **Pedagogical Approach** (1-10): Appropriateness of teaching strategies
-   - **Emotional Support** (1-10): Degree of emotional encouragement and support
-   - **Content Accuracy** (1-10): Accuracy of the subject matter
-   - **Age Appropriateness** (1-10): Whether language and concepts match student's age/level
+### Using the Evaluation System
 
-3. **Comprehensive Feedback**: For each evaluation, the system provides:
-   - An overall effectiveness score
-   - Specific strengths identified in the teaching approach
-   - Areas for improvement
-   - Actionable recommendations for enhancing teaching effectiveness
+1. Complete a teaching interaction
+2. Navigate to the Evaluation section
+3. Click "Evaluate Last Response"
+4. Review your performance metrics and feedback
+5. Use the recommendations to improve your approach
 
-4. **Visual Representation**: Results are displayed as numerical scores and through an interactive bar chart for easy interpretation.
+## 📚 Documentation
 
-### Using the Evaluation Feature
+Detailed documentation is available in the `docs/` directory:
+- [Evaluation System Guide](docs/evaluation.md)
+- [Fine-tuning Documentation](docs/fine-tuning/README.md)
 
-1. Navigate to the application in your browser (http://localhost:8501)
-2. Have a conversation with the simulated student in the Chat section
-3. Switch to the "Evaluation" section using the sidebar navigation
-4. Click the "Evaluate Last Response" button
-5. Review the comprehensive feedback provided by the system
+## 🤝 Contributing
 
-### Benefits of the Evaluation Component
+We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details on how to:
+- Report bugs
+- Suggest enhancements
+- Submit pull requests
+- Contribute to documentation
 
-- **Immediate Feedback**: Teachers receive instant feedback on their instructional approaches
-- **Targeted Improvement**: Specific recommendations help focus professional development
-- **Objective Assessment**: Standardized evaluation criteria ensure consistent feedback
-- **Private Practice**: Teachers can experiment with different approaches in a safe environment
+## 📄 License
 
-## Contributing
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-(Optional: Add guidelines for contributions if this is an open project).
+## 🙏 Acknowledgments
 
-## License
+- Utah Valley University AI Innovation Lab
+- Contributing educators and subject matter experts
+- Open source community and contributors
 
-(Optional: Specify the license, e.g., This project is licensed under the MIT License - see the LICENSE file for details). 
+## 📞 Support
+
+For support and questions:
+- Create an issue in the GitHub repository
+- Contact the development team
+- Join our community discussions
+
+---
+Built with ❤️ by the UVU AI Innovation Lab Team 
