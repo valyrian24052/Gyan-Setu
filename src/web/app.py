@@ -1834,7 +1834,7 @@ class WebInterface:
         }
         
         # Set in session state
-            st.session_state.scenario = default_scenario
+        st.session_state.scenario = default_scenario
         
         # Also return the scenario object
         return default_scenario
@@ -3406,4 +3406,5 @@ if __name__ == "__main__":
 
 # Run the application
 if __name__ == "__main__":
-    app = WebInterface()
+    web_interface = WebInterface()
+    web_interface.run()
