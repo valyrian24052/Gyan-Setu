@@ -1,147 +1,133 @@
-# <img src="./logo.png" alt="Logo" width="100" height="100">Utah Teacher Training Assistant (UTTA) 
+# UTTA (Utah Teacher Training Assistant)
 
-A sophisticated AI-powered platform for teacher training that combines advanced language models, automated evaluation metrics, and an intuitive web interface to help educators improve their teaching skills through simulated student interactions.
+An AI-powered teaching assistant enhanced by Expert Tuning, our specialized system that leverages expert feedback for continuous improvement.
 
 ## 🌟 Key Features
 
-### 1. Interactive Teaching Simulation
-- **Realistic Student Interactions:** Engage with AI-powered student personas across different grade levels and subjects
-- **Scenario-Based Learning:** Practice teaching in various classroom situations and challenges
-- **Real-time Feedback:** Receive immediate feedback on your teaching approaches
-- **Subject Matter Expert Mode:** Contribute to and review teaching examples
+### 1. Interactive Teaching Practice
+- **Simulated Student Interactions:** Practice teaching in a safe environment
+- **Real-time Feedback:** Get immediate guidance on your teaching approach
+- **Scenario Variety:** Wide range of teaching situations and student profiles
 
-### 2. Advanced Evaluation System
-- **Multi-dimensional Assessment:** Evaluation across six key teaching dimensions:
-  - Clarity (1-10)
-  - Engagement (1-10)
-  - Pedagogical Approach (1-10)
-  - Emotional Support (1-10)
-  - Content Accuracy (1-10)
-  - Age Appropriateness (1-10)
-- **Detailed Feedback:** Strengths, areas for improvement, and actionable recommendations
+### 2. Automated Assessment
+- **Multi-dimensional Evaluation:** Comprehensive teaching skill assessment
+- **Progress Tracking:** Monitor your improvement over time
+- **Detailed Analytics:** In-depth analysis of teaching performance
 - **Visual Analytics:** Interactive charts and metrics visualization
 
-### 3. Customizable Scenarios
-- **Grade Levels:** From Kindergarten through 5th Grade
-- **Subject Areas:** Mathematics, Science, Literacy, Social Studies, Art, Music, and Physical Education
-- **Student Profiles:** Various learning styles and needs
-- **Teaching Styles:** Multiple pedagogical approaches
+### 3. Expert Tuning Platform
+Our innovative expert feedback collection and model optimization system:
+- **Expert Review System:** Review and rate AI-generated teaching responses
+- **Teaching Example Submission:** Share your expertise as training data
+- **Structured Data Collection:**
+  - **Quality Metrics:** Numerical ratings across teaching dimensions
+  - **Improved Responses:** Expert-provided better alternatives
+  - **Training Examples:** Real-world teaching scenarios
+  - **Training Dataset:** Automatically formatted for optimization
 
 ### 4. Technical Features
-- **DSPy Integration:** Optimized language model interactions
-- **Knowledge Base Management:** Context-aware responses
-- **Modern Web Interface:** Built with Streamlit for ease of use
-- **Extensible Architecture:** Modular design for easy updates
+- **Model Optimization:** 
+  - Optimized language model interactions
+  - Continuous improvement through expert feedback
+  - Automated enhancement pipeline
+  - Quality-weighted training data
+  - Version-controlled improvements
+- **Knowledge Base:** Context-aware responses enhanced by expert feedback
+- **Modern Interface:** Built with Streamlit for ease of use
+- **Data Pipeline:**
+  - Structured feedback collection
+  - Automated preprocessing
+  - Quality filtering
+  - Version control
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-
-- Python 3.9 or higher
+- Python 3.8+
 - Conda package manager
 - Git
+- Access to Expert Tuning platform (for contributors)
 
 ### Quick Start
+```bash
+# Clone repository
+git clone https://github.com/your-org/UTTA.git
+cd UTTA
 
-1. **Clone the Repository:**
-   ```bash
-   git clone https://github.com/UVU-AI-Innovate/UTTA.git
-   cd UTTA
-   ```
+# Create and activate conda environment
+conda create -n utta python=3.8
+conda activate utta
 
-2. **Create and Activate Conda Environment:**
-   ```bash
-   conda create -n utta python=3.9
-   conda activate utta
-   ```
+# Install dependencies
+pip install -r requirements.txt
 
-3. **Install Dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
+# Run the application
+streamlit run src/web/app.py
+```
 
-4. **Set Up Environment:**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your configuration
-   ```
-
-5. **Run the Application:**
-   ```bash
-   PYTHONPATH=src streamlit run src/web/simple_app.py
-   ```
-
-### 📁 Project Structure
+## 📁 Project Structure
 
 ```
 UTTA/
-├── src/                      # Source code
-│   ├── core/                 # Core functionality
-│   ├── evaluation/          # Evaluation metrics
-│   │   └── metrics/        # Automated assessment
-│   ├── llm/                 # Language model integration
-│   │   └── dspy/          # DSPy framework adapters
-│   └── web/                # Web interface
-├── docs/                    # Documentation
-│   ├── evaluation.md       # Evaluation system details
-│   └── fine-tuning/       # Model fine-tuning guides
-├── knowledge_base/         # Teaching resources
-└── training_datasets/      # Training data
+├── src/
+│   ├── core/                # Core functionality
+│   ├── evaluation/         # Evaluation metrics
+│   ├── llm/                # Language model integration
+│   │   ├── dspy/         # DSPy framework adapters
+│   │   └── expert_tuning/ # Expert Tuning pipeline
+│   └── web/               # Web interface
+├── docs/
+│   ├── expert_tuning/     # Expert Tuning documentation
+│   └── evaluation.md      # Evaluation system details
+├── training_datasets/     # Training data
+│   ├── expert_feedback/   # Raw expert feedback
+│   ├── processed/        # Processed training data
+│   └── versions/        # Dataset versions
+└── knowledge_base/       # Teaching resources
 ```
 
-## 💡 Usage Guide
+## 🎯 Usage
 
-### Starting a Teaching Session
+### Basic Mode
+1. Start the application
+2. Choose a teaching scenario
+3. Interact with simulated student
+4. Receive feedback and assessment
 
-1. Launch the application and access it at `http://localhost:8501`
-2. Use the sidebar to navigate between different modes:
-   - **Chat:** Practice teaching with simulated students
-   - **Evaluation:** Review your teaching performance
-   - **Expert Mode:** Contribute teaching examples
+### Expert Mode
+1. Navigate to the Expert Tuning dashboard
+2. Choose from three main activities:
+   - **Review Teaching Examples:** Rate AI responses and provide improvements
+   - **Submit Your Solutions:** Share your teaching expertise as training data
+   - **View Impact:** Track how your contributions improve the system
 
-### Creating a Teaching Scenario
+### Contributing as an Expert
+- Review AI-generated responses and provide improvements
+- Rate responses across teaching dimensions
+- Share your own teaching examples
+- Provide detailed explanations
+- See how your feedback helps improve the AI
 
-1. Select "Create Scenario" from the interface
-2. Follow the hierarchical selection process:
-   - Choose grade level
-   - Select subject area
-   - Pick challenge type
-   - Define student profile
-   - Choose teaching style
-3. Add scenario details and student question
-4. Begin the teaching interaction
-
-### Using the Evaluation System
-
-1. Complete a teaching interaction
-2. Navigate to the Evaluation section
-3. Click "Evaluate Last Response"
-4. Review your performance metrics and feedback
-5. Use the recommendations to improve your approach
-
-## 📚 Documentation
-
-Detailed documentation is available in the `docs/` directory:
-- [Evaluation System Guide](docs/evaluation.md)
-- [Fine-tuning Documentation](docs/fine-tuning/README.md)
+### Data Quality and Impact
+- High-quality contributions are automatically added to training datasets
+- Track how your feedback influences performance
+- Earn recognition for helpful feedback
+- View impact metrics
+- Participate in focused improvement campaigns
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details on how to:
-- Report bugs
-- Suggest enhancements
-- Submit pull requests
-- Contribute to documentation
+We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see [LICENSE](LICENSE) for details.
 
 ## 🙏 Acknowledgments
 
-- Utah Valley University AI Innovation Lab
-- Contributing educators and subject matter experts
-- Open source community and contributors
+- Utah Valley University
+- Contributing teaching experts
+- Open source community
 
 ## 📞 Support
 

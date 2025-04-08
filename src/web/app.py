@@ -6,6 +6,7 @@ Uses DSPy for efficient and reliable LLM interactions.
 
 import streamlit as st
 import uuid
+import time
 
 # Set page configuration first - this must be the first Streamlit command
 st.set_page_config(
@@ -66,8 +67,8 @@ class WebInterface:
         # if 'metrics_evaluator' not in st.session_state:
         #     st.session_state.metrics_evaluator = AutomatedMetricsEvaluator()
         
-        # Run the application
-        self.run()
+        # DO NOT run the application from init - it will be called explicitly later
+        # self.run()
 
     def apply_custom_css(self):
         """Apply custom CSS styles to the Streamlit app."""
@@ -436,6 +437,20 @@ class WebInterface:
         if "app_mode" not in st.session_state:
             st.session_state.app_mode = "expert_feedback"
             
+        # Initialize points system
+        if "expert_points" not in st.session_state:
+            st.session_state.expert_points = 0
+            
+        if "expert_level" not in st.session_state:
+            st.session_state.expert_level = "Novice Teacher"
+            
+        # Initialize feedback and example collections
+        if "sme_feedback" not in st.session_state:
+            st.session_state.sme_feedback = []
+            
+        if "teaching_examples" not in st.session_state:
+            st.session_state.teaching_examples = []
+            
         # Initialize expert data collections
         if "expert_examples" not in st.session_state:
             st.session_state.expert_examples = []
@@ -443,26 +458,20 @@ class WebInterface:
         if "expert_reviews" not in st.session_state:
             st.session_state.expert_reviews = []
             
-        # Initialize gamification components
-        if "expert_points" not in st.session_state:
-            st.session_state.expert_points = 0
-            
-        if "expert_level" not in st.session_state:
-            st.session_state.expert_level = "Novice Teacher"
-            
-        if "badges" not in st.session_state:
-            st.session_state.badges = []
-            
+        # Initialize streak and badges system
         if "streak_days" not in st.session_state:
-            st.session_state.streak_days = 1
+            st.session_state.streak_days = 0
             
         if "last_contribution_date" not in st.session_state:
             st.session_state.last_contribution_date = datetime.now().strftime("%Y-%m-%d")
             
+        if "badges" not in st.session_state:
+            st.session_state.badges = []
+            
         if "awards" not in st.session_state:
             st.session_state.awards = {
                 "literacy_star": False,
-                "math_wizard": False, 
+                "math_wizard": False,
                 "science_explorer": False,
                 "feedback_champion": False
             }
@@ -470,7 +479,7 @@ class WebInterface:
         # Initialize announcement banner state
         if "show_announcement" not in st.session_state:
             st.session_state.show_announcement = True
-
+            
     def load_students(self):
         """Load student profiles from data files."""
         # Default student profiles for demonstration
@@ -638,12 +647,14 @@ class WebInterface:
             with col1:
                 subject = st.selectbox(
                     "Subject", 
-                    ["Mathematics", "Science", "Language Arts", "Social Studies", "Art", "Music", "Physical Education"]
+                    ["Mathematics", "Science", "Language Arts", "Social Studies", "Art", "Music", "Physical Education"],
+                    key="create_scenario_subject_selectbox"
                 )
                 
                 grade_level = st.selectbox(
                     "Grade Level",
-                    ["Kindergarten", "1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th", "10th", "11th", "12th"]
+                    ["Kindergarten", "1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th", "10th", "11th", "12th"],
+                    key="create_scenario_grade_selectbox"
                 )
                 
                 learning_objectives = st.text_area(
@@ -2659,7 +2670,8 @@ if __name__ == "__main__":
         selected_example_idx = st.selectbox(
             "Select a teaching scenario to review:",
             options=range(len(examples)),
-            format_func=lambda i: f"Example {i+1}: {examples[i]['subject']} - {examples[i]['question'][:50]}..."
+            format_func=lambda i: f"Example {i+1}: {examples[i]['subject']} - {examples[i]['question'][:50]}...",
+            key="review_tab_example_selector_main"  # Use a specific static key
         )
         
         selected_example = examples[selected_example_idx]
@@ -3064,6 +3076,30 @@ if __name__ == "__main__":
         # Initialize announcement banner state
         if "show_announcement" not in st.session_state:
             st.session_state.show_announcement = True
+            
+        # Initialize streak and badges system
+        if "streak_days" not in st.session_state:
+            st.session_state.streak_days = 0
+            
+        if "last_contribution_date" not in st.session_state:
+            st.session_state.last_contribution_date = datetime.now().strftime("%Y-%m-%d")
+            
+        if "badges" not in st.session_state:
+            st.session_state.badges = []
+            
+        if "awards" not in st.session_state:
+            st.session_state.awards = {
+                "literacy_star": False,
+                "math_wizard": False,
+                "science_explorer": False,
+                "feedback_champion": False
+            }
+            
+        if "expert_reviews" not in st.session_state:
+            st.session_state.expert_reviews = []
+            
+        if "expert_examples" not in st.session_state:
+            st.session_state.expert_examples = []
 
     def _update_expert_points(self, action_type, content=None):
         """
@@ -3204,34 +3240,38 @@ if __name__ == "__main__":
             
             with col1:
                 # Allow selection of scenario/context
-                scenario_options = [s.name for s in self.scenarios]
+                scenario_options = [s["title"] for s in self.scenarios]
                 selected_scenario = st.selectbox(
                     "Select Teaching Context",
                     options=scenario_options,
-                    index=0
+                    index=0,
+                    key="teaching_input_scenario_selectbox"
                 )
                 
                 # Subject area selection
                 subject_area = st.selectbox(
                     "Subject Area",
                     options=["Math", "Literacy/Language Arts", "Science", "Social Studies", "Art/Music", "Physical Education", "Social-Emotional Learning"],
-                    index=0
+                    index=0,
+                    key="teaching_input_subject_selectbox"
                 )
                 
                 # Grade level selection
                 grade_level = st.selectbox(
                     "Grade Level",
                     options=["Kindergarten", "1st Grade", "2nd Grade", "3rd Grade", "4th Grade", "5th Grade"],
-                    index=2
+                    index=2,
+                    key="teaching_input_grade_selectbox"
                 )
                 
             with col2:
                 # Student profile selection
-                student_options = [s.name for s in self.students]
+                student_options = [s["name"] for s in self.students]
                 selected_student = st.selectbox(
                     "Select Student Profile",
                     options=student_options,
-                    index=0
+                    index=0,
+                    key="teaching_input_student_selectbox"
                 )
                 
                 # Difficulty level

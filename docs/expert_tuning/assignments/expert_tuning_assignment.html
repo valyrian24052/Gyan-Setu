@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Expert Tuning Assignment - UTTA</title>
+</head>
+
+<body>
+    <div class="markdown-heading">
+        <h1>Expert Tuning Assignment</h1>
+
+        <div class="section">
+            <h2 class="heading-element">Introduction</h2>
+            <p>In this assignment, you will explore the Expert Tuning system for improving AI teaching responses through expert feedback. You'll work with the platform to understand how expert knowledge can be effectively captured and used to enhance AI
+                model performance in educational contexts.</p>
+            <p>All files needed for this assignment are available at: <a href="https://github.com/your-org/UTTA/tree/main/examples">UTTA Examples</a></p>
+        </div>
+
+        <div class="section">
+            <h2 class="heading-element">Learning Objectives</h2>
+            <ul>
+                <li>Understand the Expert Tuning feedback collection and processing pipeline</li>
+                <li>Gain practical experience with expert feedback submission and quality control</li>
+                <li>Analyze the impact of expert feedback on model performance</li>
+                <li>Develop skills in evaluating teaching responses and providing constructive feedback</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2 class="heading-element">Prerequisites</h2>
+            <ul>
+                <li>Access to the Expert Tuning platform</li>
+                <li>Python 3.9+ and Conda environment</li>
+                <li>Basic understanding of teaching principles</li>
+            </ul>
+
+            <h3 class="heading-element">Environment Setup</h3>
+            <pre><code>
+# Create and activate conda environment
+conda create -n expert-tuning python=3.9
+conda activate expert-tuning
+
+# Install required packages
+pip install expert-tuning dspy-ai
+
+# Set up environment variables
+export EXPERT_TUNING_API_KEY=your_key_here</code></pre>
+        </div>
+
+        <div class="section">
+            <h2 class="heading-element">Assignment Overview</h2>
+            <p>This assignment is structured in three parts:</p>
+            <ol>
+                <li><strong>Part 1: Expert Feedback Collection</strong> - Learn to provide quality feedback</li>
+                <li><strong>Part 2: Quality Control</strong> - Understand and implement feedback validation</li>
+                <li><strong>Part 3: Impact Analysis</strong> - Measure and analyze feedback effectiveness</li>
+            </ol>
+        </div>
+
+        <div class="section">
+            <h2 class="heading-element">Detailed Tasks</h2>
+
+            <h3>Part 1: Expert Feedback Collection (3-4 hours)</h3>
+            <ol>
+                <li>
+                    <strong>Platform Familiarization</strong>
+                    <ul>
+                        <li>Complete the Expert Tuning tutorial</li>
+                        <li>Review the feedback dimensions and rating system</li>
+                        <li>Understand the feedback submission process</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>Response Review</strong>
+                    <ul>
+                        <li>Review 10 AI teaching responses</li>
+                        <li>Provide ratings across all dimensions</li>
+                        <li>Submit improved alternatives for weak responses</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>Example Creation</strong>
+                    <ul>
+                        <li>Create 5 teaching scenarios in your area of expertise</li>
+                        <li>Provide model responses and explanations</li>
+                        <li>Document your teaching approach</li>
+                    </ul>
+                </li>
+            </ol>
+
+            <h3>Part 2: Quality Control (4-5 hours)</h3>
+            <ol>
+                <li>
+                    <strong>Validation Implementation</strong>
+                    <ul>
+                        <li>Implement feedback validation checks</li>
+                        <li>Add quality scoring mechanisms</li>
+                        <li>Create consistency verification</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>Quality Metrics</strong>
+                    <ul>
+                        <li>Define quality thresholds</li>
+                        <li>Implement peer review system</li>
+                        <li>Track expert credibility scores</li>
+                    </ul>
+                </li>
+            </ol>
+
+            <h3>Part 3: Impact Analysis (3-4 hours)</h3>
+            <ol>
+                <li>
+                    <strong>Performance Tracking</strong>
+                    <ul>
+                        <li>Monitor model improvements</li>
+                        <li>Analyze feedback impact</li>
+                        <li>Generate performance reports</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>Analytics Dashboard</strong>
+                    <ul>
+                        <li>Track contribution metrics</li>
+                        <li>Visualize improvement trends</li>
+                        <li>Generate impact reports</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+
+        <div class="section">
+            <h2 class="heading-element">Example Code</h2>
+            <pre><code>
+from expert_tuning import ExpertTuning
+from expert_tuning.feedback import FeedbackCollector
+from expert_tuning.optimization import ModelOptimizer
+
+# Initialize system
+system = ExpertTuning()
+
+# Collect expert feedback
+feedback = FeedbackCollector()
+rating = feedback.rate_response(
+    response_id="example_1",
+    ratings={
+        "clarity": 8,
+        "engagement": 7,
+        "pedagogy": 9
+    },
+    improved_response="A clearer way to explain...",
+    notes="Added concrete examples"
+)
+
+# Process and analyze
+optimizer = ModelOptimizer()
+result = optimizer.improve(feedback=rating)
+print(f"Improvement score: {result.score}")</code></pre>
+        </div>
+
+        <div class="section">
+            <h2 class="heading-element">Resources</h2>
+            <ul>
+                <li><strong>Documentation</strong>:
+                    <ul>
+                        <li><a href="docs.utta.ai">Expert Tuning Documentation</a></li>
+                        <li><a href="docs.utta.ai/guides">Expert Guidelines</a></li>
+                        <li><a href="docs.utta.ai/api">API Reference</a></li>
+                    </ul>
+                </li>
+                <li><strong>Example Files</strong>:
+                    <ul>
+                        <li><code>feedback_example.py</code> - Example feedback submission</li>
+                        <li><code>quality_control.py</code> - Quality validation implementation</li>
+                        <li><code>impact_analysis.py</code> - Performance tracking tools</li>
+                    </ul>
+                </li>
+                <li><strong>Support</strong>:
+                    <ul>
+                        <li>Community Forum: <a href="forum.utta.ai">forum.utta.ai</a></li>
+                        <li>Support Email: support@utta.ai</li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</body>
+
+</html>

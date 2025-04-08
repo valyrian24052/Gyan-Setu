@@ -69,3 +69,11 @@ models/*.gguf
 *.bin
 *.ggml
 *.pt
+# Expert-Tune-DSPy specific
+logs/
+cache/
+*.log
+config/.env
+training_datasets/expert_feedback/
+training_datasets/processed/
+training_datasets/versions/
