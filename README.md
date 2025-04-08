@@ -1,6 +1,6 @@
 # UTTA (Utah Teacher Training Assistant)
 
-An AI-powered teaching assistant enhanced by Expert Tuning, our specialized system that leverages expert feedback for continuous improvement.
+An AI-powered teaching assistant enhanced by Expert Tuning, our specialized system that leverages expert feedback for continuous improvement using DSPy for efficient small-dataset optimization.
 
 ## 🌟 Key Features
 
@@ -17,17 +17,21 @@ An AI-powered teaching assistant enhanced by Expert Tuning, our specialized syst
 
 ### 3. Expert Tuning Platform
 Our innovative expert feedback collection and model optimization system:
+- **DSPy Integration:** Efficient fine-tuning with small datasets
+  - Optimized for expert feedback
+  - Rapid iteration and improvement
+  - Low resource requirements
 - **Expert Review System:** Review and rate AI-generated teaching responses
 - **Teaching Example Submission:** Share your expertise as training data
 - **Structured Data Collection:**
   - **Quality Metrics:** Numerical ratings across teaching dimensions
   - **Improved Responses:** Expert-provided better alternatives
   - **Training Examples:** Real-world teaching scenarios
-  - **Training Dataset:** Automatically formatted for optimization
+  - **Training Dataset:** Automatically formatted for DSPy optimization
 
 ### 4. Technical Features
 - **Model Optimization:** 
-  - Optimized language model interactions
+  - DSPy-powered language model interactions
   - Continuous improvement through expert feedback
   - Automated enhancement pipeline
   - Quality-weighted training data
@@ -36,7 +40,7 @@ Our innovative expert feedback collection and model optimization system:
 - **Modern Interface:** Built with Streamlit for ease of use
 - **Data Pipeline:**
   - Structured feedback collection
-  - Automated preprocessing
+  - DSPy-optimized preprocessing
   - Quality filtering
   - Version control
 
@@ -51,7 +55,7 @@ Our innovative expert feedback collection and model optimization system:
 ### Quick Start
 ```bash
 # Clone repository
-git clone https://github.com/your-org/UTTA.git
+git clone https://github.com/UVU-AI-Innovate/UTTA.git
 cd UTTA
 
 # Create and activate conda environment
@@ -71,19 +75,22 @@ streamlit run src/web/app.py
 UTTA/
 ├── src/
 │   ├── core/                # Core functionality
-│   ├── evaluation/         # Evaluation metrics
+│   ├── evaluation/          # Evaluation metrics
 │   ├── llm/                # Language model integration
-│   │   ├── dspy/         # DSPy framework adapters
-│   │   └── expert_tuning/ # Expert Tuning pipeline
-│   └── web/               # Web interface
+│   │   ├── dspy/           # DSPy framework integration
+│   │   └── expert_tuning/  # Expert Tuning pipeline
+│   └── web/                # Web interface
 ├── docs/
-│   ├── expert_tuning/     # Expert Tuning documentation
-│   └── evaluation.md      # Evaluation system details
-├── training_datasets/     # Training data
-│   ├── expert_feedback/   # Raw expert feedback
-│   ├── processed/        # Processed training data
-│   └── versions/        # Dataset versions
-└── knowledge_base/       # Teaching resources
+│   ├── expert_tuning/      # Expert Tuning documentation
+│   │   ├── overview.md     # System overview
+│   │   ├── quickstart.md   # Quick start guide
+│   │   └── dspy.md        # DSPy integration guide
+│   └── evaluation.md       # Evaluation system details
+├── training_datasets/      # Training data
+│   ├── expert_feedback/    # Raw expert feedback
+│   ├── processed/          # DSPy-processed training data
+│   └── versions/           # Dataset versions
+└── knowledge_base/         # Teaching resources
 ```
 
 ## 🎯 Usage
@@ -106,10 +113,11 @@ UTTA/
 - Rate responses across teaching dimensions
 - Share your own teaching examples
 - Provide detailed explanations
-- See how your feedback helps improve the AI
+- See how your feedback helps improve the AI through DSPy optimization
 
 ### Data Quality and Impact
 - High-quality contributions are automatically added to training datasets
+- DSPy efficiently processes small datasets for maximum impact
 - Track how your feedback influences performance
 - Earn recognition for helpful feedback
 - View impact metrics
@@ -117,7 +125,7 @@ UTTA/
 
 ## 🤝 Contributing
 
-We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+We welcome contributions! See our [Contributing Guide](docs/CONTRIBUTING.md) for guidelines.
 
 ## 📄 License
 
@@ -127,14 +135,8 @@ This project is licensed under the MIT License - see [LICENSE](LICENSE) for deta
 
 - Utah Valley University
 - Contributing teaching experts
+- DSPy development team
 - Open source community
-
-## 📞 Support
-
-For support and questions:
-- Create an issue in the GitHub repository
-- Contact the development team
-- Join our community discussions
 
 ---
 Built with ❤️ by the UVU AI Innovation Lab Team 
