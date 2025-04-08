@@ -11,7 +11,7 @@
 
 ```bash
 # Create and activate conda environment
-conda create -n expert-tuning python=3.9
+conda create -n expert-tuning python=3.10
 conda activate expert-tuning
 
 # Install required packages

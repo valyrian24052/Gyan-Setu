@@ -9,13 +9,7 @@ An AI-powered teaching assistant enhanced by Expert Tuning, our specialized syst
 - **Real-time Feedback:** Get immediate guidance on your teaching approach
 - **Scenario Variety:** Wide range of teaching situations and student profiles
 
-### 2. Automated Assessment
-- **Multi-dimensional Evaluation:** Comprehensive teaching skill assessment
-- **Progress Tracking:** Monitor your improvement over time
-- **Detailed Analytics:** In-depth analysis of teaching performance
-- **Visual Analytics:** Interactive charts and metrics visualization
-
-### 3. Expert Tuning Platform
+### 2. Expert Tuning Platform
 Our innovative expert feedback collection and model optimization system:
 - **DSPy Integration:** Efficient fine-tuning with small datasets
   - Optimized for expert feedback
@@ -29,7 +23,7 @@ Our innovative expert feedback collection and model optimization system:
   - **Training Examples:** Real-world teaching scenarios
   - **Training Dataset:** Automatically formatted for DSPy optimization
 
-### 4. Technical Features
+### 3. Technical Features
 - **Model Optimization:** 
   - DSPy-powered language model interactions
   - Continuous improvement through expert feedback
@@ -47,7 +41,7 @@ Our innovative expert feedback collection and model optimization system:
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Python 3.8+
+- Python 3.10+
 - Conda package manager
 - Git
 - Access to Expert Tuning platform (for contributors)
@@ -59,7 +53,7 @@ git clone https://github.com/UVU-AI-Innovate/UTTA.git
 cd UTTA
 
 # Create and activate conda environment
-conda create -n utta python=3.8
+conda create -n utta python=3.10
 conda activate utta
 
 # Install dependencies
@@ -75,7 +69,6 @@ streamlit run src/web/app.py
 UTTA/
 ├── src/
 │   ├── core/                # Core functionality
-│   ├── evaluation/          # Evaluation metrics
 │   ├── llm/                # Language model integration
 │   │   ├── dspy/           # DSPy framework integration
 │   │   └── expert_tuning/  # Expert Tuning pipeline
@@ -85,7 +78,6 @@ UTTA/
 │   │   ├── overview.md     # System overview
 │   │   ├── quickstart.md   # Quick start guide
 │   │   └── dspy.md        # DSPy integration guide
-│   └── evaluation.md       # Evaluation system details
 ├── training_datasets/      # Training data
 │   ├── expert_feedback/    # Raw expert feedback
 │   ├── processed/          # DSPy-processed training data
@@ -99,7 +91,7 @@ UTTA/
 1. Start the application
 2. Choose a teaching scenario
 3. Interact with simulated student
-4. Receive feedback and assessment
+4. Receive feedback and guidance
 
 ### Expert Mode
 1. Navigate to the Expert Tuning dashboard
@@ -139,4 +131,4 @@ This project is licensed under the MIT License - see [LICENSE](LICENSE) for deta
 - Open source community
 
 ---
-Built with ❤️ by the UVU AI Innovation Lab Team 
+Built with ❤️ by the UVU AI Innovation Lab Team
